@@ -2,8 +2,8 @@
 package client
 
 import (
-	spb "github.com/Azure/sonic-telemetry/proto"
-	transutil "github.com/Azure/sonic-telemetry/transl_utils"
+	spb "proto"
+	transutil "transl_utils"
 	log "github.com/golang/glog"
 	gnmipb "github.com/openconfig/gnmi/proto/gnmi"
 	"github.com/workiva/go-datastructures/queue"

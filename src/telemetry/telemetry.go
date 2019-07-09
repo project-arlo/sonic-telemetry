@@ -10,8 +10,8 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 
-	gnmi "github.com/Azure/sonic-telemetry/gnmi_server"
-	testcert "github.com/Azure/sonic-telemetry/testdata/tls"
+	gnmi "gnmi_server"
+	testcert "testdata/tls"
 )
 
 var (
