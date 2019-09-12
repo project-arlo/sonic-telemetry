@@ -77,7 +77,7 @@ var (
 	clientCert = flag.String("client_crt", "", "Client certificate file. Used for client certificate-based authentication.")
 	clientKey  = flag.String("client_key", "", "Client private key file. Used for client certificate-based authentication.")
 	//Subscribe Options
-	streaming_type = flag.Uint("streaming_type", 0, "One of TARGET_DEFINED, ON_CHANGE or SAMPLE")
+	streaming_type = flag.String("streaming_type", "TARGET_DEFINED", "One of TARGET_DEFINED, ON_CHANGE or SAMPLE")
 	streaming_sample_int = flag.Uint("streaming_sample_interval", 0, "Streaming sample inteval seconds, 0 means lowest supported.")
 	heartbeat_int = flag.Uint("heartbeat_interval", 0, "Heartbeat inteval seconds.")
 	suppress_redundant = flag.Bool("suppress_redundant", false, "Suppress Redundant Subscription Updates")
@@ -283,9 +283,17 @@ func executeSubscribe(ctx context.Context) error {
 	if len(*queryFlag) == 0 {
 		return errors.New("--query must be set")
 	}
-	q.Streaming_type = gpb.SubscriptionMode(*streaming_type)
-	q.Streaming_sample_int = uint64(*streaming_sample_int)
-	q.Heartbeat_int = uint64(*heartbeat_int)
+	if *streaming_type == "TARGET_DEFINED" {
+		q.Streaming_type = gpb.SubscriptionMode(0)
+	} else if *streaming_type ==  "ON_CHANGE" {
+		q.Streaming_type =  gpb.SubscriptionMode(1)
+	} else if *streaming_type ==  "SAMPLE" {
+		q.Streaming_type = gpb.SubscriptionMode(2)
+	} else {
+		return errors.New("-streaming_type must be one of: (TARGET_DEFINED, ON_CHANGE, SAMPLE)")
+	}
+	q.Streaming_sample_int = uint64(*streaming_sample_int)*uint64(time.Second)
+	q.Heartbeat_int = uint64(*heartbeat_int)*uint64(time.Second)
 	q.Suppress_redundant = bool(*suppress_redundant)
 	for _, path := range *queryFlag {
 		query, err := parseQuery(path, cfg.Delimiter)
