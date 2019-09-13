@@ -181,7 +181,6 @@ func runTestSet(t *testing.T, ctx context.Context, gClient pb.GNMIClient, pathTa
     req := &pb.SetRequest{}
     switch op {
         case Replace:
-            //prefix := pb.Path{Target: pathTarget}
             var v *pb.TypedValue
             v = &pb.TypedValue{
                 Value: &pb.TypedValue_JsonIetfVal{JsonIetfVal: extractJSON(attributeData)}}
@@ -390,8 +389,8 @@ func TestGnmiSet(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	fileName := "testdata/get_interface.json"
-        interfaceData, err := ioutil.ReadFile(fileName)
+	fileName := "testdata/check_interface_mtu_set.json"
+        interface_mtu, err := ioutil.ReadFile(fileName)
         if err != nil {
            t.Fatalf("read file %v err: %v", fileName, err)
         }
@@ -432,15 +431,16 @@ func TestGnmiSet(t *testing.T) {
                 valTest:false,
         },
         {
-                desc:       "Check OC Interface values set",
+                desc:       "Check OC Interface mtu value set",
                 pathTarget: "OC_YANG",
                 textPbPath: `
-                        elem: <name: "openconfig-interfaces:interfaces" > elem: <name: "interface" key:<key:"name" value:"Ethernet0" > >
+                        elem: <name: "openconfig-interfaces:interfaces" > elem: <name: "interface" key:<key:"name" value:"Ethernet0" > > elem: <name: "state" > elem: <name: "mtu" >
                 `,
                 wantRetCode: codes.OK,
-                wantRespVal: interfaceData,
+                wantRespVal: interface_mtu,
                 valTest:true,
         },
+        // TODO: Add a check if interface ip address value set after Interface app adds support for Get for ip-address attribute
 	{
                 desc: "Delete OC Interface IP",
                 pathTarget: "OC_YANG",
