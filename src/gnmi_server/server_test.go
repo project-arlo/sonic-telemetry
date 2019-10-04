@@ -22,7 +22,7 @@ import (
     "io/ioutil"
     "os"
     "os/exec"
-    "reflect"
+    // "reflect"
     "testing"
     "time"
     "fmt"
@@ -35,6 +35,17 @@ import (
 )
 
 var clientTypes = []string{gclient.Type}
+
+type UnitTest struct {
+    desc            string
+    pathTarget      string
+    textPbPath      string
+    wantRetCode     codes.Code
+    wantRespVal     interface{}
+    attributeData   string
+    operation       op_t
+    schema gojsonschema.JSONLoader
+}
 
 func loadConfig(t *testing.T, key string, in []byte) map[string]interface{} {
     var fvp map[string]interface{}
@@ -87,16 +98,15 @@ func createServer(t *testing.T) *Server {
 
 // runTestGet requests a path from the server by Get grpc call, and compares if
 // the return code is OK.
-func runTestGet(t *testing.T, ctx context.Context, gClient pb.GNMIClient, pathTarget string,
-    textPbPath string, wantRetCode codes.Code, wantRespVal interface{}, valTest bool) {
+func runTestGet(t *testing.T, ctx context.Context, gClient pb.GNMIClient, st *UnitTest) {
         //var retCodeOk bool
     // Send request
 
     var pbPath pb.Path
-    if err := proto.UnmarshalText(textPbPath, &pbPath); err != nil {
-        t.Fatalf("error in unmarshaling path: %v %v", textPbPath, err)
+    if err := proto.UnmarshalText(st.textPbPath, &pbPath); err != nil {
+        t.Fatalf("error in unmarshaling path: %v %v", st.textPbPath, err)
     }
-    prefix := pb.Path{Target: pathTarget}
+    prefix := pb.Path{Target: st.pathTarget}
     req := &pb.GetRequest{
         Prefix:   &prefix,
         Path:     []*pb.Path{&pbPath},
@@ -105,7 +115,7 @@ func runTestGet(t *testing.T, ctx context.Context, gClient pb.GNMIClient, pathTa
 
     resp, err := gClient.Get(ctx, req)
     // Check return code
-    fmt.Println(resp)
+    
     gotRetStatus, ok := status.FromError(err)
     if !ok {
         t.Fatal("got a non-grpc error from grpc call")
@@ -113,16 +123,16 @@ func runTestGet(t *testing.T, ctx context.Context, gClient pb.GNMIClient, pathTa
     // if resp == nil {
     //  t.Fatalf("nil response from gNMI")
     // }
-
-    if gotRetStatus.Code() != wantRetCode {
+    var JsonIetfVal string
+    if gotRetStatus.Code() != st.wantRetCode {
         //retCodeOk = false
         t.Log("err: ", err)
-        t.Fatalf("got return code %v, want %v", gotRetStatus.Code(), wantRetCode)
+        t.Fatalf("got return code %v, want %v", gotRetStatus.Code(), st.wantRetCode)
     } else  {
         //retCodeOk = true
     }
        // Check response value
-    if (valTest) {
+    
         var gotVal interface{}
         if resp != nil {
             notifs := resp.GetNotification()
@@ -140,22 +150,20 @@ func runTestGet(t *testing.T, ctx context.Context, gClient pb.GNMIClient, pathTa
                     t.Errorf("got: %v, want a scalar value", gotVal)
                 }
             } else {
-            // Unmarshal json data to gotVal container for comparison
-                if err := json.Unmarshal(val.GetJsonIetfVal(), &gotVal); err != nil {
-                    t.Fatalf("error in unmarshaling IETF JSON data to json container: %v", err)
-                }
-                var wantJSONStruct interface{}
-                if err := json.Unmarshal(wantRespVal.([]byte), &wantJSONStruct); err != nil {
-                    t.Fatalf("error in unmarshaling IETF JSON data to json container: %v", err)
-                }
-                wantRespVal = wantJSONStruct
+                JsonIetfVal = string(val.GetJsonIetfVal())
             }
         }
 
-
-        if !reflect.DeepEqual(gotVal, wantRespVal) {
-            t.Errorf("got: %v (%T),\nwant %v (%T)", gotVal, gotVal, wantRespVal, wantRespVal)
+    docLoader := gojsonschema.NewStringLoader(JsonIetfVal)
+    result, err := gojsonschema.Validate(st.schema, docLoader)
+    if err != nil {
+        t.Fatalf("Error validating response JSON")
+    }
+    if !result.Valid() {
+        for _, desc := range result.Errors() {
+            fmt.Printf("- %s\n", desc)
         }
+        t.Fatalf("The response JSON is not valid.")
     }
 }
 
@@ -174,7 +182,7 @@ const (
     Update op_t = 3
 )
 
-func runTestSet(t *testing.T, ctx context.Context, gClient pb.GNMIClient, st *SetTest) {
+func runTestSet(t *testing.T, ctx context.Context, gClient pb.GNMIClient, st *UnitTest) {
     // Send request 
     var pbPath pb.Path
     if err := proto.UnmarshalText(st.textPbPath, &pbPath); err != nil {
@@ -205,44 +213,6 @@ func runTestSet(t *testing.T, ctx context.Context, gClient pb.GNMIClient, st *Se
     if gotRetStatus.Code() != st.wantRetCode {
         t.Log("err: ", err)
         t.Fatalf("got return code %v, want %v", gotRetStatus.Code(), st.wantRetCode)
-    }
-
-    
-    greq := &pb.GetRequest{
-        Prefix:   &prefix,
-        Path:     []*pb.Path{&pbPath},
-        Encoding: pb.Encoding_JSON_IETF,
-    }
-
-    gresp, err := gClient.Get(ctx, greq)
-    gotRetStatus, ok = status.FromError(err)
-    if !ok {
-        t.Fatal("got a non-grpc error from grpc call")
-    }
-
-    
-    
-    notifs := gresp.GetNotification()
-    if len(notifs) != 1 {
-        t.Fatalf("got %d notifications, want 1", len(notifs))
-    }
-    updates := notifs[0].GetUpdate()
-    if len(updates) != 1 {
-        t.Fatalf("got %d updates in the notification, want 1", len(updates))
-    }
-    val := updates[0].GetVal()
-
-    docLoader := gojsonschema.NewStringLoader(string(val.GetJsonIetfVal()))
-    result, err := gojsonschema.Validate(st.schema, docLoader)
-    if err != nil {
-        t.Fatalf("Error validating response JSON")
-    }
-    if !result.Valid() {
-        for _, desc := range result.Errors() {
-            fmt.Printf("- %s\n", desc)
-        }
-
-        t.Fatalf("The response JSON is not valid.")
     }
         
 }
@@ -409,16 +379,7 @@ func prepareDb(t *testing.T) {
     // Load CONFIG_DB for alias translation
     prepareConfigDb(t)
 }
-type SetTest struct {
-    desc            string
-    pathTarget      string
-    textPbPath      string
-    wantRetCode     codes.Code
-    wantRespVal     interface{}
-    attributeData   string
-    operation       op_t
-    schema gojsonschema.JSONLoader
-}
+
 
 func TestGnmiSet(t *testing.T) {
     //t.Log("Start sevrer")
@@ -441,13 +402,13 @@ func TestGnmiSet(t *testing.T) {
     defer cancel()
 
 
-    var tds []SetTest
+    var tds []UnitTest
     files, err := filepath.Glob("testdata/json_tests/*.json")
     if err != nil {
         t.Fatal("Error opening test files")
     }
     for _, f := range files {
-        tst, err := setTestFromFile(f)
+        tst, err := unitTestFromFile(f)
         if err != nil {
             t.Fatalf("Error loading test file")
         }
@@ -458,13 +419,19 @@ func TestGnmiSet(t *testing.T) {
 
         t.Run(td.desc, func(t *testing.T) {
                 runTestSet(t, ctx, gClient, &td)
+                //Run Get on same path to verify set worked.
+                //If test does not care about veirfying result,
+                // it can leave the schema blank.
+
+                time.Sleep(2* time.Second) // Give time for change to register.
+                runTestGet(t, ctx, gClient, &td)
         })
                 
     }
     s.s.Stop()
 }
-func setTestFromFile(filename string) (SetTest, error) {
-    var st SetTest
+func unitTestFromFile(filename string) (UnitTest, error) {
+    var st UnitTest
     var path pb.Path
     schema := gojsonschema.NewReferenceLoader("file://./" + filename)
     schemaJsonIf,err := schema.LoadJSON()
@@ -533,135 +500,23 @@ func TestGnmiGet(t *testing.T) {
     gClient := pb.NewGNMIClient(conn)
     ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
     defer cancel()
-    /*fileName := "testdata/interfaces.json"
-        interfaces, err := ioutil.ReadFile(fileName)
+
+    var tds []UnitTest
+    files, err := filepath.Glob("testdata/json_tests/*.json")
+    if err != nil {
+        t.Fatal("Error opening test files")
+    }
+    for _, f := range files {
+        tst, err := unitTestFromFile(f)
         if err != nil {
-           t.Fatalf("read file %v err: %v", fileName, err)
-        }*/
-        var emptyRespVal interface{}
-    tds := []struct {
-        desc        string
-        pathTarget  string
-        textPbPath  string
-        wantRetCode codes.Code
-        wantRespVal interface{}
-        valTest     bool
-    }{
-      /*  {
-        desc:       "Get OC Interfaces",
-        pathTarget: "OC_YANG",
-        textPbPath: `
-            elem: <name: "openconfig-interfaces:interfaces" >
-        `,
-        wantRetCode: codes.OK,
-        wantRespVal: interfaces,
-                valTest:true,
-    },
-     */ {
-                desc:       "Get OC Platform",
-                pathTarget: "OC_YANG",
-                textPbPath: `
-                        elem: <name: "openconfig-platform:components" >
-                `,
-                wantRetCode: codes.OK,
-                wantRespVal: emptyRespVal,
-                valTest:false,
-        },
-        {
-                desc:       "Get OC System State",
-                pathTarget: "OC_YANG",
-                textPbPath: `
-                        elem: <name: "openconfig-system:system" > elem: <name: "state" >
-                `,
-                wantRetCode: codes.OK,
-                wantRespVal: emptyRespVal,
-                valTest:false,
-        },
-        {
-                desc:       "Get OC System CPU",
-                pathTarget: "OC_YANG",
-                textPbPath: `
-                        elem: <name: "openconfig-system:system" > elem: <name: "cpus" >
-                `,
-                wantRetCode: codes.OK,
-                wantRespVal: emptyRespVal,
-                valTest:false,
-        },
-        {
-                desc:       "Get OC System memory",
-                pathTarget: "OC_YANG",
-                textPbPath: `
-                        elem: <name: "openconfig-system:system" > elem: <name: "memory" >
-                `,
-                wantRetCode: codes.OK,
-                wantRespVal: emptyRespVal,
-                valTest:false,
-        },
-        {
-                desc:       "Get OC System processes",
-                pathTarget: "OC_YANG",
-                textPbPath: `
-                        elem: <name: "openconfig-system:system" > elem: <name: "processes" >
-                `,
-                wantRetCode: codes.OK,
-                wantRespVal: emptyRespVal,
-                valTest:false,
-        },
-            {
-                desc:       "Get OC Interfaces",
-                pathTarget: "OC_YANG",
-                textPbPath: `
-                        elem: <name: "openconfig-interfaces:interfaces" >
-                `,
-                wantRetCode: codes.OK,
-                wantRespVal: emptyRespVal,
-                valTest:false,
-        },
-        {
-                desc:       "Get OC Interface",
-                pathTarget: "OC_YANG",
-                textPbPath: `
-                        elem: <name: "openconfig-interfaces:interfaces" > elem: <name: "interface" key:<key:"name" value:"Ethernet0" > >
-                `,
-                wantRetCode: codes.OK,
-                wantRespVal: emptyRespVal,
-                valTest:false,
-        },
-        {
-                desc:       "Get OC Interface admin-status",
-                pathTarget: "OC_YANG",
-                textPbPath: `
-                        elem: <name: "openconfig-interfaces:interfaces" > elem: <name: "interface" key:<key:"name" value:"Ethernet0" > > elem: <name: "state" > elem: <name: "admin-status" >
-                `,
-                wantRetCode: codes.OK,
-                wantRespVal: emptyRespVal,
-                valTest:false,
-        },
-        {
-                desc:       "Get OC Interface ifindex",
-                pathTarget: "OC_YANG",
-                textPbPath: `
-                        elem: <name: "openconfig-interfaces:interfaces" > elem: <name: "interface" key:<key:"name" value:"Ethernet0" > > elem: <name: "state" > elem: <name: "ifindex" >
-                `,
-                wantRetCode: codes.OK,
-                wantRespVal: emptyRespVal,
-                valTest:false,
-        },
-        {
-                desc:       "Get OC Interface mtu",
-                pathTarget: "OC_YANG",
-                textPbPath: `
-                        elem: <name: "openconfig-interfaces:interfaces" > elem: <name: "interface" key:<key:"name" value:"Ethernet0" > > elem: <name: "state" > elem: <name: "mtu" >
-                `,
-                wantRetCode: codes.OK,
-                wantRespVal: emptyRespVal,
-                valTest:false,
-        },
+            t.Fatalf("Error loading test file")
         }
+        tds = append(tds, tst)
+    }    
 
     for _, td := range tds {
         t.Run(td.desc, func(t *testing.T) {
-            runTestGet(t, ctx, gClient, td.pathTarget, td.textPbPath, td.wantRetCode, td.wantRespVal, td.valTest)
+            runTestGet(t, ctx, gClient, &td)
         })
     }
     s.s.Stop()

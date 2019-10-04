@@ -3,7 +3,7 @@
   "returnCode": 0,
   "xpath": "openconfig-interfaces:interfaces/interface[name=Ethernet0]",
   "target": "OC_YANG",
-  "attributeData": "{\"config\": {\"mtu\":9001}}",
+  "attributeData": "{\"config\": {\"mtu\":9003}}",
 
   "$schema": "http://json-schema.org/draft-07/schema#",
   "type": "object",
@@ -33,7 +33,7 @@
                 "type": "integer",
                 "title": "The Mtu Schema",
                 "enum": [
-                  9001
+                  9003
                 ]
               }
             }
