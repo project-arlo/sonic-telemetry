@@ -27,8 +27,7 @@ import (
     "time"
     "fmt"
     "strings"
-    "strconv"
-    // "github.com/xeipuuv/gojsonschema"
+    "github.com/xeipuuv/gojsonschema"
     // Register supported client types.
     spb "proto"
     sdc "sonic_data_client"
@@ -175,19 +174,19 @@ const (
     Update op_t = 3
 )
 
-func runTestSet(t *testing.T, ctx context.Context, gClient pb.GNMIClient, pathTarget string,
-    textPbPath string, wantRetCode codes.Code, wantRespVal interface{}, attributeData string, op op_t) {
+func runTestSet(t *testing.T, ctx context.Context, gClient pb.GNMIClient, st *SetTest) {
     // Send request 
     var pbPath pb.Path
-    if err := proto.UnmarshalText(textPbPath, &pbPath); err != nil {
-        t.Fatalf("error in unmarshaling path: %v %v", textPbPath, err)
+    if err := proto.UnmarshalText(st.textPbPath, &pbPath); err != nil {
+        t.Fatalf("error in unmarshaling path: %v %v", st.textPbPath, err)
     }
-    req := &pb.SetRequest{}
-    switch op {
+    prefix := pb.Path{Target: st.pathTarget}
+    req := &pb.SetRequest{Prefix: &prefix}
+    switch st.operation {
         case Replace:
             var v *pb.TypedValue
             v = &pb.TypedValue{
-                Value: &pb.TypedValue_JsonIetfVal{JsonIetfVal: extractJSON(attributeData)}}
+                Value: &pb.TypedValue_JsonIetfVal{JsonIetfVal: extractJSON(st.attributeData)}}
 
             req = &pb.SetRequest{
                         Replace: []*pb.Update{&pb.Update{Path: &pbPath, Val: v}},
@@ -197,17 +196,55 @@ func runTestSet(t *testing.T, ctx context.Context, gClient pb.GNMIClient, pathTa
                         Delete: []*pb.Path{&pbPath},
             }
     }
-    resp, err := gClient.Set(ctx, req)
-    fmt.Println(resp)
+    _, err := gClient.Set(ctx, req)
+    
     gotRetStatus, ok := status.FromError(err)
     if !ok {
         t.Fatal("got a non-grpc error from grpc call")
     }
-    if gotRetStatus.Code() != wantRetCode {
+    if gotRetStatus.Code() != st.wantRetCode {
         t.Log("err: ", err)
-        t.Fatalf("got return code %v, want %v", gotRetStatus.Code(), wantRetCode)
-    } else  {
+        t.Fatalf("got return code %v, want %v", gotRetStatus.Code(), st.wantRetCode)
     }
+
+    
+    greq := &pb.GetRequest{
+        Prefix:   &prefix,
+        Path:     []*pb.Path{&pbPath},
+        Encoding: pb.Encoding_JSON_IETF,
+    }
+
+    gresp, err := gClient.Get(ctx, greq)
+    gotRetStatus, ok = status.FromError(err)
+    if !ok {
+        t.Fatal("got a non-grpc error from grpc call")
+    }
+
+    
+    
+    notifs := gresp.GetNotification()
+    if len(notifs) != 1 {
+        t.Fatalf("got %d notifications, want 1", len(notifs))
+    }
+    updates := notifs[0].GetUpdate()
+    if len(updates) != 1 {
+        t.Fatalf("got %d updates in the notification, want 1", len(updates))
+    }
+    val := updates[0].GetVal()
+
+    docLoader := gojsonschema.NewStringLoader(string(val.GetJsonIetfVal()))
+    result, err := gojsonschema.Validate(st.schema, docLoader)
+    if err != nil {
+        t.Fatalf("Error validating response JSON")
+    }
+    if !result.Valid() {
+        for _, desc := range result.Errors() {
+            fmt.Printf("- %s\n", desc)
+        }
+
+        t.Fatalf("The response JSON is not valid.")
+    }
+        
 }
 
 func runServer(t *testing.T, s *Server) {
@@ -380,8 +417,9 @@ type SetTest struct {
     wantRespVal     interface{}
     attributeData   string
     operation       op_t
-    valTest         bool
+    schema gojsonschema.JSONLoader
 }
+
 func TestGnmiSet(t *testing.T) {
     //t.Log("Start sevrer")
     s := createServer(t)
@@ -391,7 +429,7 @@ func TestGnmiSet(t *testing.T) {
     tlsConfig := &tls.Config{InsecureSkipVerify: true}
     opts := []grpc.DialOption{grpc.WithTransportCredentials(credentials.NewTLS(tlsConfig))}
 
-    targetAddr := "127.0.0.1:8081"
+    targetAddr := "127.0.0.1:8080"
     conn, err := grpc.Dial(targetAddr, opts...)
     if err != nil {
         t.Fatalf("Dialing to %q failed: %v", targetAddr, err)
@@ -404,45 +442,56 @@ func TestGnmiSet(t *testing.T) {
 
 
     var tds []SetTest
-    files, err := filepath.Glob("testdata/input/*.json")
+    files, err := filepath.Glob("testdata/json_tests/*.json")
     if err != nil {
-        t.Fatal("Error opening test file")
+        t.Fatal("Error opening test files")
     }
     for _, f := range files {
-        tds = append(tds, setTestFromFile(f))
+        tst, err := setTestFromFile(f)
+        if err != nil {
+            t.Fatalf("Error loading test file")
+        }
+        tds = append(tds, tst)
     }
 
     for _, td := range tds {
-                if td.valTest == true {
-            // wait for 2 seconds for change to sync
-            time.Sleep(2* time.Second)
-                    t.Run(td.desc, func(t *testing.T) {
-                            runTestGet(t, ctx, gClient, td.pathTarget, td.textPbPath, td.wantRetCode, td.wantRespVal, td.valTest)
-                    })
-                } else {
-                    t.Run(td.desc, func(t *testing.T) {
-                            runTestSet(t, ctx, gClient, td.pathTarget, td.textPbPath, td.wantRetCode, td.wantRespVal,  td.attributeData, td.operation)
-                    })
-                }
+
+        t.Run(td.desc, func(t *testing.T) {
+                runTestSet(t, ctx, gClient, &td)
+        })
+                
     }
     s.s.Stop()
 }
-func setTestFromFile(filename string) SetTest {
+func setTestFromFile(filename string) (SetTest, error) {
     var st SetTest
     var path pb.Path
-    nameparts := strings.Split(filename, ".")
-    parts := strings.Split(nameparts[0], "_")
-    if parts[0] == "replace" {
-        st.operation = Replace
-    } else if parts[0] == "update" {
-        st.operation = Update
-    } else if parts[0] == "delete" {
-        st.operation = Delete
+    schema := gojsonschema.NewReferenceLoader("file://./" + filename)
+    schemaJsonIf,err := schema.LoadJSON()
+    if err != nil {
+        fmt.Println(err)
+        return st,err
     }
-    code, _ := strconv.Atoi(parts[1])
-    st.wantRetCode = codes.Code(code)
+    schemaJson := schemaJsonIf.(map[string]interface{})
 
-    for _,pp := range parts[2:] {
+    switch schemaJson["operation"].(string) {
+    case "replace":
+        st.operation = Replace
+    case "update":
+        st.operation = Update
+    case "delete":
+        st.operation = Delete
+    default:
+        fmt.Println("Invalid Operation")
+    }
+    rt,err := schemaJson["returnCode"].(json.Number).Int64()
+    if err != nil {
+        fmt.Println(err)
+        return st,err
+    }
+    st.wantRetCode = codes.Code(rt)
+
+    for _,pp := range strings.Split(schemaJson["xpath"].(string), "/") {
         p_name := pp
         key_start := strings.Index(pp, "[")
         key_end := strings.Index(pp, "]")
@@ -458,10 +507,12 @@ func setTestFromFile(filename string) SetTest {
     }
 
     st.textPbPath = proto.MarshalTextString(&path)
-    st.pathTarget = "OC_YANG"
-    st.desc = nameparts[0]
-
-    return st
+    st.pathTarget = schemaJson["target"].(string)
+    st.desc = schemaJson["title"].(string)
+    st.attributeData = schemaJson["attributeData"].(string)
+    st.schema = schema
+    
+    return st, nil
 }
 func TestGnmiGet(t *testing.T) {
     //t.Log("Start server")
