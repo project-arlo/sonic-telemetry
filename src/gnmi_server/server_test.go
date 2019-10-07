@@ -131,28 +131,28 @@ func runTestGet(t *testing.T, ctx context.Context, gClient pb.GNMIClient, st *Un
     } else  {
         //retCodeOk = true
     }
-       // Check response value
-    
-        var gotVal interface{}
-        if resp != nil {
-            notifs := resp.GetNotification()
-            if len(notifs) != 1 {
-                t.Fatalf("got %d notifications, want 1", len(notifs))
-            }
-            updates := notifs[0].GetUpdate()
-            if len(updates) != 1 {
-                t.Fatalf("got %d updates in the notification, want 1", len(updates))
-            }
-            val := updates[0].GetVal()
-            if val.GetJsonIetfVal() == nil {
-                gotVal, err = value.ToScalar(val)
-                if err != nil {
-                    t.Errorf("got: %v, want a scalar value", gotVal)
-                }
-            } else {
-                JsonIetfVal = string(val.GetJsonIetfVal())
-            }
+    // Check response value
+
+    var gotVal interface{}
+    if resp != nil {
+        notifs := resp.GetNotification()
+        if len(notifs) != 1 {
+            t.Fatalf("got %d notifications, want 1", len(notifs))
         }
+        updates := notifs[0].GetUpdate()
+        if len(updates) != 1 {
+            t.Fatalf("got %d updates in the notification, want 1", len(updates))
+        }
+        val := updates[0].GetVal()
+        if val.GetJsonIetfVal() == nil {
+            gotVal, err = value.ToScalar(val)
+            if err != nil {
+                t.Errorf("got: %v, want a scalar value", gotVal)
+            }
+        } else {
+            JsonIetfVal = string(val.GetJsonIetfVal())
+        }
+    }
 
     docLoader := gojsonschema.NewStringLoader(JsonIetfVal)
     result, err := gojsonschema.Validate(st.schema, docLoader)
@@ -161,7 +161,7 @@ func runTestGet(t *testing.T, ctx context.Context, gClient pb.GNMIClient, st *Un
     }
     if !result.Valid() {
         for _, desc := range result.Errors() {
-            fmt.Printf("- %s\n", desc)
+            t.Logf("- %s\n", desc)
         }
         t.Fatalf("The response JSON is not valid.")
     }
@@ -180,6 +180,7 @@ const (
     Delete op_t = 1
     Replace op_t = 2
     Update op_t = 3
+    Get op_t = 4
 )
 
 func runTestSet(t *testing.T, ctx context.Context, gClient pb.GNMIClient, st *UnitTest) {
@@ -198,6 +199,14 @@ func runTestSet(t *testing.T, ctx context.Context, gClient pb.GNMIClient, st *Un
 
             req = &pb.SetRequest{
                         Replace: []*pb.Update{&pb.Update{Path: &pbPath, Val: v}},
+            }
+        case Update:
+            var v *pb.TypedValue
+            v = &pb.TypedValue{
+                Value: &pb.TypedValue_JsonIetfVal{JsonIetfVal: extractJSON(st.attributeData)}}
+
+            req = &pb.SetRequest{
+                        Update: []*pb.Update{&pb.Update{Path: &pbPath, Val: v}},
             }
         case Delete:
             req = &pb.SetRequest{
@@ -380,8 +389,96 @@ func prepareDb(t *testing.T) {
     prepareConfigDb(t)
 }
 
+func unitTestFromFile(filename string) (UnitTest, error) {
+    var st UnitTest
+    var path pb.Path
+    schema := gojsonschema.NewReferenceLoader("file://./" + filename)
+    schemaJsonIf,err := schema.LoadJSON()
+    if err != nil {
+        return st,err
+    }
+    schemaJson := schemaJsonIf.(map[string]interface{})
 
-func TestGnmiSet(t *testing.T) {
+    switch schemaJson["operation"].(string) {
+    case "replace":
+        st.operation = Replace
+    case "update":
+        st.operation = Update
+    case "delete":
+        st.operation = Delete
+    case "get":
+        st.operation = Get
+    default:
+        return st, fmt.Errorf("Invalid operation: %v in %v", schemaJson["operation"].(string), filename)
+    }
+    rt,err := schemaJson["returnCode"].(json.Number).Int64()
+    if err != nil {
+        return st,err
+    }
+    st.wantRetCode = codes.Code(rt)
+    // if val, ok := schemaJson["validateReturnCode"]; ok {
+    //     rt,err = val.(json.Number).Int64()
+    //     if err != nil {
+    //         fmt.Println(err)
+    //         return st,err
+    //     }
+    //     st.validateReturnCode = codes.Code(rt)
+    // } else {
+    //     st.validateReturnCode = st.wantRetCode
+    // }
+
+    for _,pp := range strings.Split(schemaJson["xpath"].(string), "/") {
+        p_name := pp
+        key_start := strings.Index(pp, "[")
+        key_end := strings.Index(pp, "]")
+        if key_start > -1 && key_end > -1 {
+            key_parts := strings.Split(pp[key_start+1:key_end], "=")
+            key_name := key_parts[0]
+            key_val := key_parts[1]
+            p_name = pp[:key_start]
+            path.Elem = append(path.Elem, &pb.PathElem{Name: p_name, Key:  map[string]string{key_name: key_val}})
+        } else {
+            path.Elem = append(path.Elem, &pb.PathElem{Name: p_name})
+        }
+    }
+    st.textPbPath = proto.MarshalTextString(&path)
+
+    // if val, ok := schemaJson["validateXpath"]; ok {
+    //     for _,pp := range strings.Split(val.(string), "/") {
+    //         p_name := pp
+    //         key_start := strings.Index(pp, "[")
+    //         key_end := strings.Index(pp, "]")
+    //         if key_start > -1 && key_end > -1 {
+    //             key_parts := strings.Split(pp[key_start+1:key_end], "=")
+    //             key_name := key_parts[0]
+    //             key_val := key_parts[1]
+    //             p_name = pp[:key_start]
+    //             vpath.Elem = append(vpath.Elem, &pb.PathElem{Name: p_name, Key:  map[string]string{key_name: key_val}})
+    //         } else {
+    //             vpath.Elem = append(vpath.Elem, &pb.PathElem{Name: p_name})
+    //         }
+    //     }
+    //     st.validateXpath = proto.MarshalTextString(&vpath)
+    // } else {
+    //     st.validateXpath = st.textPbPath
+    // }
+
+    
+    if val, ok := schemaJson["target"]; ok {
+        st.pathTarget = val.(string)
+    }
+    if val, ok := schemaJson["title"]; ok {
+        st.desc = val.(string)
+    }
+    if val, ok := schemaJson["attributeData"]; ok {
+        st.attributeData = val.(string)
+    }
+    st.schema = schema
+    
+    return st, nil
+}
+
+func TestGnmiGetSet(t *testing.T) {
     //t.Log("Start sevrer")
     s := createServer(t)
     go runServer(t, s)
@@ -410,117 +507,64 @@ func TestGnmiSet(t *testing.T) {
     for _, f := range files {
         tst, err := unitTestFromFile(f)
         if err != nil {
-            t.Fatalf("Error loading test file")
+            t.Fatal(err)
         }
         tds = append(tds, tst)
     }
 
     for _, td := range tds {
-
         t.Run(td.desc, func(t *testing.T) {
+            if td.operation == Update || td.operation == Delete || td.operation == Replace {
                 runTestSet(t, ctx, gClient, &td)
-                //Run Get on same path to verify set worked.
-                //If test does not care about veirfying result,
-                // it can leave the schema blank.
-
-                time.Sleep(2* time.Second) // Give time for change to register.
+            } else if td.operation == Get {
                 runTestGet(t, ctx, gClient, &td)
+            }
         })
-                
+        time.Sleep(2* time.Second) // Give time for change to register.
     }
     s.s.Stop()
 }
-func unitTestFromFile(filename string) (UnitTest, error) {
-    var st UnitTest
-    var path pb.Path
-    schema := gojsonschema.NewReferenceLoader("file://./" + filename)
-    schemaJsonIf,err := schema.LoadJSON()
-    if err != nil {
-        fmt.Println(err)
-        return st,err
-    }
-    schemaJson := schemaJsonIf.(map[string]interface{})
 
-    switch schemaJson["operation"].(string) {
-    case "replace":
-        st.operation = Replace
-    case "update":
-        st.operation = Update
-    case "delete":
-        st.operation = Delete
-    default:
-        fmt.Println("Invalid Operation")
-    }
-    rt,err := schemaJson["returnCode"].(json.Number).Int64()
-    if err != nil {
-        fmt.Println(err)
-        return st,err
-    }
-    st.wantRetCode = codes.Code(rt)
+// func TestGnmiGet(t *testing.T) {
+//     //t.Log("Start server")
+//     s := createServer(t)
+//     go runServer(t, s)
 
-    for _,pp := range strings.Split(schemaJson["xpath"].(string), "/") {
-        p_name := pp
-        key_start := strings.Index(pp, "[")
-        key_end := strings.Index(pp, "]")
-        if key_start > -1 && key_end > -1 {
-            key_parts := strings.Split(pp[key_start+1:key_end], "=")
-            key_name := key_parts[0]
-            key_val := key_parts[1]
-            p_name = pp[:key_start]
-            path.Elem = append(path.Elem, &pb.PathElem{Name: p_name, Key:  map[string]string{key_name: key_val}})
-        } else {
-            path.Elem = append(path.Elem, &pb.PathElem{Name: p_name})
-        }
-    }
+//     //t.Log("Start gNMI client")
+//     tlsConfig := &tls.Config{InsecureSkipVerify: true}
+//     opts := []grpc.DialOption{grpc.WithTransportCredentials(credentials.NewTLS(tlsConfig))}
 
-    st.textPbPath = proto.MarshalTextString(&path)
-    st.pathTarget = schemaJson["target"].(string)
-    st.desc = schemaJson["title"].(string)
-    st.attributeData = schemaJson["attributeData"].(string)
-    st.schema = schema
-    
-    return st, nil
-}
-func TestGnmiGet(t *testing.T) {
-    //t.Log("Start server")
-    s := createServer(t)
-    go runServer(t, s)
+//     targetAddr := "127.0.0.1:8081"
+//     conn, err := grpc.Dial(targetAddr, opts...)
+//     if err != nil {
+//         t.Fatalf("Dialing to %q failed: %v", targetAddr, err)
+//     }
+//     defer conn.Close()
 
-    //t.Log("Start gNMI client")
-    tlsConfig := &tls.Config{InsecureSkipVerify: true}
-    opts := []grpc.DialOption{grpc.WithTransportCredentials(credentials.NewTLS(tlsConfig))}
+//     gClient := pb.NewGNMIClient(conn)
+//     ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+//     defer cancel()
 
-    targetAddr := "127.0.0.1:8081"
-    conn, err := grpc.Dial(targetAddr, opts...)
-    if err != nil {
-        t.Fatalf("Dialing to %q failed: %v", targetAddr, err)
-    }
-    defer conn.Close()
+//     var tds []UnitTest
+//     files, err := filepath.Glob("testdata/json_tests/*.json")
+//     if err != nil {
+//         t.Fatal("Error opening test files")
+//     }
+//     for _, f := range files {
+//         tst, err := unitTestFromFile(f)
+//         if err != nil {
+//             t.Fatalf("Error loading test file")
+//         }
+//         tds = append(tds, tst)
+//     }    
 
-    gClient := pb.NewGNMIClient(conn)
-    ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-    defer cancel()
-
-    var tds []UnitTest
-    files, err := filepath.Glob("testdata/json_tests/*.json")
-    if err != nil {
-        t.Fatal("Error opening test files")
-    }
-    for _, f := range files {
-        tst, err := unitTestFromFile(f)
-        if err != nil {
-            t.Fatalf("Error loading test file")
-        }
-        tds = append(tds, tst)
-    }    
-
-    for _, td := range tds {
-        t.Run(td.desc, func(t *testing.T) {
-            runTestGet(t, ctx, gClient, &td)
-        })
-    }
-    s.s.Stop()
-}
+//     for _, td := range tds {
+//         t.Run(td.desc, func(t *testing.T) {
+//             runTestGet(t, ctx, gClient, &td)
+//         })
+//     }
+//     s.s.Stop()
+// }
 
 type tablePathValue struct {
     dbName    string
