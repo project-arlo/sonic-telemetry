@@ -6,7 +6,7 @@ flexible way that allows the same test cases to work on multiple
 platforms, JSON Schema is proposed. The features of JSON Schema that are
 useful for this purpose are:
 
--   Structure Validation: Validate the response is in the write format
+-   Structure Validation: Validate the response is in the right format
     (objects, arrays, field types etc)
 -   Data Validation: Validate the returned data is what we expect,
     using:
