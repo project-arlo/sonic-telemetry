@@ -31,89 +31,48 @@ Example of GET Test
 -------------------
 ```
 {
+  "operation": "get",
+  "returnCode": 0,
+  "xpath": "openconfig-interfaces:interfaces/interface[name=Ethernet0]",
+  "target": "OC_YANG",
 
-"operation": "get",
-
-"returnCode": 0,
-
-"xpath": "openconfig-interfaces:interfaces/interface\[name=Ethernet0\]",
-
-"target": "OC\_YANG",
-
-"\$schema": "http://json-schema.org/draft-07/schema\#",
-
-"type": "object",
-
-"title": "Check Interface mtu",
-
-"required": \[
-
-"openconfig-interfaces:interface"
-
-\],
-
-"properties": {
-
-"openconfig-interfaces:interface": {
-
-"type": "array",
-
-"title": "The Openconfig-interfaces:interface Schema",
-
-"items": {
-
-"type": "object",
-
-"title": "The Items Schema",
-
-"required": \[
-
-"config"
-
-\],
-
-"properties": {
-
-"config": {
-
-"type": "object",
-
-"title": "The Config Schema",
-
-"required": \[
-
-"mtu"
-
-\],
-
-"properties": {
-
-"mtu": {
-
-"type": "integer",
-
-"title": "The Mtu Schema",
-
-"enum": \[
-
-9003
-
-\]
-
-}
-
-}
-
-}
-
-}
-
-}
-
-}
-
-}
-
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "title": "Check Interface mtu",
+  "required": [
+    "openconfig-interfaces:interface"
+  ],
+  "properties": {
+    "openconfig-interfaces:interface": {
+      "type": "array",
+      "title": "The Openconfig-interfaces:interface Schema",
+      "items": {
+        "type": "object",
+        "title": "The Items Schema",
+        "required": [
+          "config"
+        ],
+        "properties": {
+          "config": {
+            "type": "object",
+            "title": "The Config Schema",
+            "required": [
+              "mtu"
+            ],
+            "properties": {
+              "mtu": {
+                "type": "integer",
+                "title": "The Mtu Schema",
+                "enum": [
+                  9003
+                ]
+              }
+            }
+          }
+        }
+      }
+    }
+  }
 }
 ```
 ### Test Explanation
@@ -132,18 +91,12 @@ Example of SET Test
 -------------------
 ```
 {
-
-"operation": "replace",
-
-"returnCode": 0,
-
-"xpath": "openconfig-interfaces:interfaces/interface\[name=Ethernet0\]",
-
-"target": "OC\_YANG",
-
-"title": "Set Interface mtu",
-
-"attributeData": "{\\"config\\": {\\"mtu\\":9003}}"
+  "operation": "replace",
+  "returnCode": 0,
+  "xpath": "openconfig-interfaces:interfaces/interface[name=Ethernet0]",
+  "target": "OC_YANG",
+  "title": "Set Interface mtu",
+  "attributeData": "{\"config\": {\"mtu\":9003}}"
 
 }
 ```
