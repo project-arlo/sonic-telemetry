@@ -1,9 +1,0 @@
-{
-  "operation": "replace",
-  "returnCode": 0,
-  "xpath": "openconfig-interfaces:interfaces/interface[name=Ethernet0]",
-  "target": "OC_YANG",
-  "title": "Set Interface mtu",
-  "attributeData": "{\"config\": {\"mtu\":9003}}"
-
-}

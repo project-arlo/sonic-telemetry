@@ -36,8 +36,7 @@ import (
 
 var clientTypes = []string{gclient.Type}
 
-type UnitTest struct {
-    desc            string
+type Operation struct {
     pathTarget      string
     textPbPath      string
     wantRetCode     codes.Code
@@ -45,6 +44,10 @@ type UnitTest struct {
     attributeData   string
     operation       op_t
     schema gojsonschema.JSONLoader
+}
+type UnitTest struct {
+    desc            string
+    operations      []Operation
 }
 
 func loadConfig(t *testing.T, key string, in []byte) map[string]interface{} {
@@ -98,7 +101,7 @@ func createServer(t *testing.T) *Server {
 
 // runTestGet requests a path from the server by Get grpc call, and compares if
 // the return code is OK.
-func runTestGet(t *testing.T, ctx context.Context, gClient pb.GNMIClient, st *UnitTest) {
+func runTestGet(t *testing.T, ctx context.Context, gClient pb.GNMIClient, st *Operation) {
         //var retCodeOk bool
     // Send request
 
@@ -183,7 +186,7 @@ const (
     Get op_t = 4
 )
 
-func runTestSet(t *testing.T, ctx context.Context, gClient pb.GNMIClient, st *UnitTest) {
+func runTestSet(t *testing.T, ctx context.Context, gClient pb.GNMIClient, st *Operation) {
     // Send request 
     var pbPath pb.Path
     if err := proto.UnmarshalText(st.textPbPath, &pbPath); err != nil {
@@ -397,83 +400,66 @@ func unitTestFromFile(filename string) (UnitTest, error) {
     if err != nil {
         return st,err
     }
+
     schemaJson := schemaJsonIf.(map[string]interface{})
 
-    switch schemaJson["operation"].(string) {
-    case "replace":
-        st.operation = Replace
-    case "update":
-        st.operation = Update
-    case "delete":
-        st.operation = Delete
-    case "get":
-        st.operation = Get
-    default:
-        return st, fmt.Errorf("Invalid operation: %v in %v", schemaJson["operation"].(string), filename)
-    }
-    rt,err := schemaJson["returnCode"].(json.Number).Int64()
-    if err != nil {
-        return st,err
-    }
-    st.wantRetCode = codes.Code(rt)
-    // if val, ok := schemaJson["validateReturnCode"]; ok {
-    //     rt,err = val.(json.Number).Int64()
-    //     if err != nil {
-    //         fmt.Println(err)
-    //         return st,err
-    //     }
-    //     st.validateReturnCode = codes.Code(rt)
-    // } else {
-    //     st.validateReturnCode = st.wantRetCode
-    // }
-
-    for _,pp := range strings.Split(schemaJson["xpath"].(string), "/") {
-        p_name := pp
-        key_start := strings.Index(pp, "[")
-        key_end := strings.Index(pp, "]")
-        if key_start > -1 && key_end > -1 {
-            key_parts := strings.Split(pp[key_start+1:key_end], "=")
-            key_name := key_parts[0]
-            key_val := key_parts[1]
-            p_name = pp[:key_start]
-            path.Elem = append(path.Elem, &pb.PathElem{Name: p_name, Key:  map[string]string{key_name: key_val}})
-        } else {
-            path.Elem = append(path.Elem, &pb.PathElem{Name: p_name})
-        }
-    }
-    st.textPbPath = proto.MarshalTextString(&path)
-
-    // if val, ok := schemaJson["validateXpath"]; ok {
-    //     for _,pp := range strings.Split(val.(string), "/") {
-    //         p_name := pp
-    //         key_start := strings.Index(pp, "[")
-    //         key_end := strings.Index(pp, "]")
-    //         if key_start > -1 && key_end > -1 {
-    //             key_parts := strings.Split(pp[key_start+1:key_end], "=")
-    //             key_name := key_parts[0]
-    //             key_val := key_parts[1]
-    //             p_name = pp[:key_start]
-    //             vpath.Elem = append(vpath.Elem, &pb.PathElem{Name: p_name, Key:  map[string]string{key_name: key_val}})
-    //         } else {
-    //             vpath.Elem = append(vpath.Elem, &pb.PathElem{Name: p_name})
-    //         }
-    //     }
-    //     st.validateXpath = proto.MarshalTextString(&vpath)
-    // } else {
-    //     st.validateXpath = st.textPbPath
-    // }
-
-    
-    if val, ok := schemaJson["target"]; ok {
-        st.pathTarget = val.(string)
-    }
     if val, ok := schemaJson["title"]; ok {
         st.desc = val.(string)
     }
-    if val, ok := schemaJson["attributeData"]; ok {
-        st.attributeData = val.(string)
+
+    if val, ok := schemaJson["operations"]; ok {
+        for _,opp := range val.([]interface{}) {
+            var new_op Operation
+            op := opp.(map[string]interface{})
+            switch op["operation"].(string) {
+            case "replace":
+                new_op.operation = Replace
+            case "update":
+                new_op.operation = Update
+            case "delete":
+                new_op.operation = Delete
+            case "get":
+                new_op.operation = Get
+            default:
+                return st, fmt.Errorf("Invalid operation: %v in %v", op["operation"].(string), filename)
+            }
+            rt,err := op["returnCode"].(json.Number).Int64()
+            if err != nil {
+                return st,err
+            }
+            new_op.wantRetCode = codes.Code(rt)
+
+            for _,pp := range strings.Split(op["xpath"].(string), "/") {
+                p_name := pp
+                key_start := strings.Index(pp, "[")
+                key_end := strings.Index(pp, "]")
+                if key_start > -1 && key_end > -1 {
+                    key_parts := strings.Split(pp[key_start+1:key_end], "=")
+                    key_name := key_parts[0]
+                    key_val := key_parts[1]
+                    p_name = pp[:key_start]
+                    path.Elem = append(path.Elem, &pb.PathElem{Name: p_name, Key:  map[string]string{key_name: key_val}})
+                } else {
+                    path.Elem = append(path.Elem, &pb.PathElem{Name: p_name})
+                }
+            }
+            new_op.textPbPath = proto.MarshalTextString(&path)
+            fmt.Println(new_op.textPbPath)
+            
+            if val, ok := op["target"]; ok {
+                new_op.pathTarget = val.(string)
+            }
+
+            if val, ok := op["attributeData"]; ok {
+                new_op.attributeData = val.(string)
+            }
+
+            new_op.schema = gojsonschema.NewGoLoader(op)
+            st.operations = append(st.operations, new_op)
+        }
     }
-    st.schema = schema
+
+    
     
     return st, nil
 }
@@ -514,10 +500,13 @@ func TestGnmiGetSet(t *testing.T) {
 
     for _, td := range tds {
         t.Run(td.desc, func(t *testing.T) {
-            if td.operation == Update || td.operation == Delete || td.operation == Replace {
-                runTestSet(t, ctx, gClient, &td)
-            } else if td.operation == Get {
-                runTestGet(t, ctx, gClient, &td)
+            for _,op := range td.operations {
+                // t.Logf("operation: %v path: %v", op.operation, op.textPbPath)
+                if op.operation == Update || op.operation == Delete || op.operation == Replace {
+                    runTestSet(t, ctx, gClient, &op)
+                } else if op.operation == Get {
+                    runTestGet(t, ctx, gClient, &op)
+                }
             }
         })
         time.Sleep(2* time.Second) // Give time for change to register.
