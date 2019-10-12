@@ -302,6 +302,13 @@
           }
         }
       }
+    },
+    {
+      "operation": "delete",
+      "returnCode": 0,
+      "xpath": "openconfig-interfaces:interfaces/interface[name=Ethernet8]/subinterfaces/subinterface[index=0]/ipv4/addresses/address[ip=9.9.9.9]",
+      "target": "OC_YANG",
+      "title": "Delete Interface ipv4 address"
     }
   ]
 }
