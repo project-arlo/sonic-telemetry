@@ -50,6 +50,7 @@ $(BUILD_DIR)/.deps:
 	GOPATH=$(GO_DEP_PATH) $(GO) get -u github.com/google/gnxi/utils
 	GOPATH=$(GO_DEP_PATH) $(GO) get -u github.com/jipanyang/gnxi/utils/xpath
 	GOPATH=$(GO_DEP_PATH) $(GO) get -u github.com/jipanyang/gnmi/client/gnmi
+	GOPATH=$(GO_DEP_PATH) $(GO) get -u github.com/xeipuuv/gojsonschema
 
 telemetry:$(BUILD_DIR)/telemetry $(BUILD_DIR)/dialout_client_cli $(BUILD_DIR)/gnmi_get $(BUILD_DIR)/gnmi_set $(BUILD_DIR)/gnmi_cli
 
@@ -82,6 +83,7 @@ $(TELEMETRY_TEST_BIN): $(TEST_FILES) $(SRC_FILES)
 	cp test/01_create_MyACL1_MyACL2.json $(TELEMETRY_TEST_DIR)
 	cp -r $(GO_MGMT_PATH)/src/cvl/schema $(TELEMETRY_TEST_DIR)
 
+
 install:
 	$(INSTALL) -D $(BUILD_DIR)/telemetry $(DESTDIR)/usr/sbin/telemetry
 	$(INSTALL) -D $(BUILD_DIR)/dialout_client_cli $(DESTDIR)/usr/sbin/dialout_client_cli
@@ -90,8 +92,9 @@ install:
 	$(INSTALL) -D $(BUILD_DIR)/gnmi_cli $(DESTDIR)/usr/sbin/gnmi_cli
 
 	mkdir -p $(DESTDIR)/usr/bin/
-	cp -r $(GO_MGMT_PATH)/src/cvl/schema $(DESTDIR)/usr/sbin
-	cp -r $(GO_MGMT_PATH)/src/cvl/schema $(DESTDIR)/usr/bin
+	cp -r $(GO_MGMT_PATH)/debian/sonic-mgmt-framework/usr/sbin/schema $(DESTDIR)/usr/sbin
+	cp -r $(GO_MGMT_PATH)/debian/sonic-mgmt-framework/usr/sbin/schema $(DESTDIR)/usr/bin
+	cp -r $(GO_MGMT_PATH)/debian/sonic-mgmt-framework/usr/models $(DESTDIR)/usr/
 
 deinstall:
 	rm $(DESTDIR)/usr/sbin/telemetry

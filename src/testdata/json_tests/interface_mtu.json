@@ -1,0 +1,58 @@
+{
+  "title": "Set Interface mtu",
+  "operations":[
+    {
+      "operation": "replace",
+      "returnCode": 0,
+      "xpath": "openconfig-interfaces:interfaces/interface[name=Ethernet0]",
+      "target": "OC_YANG",
+      "attributeData": "{\"config\": {\"mtu\":9003}}"
+
+    },
+    {
+      "operation": "get",
+      "returnCode": 0,
+      "xpath": "openconfig-interfaces:interfaces/interface[name=Ethernet0]",
+      "target": "OC_YANG",
+      "type": "object",
+      "required": [
+        "openconfig-interfaces:interface"
+      ],
+      "properties": {
+        "openconfig-interfaces:interface": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "config"
+            ],
+            "properties": {
+              "config": {
+                "type": "object",
+                "required": [
+                  "mtu"
+                ],
+                "properties": {
+                  "mtu": {
+                    "type": "integer",
+                    "enum": [
+                      9003
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "operation": "replace",
+      "returnCode": 0,
+      "xpath": "openconfig-interfaces:interfaces/interface[name=Ethernet0]",
+      "target": "OC_YANG",
+      "attributeData": "{\"config\": {\"mtu\":9100}}"
+
+    }
+  ]
+}
