@@ -53,7 +53,7 @@ $(BUILD_DIR)/.deps:
 	GOPATH=$(GO_DEP_PATH) $(GO) get -u github.com/xeipuuv/gojsonschema
 	GOPATH=$(GO_DEP_PATH) $(GO) get -u github.com/openconfig/gnoi/system
 
-telemetry:$(BUILD_DIR)/telemetry $(BUILD_DIR)/dialout_client_cli $(BUILD_DIR)/gnmi_get $(BUILD_DIR)/gnmi_set $(BUILD_DIR)/gnmi_cli
+telemetry:$(BUILD_DIR)/telemetry $(BUILD_DIR)/dialout_client_cli $(BUILD_DIR)/gnmi_get $(BUILD_DIR)/gnmi_set $(BUILD_DIR)/gnmi_cli $(BUILD_DIR)/gnoi_client
 
 $(BUILD_DIR)/telemetry:src/telemetry/telemetry.go
 	@echo "Building $@"
@@ -66,6 +66,8 @@ $(BUILD_DIR)/gnmi_set:src/gnmi_clients/gnmi_set.go
 	GOPATH=$(GOPATH) $(GO) build $(GOFLAGS) -o $@ $^
 $(BUILD_DIR)/gnmi_cli:src/gnmi_clients/src/github.com/openconfig/gnmi
 	GOPATH=$(PWD)/src/gnmi_clients:$(GOPATH) $(GO) build $(GOFLAGS) -o $@ github.com/openconfig/gnmi/cmd/gnmi_cli
+$(BUILD_DIR)/gnoi_client:src/gnmi_clients/gnoi_client.go
+	GOPATH=$(PWD)/src/gnmi_clients:$(GOPATH) $(GO) build $(GOFLAGS) -o $@ $^
 
 clean:
 	rm -rf $(BUILD_DIR)/telemetry
@@ -91,6 +93,7 @@ install:
 	$(INSTALL) -D $(BUILD_DIR)/gnmi_get $(DESTDIR)/usr/sbin/gnmi_get
 	$(INSTALL) -D $(BUILD_DIR)/gnmi_set $(DESTDIR)/usr/sbin/gnmi_set
 	$(INSTALL) -D $(BUILD_DIR)/gnmi_cli $(DESTDIR)/usr/sbin/gnmi_cli
+	$(INSTALL) -D $(BUILD_DIR)/gnoi_client $(DESTDIR)/usr/sbin/gnoi_client
 
 	mkdir -p $(DESTDIR)/usr/bin/
 	cp -r $(GO_MGMT_PATH)/debian/sonic-mgmt-framework/usr/sbin/schema $(DESTDIR)/usr/sbin
@@ -102,3 +105,4 @@ deinstall:
 	rm $(DESTDIR)/usr/sbin/dialout_client_cli
 	rm $(DESTDIR)/usr/sbin/gnmi_get
 	rm $(DESTDIR)/usr/sbin/gnmi_set
+	rm $(DESTDIR)/usr/sbin/gnoi_client

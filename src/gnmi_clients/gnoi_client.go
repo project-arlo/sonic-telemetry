@@ -11,9 +11,16 @@ import (
 	"os"
 	"os/signal"
 	"fmt"
+	"flag"
+)
+
+var (
+	module = flag.String("module", "System", "gNOI Module")
+	rpc = flag.String("rpc", "Time", "rpc call in specified module to call")
 )
 
 func main() {
+	flag.Parse()
 	serverAddr := "localhost:8080"
 	tls_conf := tls.Config{InsecureSkipVerify: true}
     opts := []grpc.DialOption{
@@ -35,8 +42,19 @@ func main() {
 		panic(err.Error())
 	}
 	sc := gnoi_system_pb.NewSystemClient(conn)
-	tr := new(gnoi_system_pb.TimeRequest)
-	resp,err := sc.Time(ctx, tr)
+
+	switch *module {
+	case "System":
+		switch *rpc {
+		case "Time":
+			systemTime(sc, ctx)
+		}
+	}
+}
+
+func systemTime(sc gnoi_system_pb.SystemClient, ctx context.Context) {
+	fmt.Println("System Time")
+	resp,err := sc.Time(ctx, new(gnoi_system_pb.TimeRequest))
 	if err != nil {
 		panic(err.Error())
 	}
