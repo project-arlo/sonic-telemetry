@@ -91,9 +91,7 @@ func (srv *Server) Address() string {
 func (srv *Server) Port() int64 {
 	return srv.config.Port
 }
-// func (srv *Server) Time(stream gnmipb.GNMI_SubscribeServer) error {
 
-// }
 // Subscribe implements the gNMI Subscribe RPC.
 func (srv *Server) Subscribe(stream gnmipb.GNMI_SubscribeServer) error {
 	ctx := stream.Context()
