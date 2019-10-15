@@ -51,6 +51,7 @@ $(BUILD_DIR)/.deps:
 	GOPATH=$(GO_DEP_PATH) $(GO) get -u github.com/jipanyang/gnxi/utils/xpath
 	GOPATH=$(GO_DEP_PATH) $(GO) get -u github.com/jipanyang/gnmi/client/gnmi
 	GOPATH=$(GO_DEP_PATH) $(GO) get -u github.com/xeipuuv/gojsonschema
+	GOPATH=$(GO_DEP_PATH) $(GO) get -u github.com/openconfig/gnoi/system
 
 telemetry:$(BUILD_DIR)/telemetry $(BUILD_DIR)/dialout_client_cli $(BUILD_DIR)/gnmi_get $(BUILD_DIR)/gnmi_set $(BUILD_DIR)/gnmi_cli
 

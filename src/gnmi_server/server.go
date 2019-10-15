@@ -14,9 +14,10 @@ import (
 	"google.golang.org/grpc/peer"
 	"google.golang.org/grpc/reflection"
 	"google.golang.org/grpc/status"
-
+	gnoi_system_pb "github.com/openconfig/gnoi/system"
 	sdc "sonic_data_client"
 	gnmipb "github.com/openconfig/gnmi/proto/gnmi"
+	
 )
 
 var (
@@ -48,6 +49,7 @@ func NewServer(config *Config, opts []grpc.ServerOption) (*Server, error) {
 	}
 
 	s := grpc.NewServer(opts...)
+
 	reflection.Register(s)
 
 	srv := &Server{
@@ -64,7 +66,9 @@ func NewServer(config *Config, opts []grpc.ServerOption) (*Server, error) {
 		return nil, fmt.Errorf("failed to open listener port %d: %v", srv.config.Port, err)
 	}
 	gnmipb.RegisterGNMIServer(srv.s, srv)
+	gnoi_system_pb.RegisterSystemServer(srv.s, srv)
 	log.V(1).Infof("Created Server on %s", srv.Address())
+
 	return srv, nil
 }
 
@@ -87,7 +91,9 @@ func (srv *Server) Address() string {
 func (srv *Server) Port() int64 {
 	return srv.config.Port
 }
+// func (srv *Server) Time(stream gnmipb.GNMI_SubscribeServer) error {
 
+// }
 // Subscribe implements the gNMI Subscribe RPC.
 func (srv *Server) Subscribe(stream gnmipb.GNMI_SubscribeServer) error {
 	ctx := stream.Context()
