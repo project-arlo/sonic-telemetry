@@ -84,7 +84,7 @@ $(TELEMETRY_TEST_BIN): $(TEST_FILES) $(SRC_FILES)
 	GOPATH=$(GOPATH) $(GO) test -c -cover gnmi_server -o $@
 	cp -r src/testdata $(TELEMETRY_TEST_DIR)
 	cp test/01_create_MyACL1_MyACL2.json $(TELEMETRY_TEST_DIR)
-	cp -r $(GO_MGMT_PATH)/src/cvl/schema $(TELEMETRY_TEST_DIR)
+	cp -r $(GO_MGMT_PATH)/debian/sonic-mgmt-framework/usr/sbin/schema $(TELEMETRY_TEST_DIR)
 
 
 install:
