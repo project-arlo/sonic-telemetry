@@ -17,11 +17,11 @@ import (
 var (
 	module = flag.String("module", "System", "gNOI Module")
 	rpc = flag.String("rpc", "Time", "rpc call in specified module to call")
+	target = flag.String("target", "localhost:8080", "Address:port of gNOI Server")
 )
 
 func main() {
 	flag.Parse()
-	serverAddr := "localhost:8080"
 	tls_conf := tls.Config{InsecureSkipVerify: true}
     opts := []grpc.DialOption{
             grpc.WithTimeout(time.Second * 3),
@@ -37,7 +37,7 @@ func main() {
             <-c
             cancel()
     }()
-	conn, err := grpc.Dial(serverAddr, opts...)
+	conn, err := grpc.Dial(*target, opts...)
 	if err != nil {
 		panic(err.Error())
 	}
