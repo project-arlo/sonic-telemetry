@@ -465,14 +465,14 @@ func unitTestFromFile(filename string) (UnitTest, error) {
 
 func TestGnmiGetSet(t *testing.T) {
     //t.Log("Start sevrer")
-    // s := createServer(t)
-    // go runServer(t, s)
+    s := createServer(t)
+    go runServer(t, s)
 
     //t.Log("Start gNMI client")
     tlsConfig := &tls.Config{InsecureSkipVerify: true}
     opts := []grpc.DialOption{grpc.WithTransportCredentials(credentials.NewTLS(tlsConfig))}
 
-    targetAddr := "127.0.0.1:8080"
+    targetAddr := "127.0.0.1:8081"
     conn, err := grpc.Dial(targetAddr, opts...)
     if err != nil {
         t.Fatalf("Dialing to %q failed: %v", targetAddr, err)
@@ -510,7 +510,7 @@ func TestGnmiGetSet(t *testing.T) {
         })
         time.Sleep(2* time.Second) // Give time for change to register.
     }
-    // s.s.Stop()
+    s.s.Stop()
 }
 
 // func TestGnmiGet(t *testing.T) {
