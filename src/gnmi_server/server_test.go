@@ -394,7 +394,6 @@ func prepareDb(t *testing.T) {
 
 func unitTestFromFile(filename string) (UnitTest, error) {
     var st UnitTest
-    var path pb.Path
     schema := gojsonschema.NewReferenceLoader("file://./" + filename)
     schemaJsonIf,err := schema.LoadJSON()
     if err != nil {
@@ -409,6 +408,7 @@ func unitTestFromFile(filename string) (UnitTest, error) {
 
     if val, ok := schemaJson["operations"]; ok {
         for _,opp := range val.([]interface{}) {
+            var path pb.Path
             var new_op Operation
             op := opp.(map[string]interface{})
             switch op["operation"].(string) {
@@ -444,7 +444,6 @@ func unitTestFromFile(filename string) (UnitTest, error) {
                 }
             }
             new_op.textPbPath = proto.MarshalTextString(&path)
-            fmt.Println(new_op.textPbPath)
             
             if val, ok := op["target"]; ok {
                 new_op.pathTarget = val.(string)
