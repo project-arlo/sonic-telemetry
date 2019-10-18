@@ -394,7 +394,6 @@ func prepareDb(t *testing.T) {
 
 func unitTestFromFile(filename string) (UnitTest, error) {
     var st UnitTest
-    var path pb.Path
     schema := gojsonschema.NewReferenceLoader("file://./" + filename)
     schemaJsonIf,err := schema.LoadJSON()
     if err != nil {
@@ -409,6 +408,7 @@ func unitTestFromFile(filename string) (UnitTest, error) {
 
     if val, ok := schemaJson["operations"]; ok {
         for _,opp := range val.([]interface{}) {
+            var path pb.Path
             var new_op Operation
             op := opp.(map[string]interface{})
             switch op["operation"].(string) {
@@ -444,7 +444,6 @@ func unitTestFromFile(filename string) (UnitTest, error) {
                 }
             }
             new_op.textPbPath = proto.MarshalTextString(&path)
-            fmt.Println(new_op.textPbPath)
             
             if val, ok := op["target"]; ok {
                 new_op.pathTarget = val.(string)
@@ -466,14 +465,14 @@ func unitTestFromFile(filename string) (UnitTest, error) {
 
 func TestGnmiGetSet(t *testing.T) {
     //t.Log("Start sevrer")
-    s := createServer(t)
-    go runServer(t, s)
+    // s := createServer(t)
+    // go runServer(t, s)
 
     //t.Log("Start gNMI client")
     tlsConfig := &tls.Config{InsecureSkipVerify: true}
     opts := []grpc.DialOption{grpc.WithTransportCredentials(credentials.NewTLS(tlsConfig))}
 
-    targetAddr := "127.0.0.1:8081"
+    targetAddr := "127.0.0.1:8080"
     conn, err := grpc.Dial(targetAddr, opts...)
     if err != nil {
         t.Fatalf("Dialing to %q failed: %v", targetAddr, err)
@@ -511,7 +510,7 @@ func TestGnmiGetSet(t *testing.T) {
         })
         time.Sleep(2* time.Second) // Give time for change to register.
     }
-    s.s.Stop()
+    // s.s.Stop()
 }
 
 // func TestGnmiGet(t *testing.T) {
