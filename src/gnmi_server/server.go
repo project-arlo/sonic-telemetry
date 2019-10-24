@@ -41,6 +41,7 @@ type Config struct {
 	// Port for the Server to listen on. If 0 or unset the Server will pick a port
 	// for this Server.
 	Port int64
+	UserAuth bool
 }
 
 // New returns an initialized Server.
@@ -97,7 +98,7 @@ func (srv *Server) Port() int64 {
 func (srv *Server) Subscribe(stream gnmipb.GNMI_SubscribeServer) error {
 
 	ctx := stream.Context()
-	if !PAMAuthenAndAuthor(ctx, false) {
+	if srv.config.UserAuth && !PAMAuthenAndAuthor(ctx, false) {
 		return status.Errorf(codes.PermissionDenied, "Invalid Username/Password")
 	}
 	pr, ok := peer.FromContext(ctx)
@@ -155,7 +156,7 @@ func (s *Server) checkEncodingAndModel(encoding gnmipb.Encoding, models []*gnmip
 
 // Get implements the Get RPC in gNMI spec.
 func (s *Server) Get(ctx context.Context, req *gnmipb.GetRequest) (*gnmipb.GetResponse, error) {
-	if !PAMAuthenAndAuthor(ctx, false) {
+	if s.config.UserAuth && !PAMAuthenAndAuthor(ctx, false) {
 		return nil, status.Errorf(codes.PermissionDenied, "Invalid Username/Password")
 	}
 	var err error
@@ -212,7 +213,7 @@ func (s *Server) Get(ctx context.Context, req *gnmipb.GetRequest) (*gnmipb.GetRe
 
 // Set method is not implemented. Refer to gnxi for examples with openconfig integration
 func (srv *Server) Set(ctx context.Context,req *gnmipb.SetRequest) (*gnmipb.SetResponse, error) {
-		if !PAMAuthenAndAuthor(ctx, true) {
+		if srv.config.UserAuth && !PAMAuthenAndAuthor(ctx, true) {
 			return nil, status.Errorf(codes.PermissionDenied, "Invalid Username/Password")
 		}
 		var results []*gnmipb.UpdateResult
@@ -291,7 +292,7 @@ func (srv *Server) Set(ctx context.Context,req *gnmipb.SetRequest) (*gnmipb.SetR
 
 // Capabilities method is not implemented. Refer to gnxi for examples with openconfig integration
 func (srv *Server) Capabilities(ctx context.Context, req *gnmipb.CapabilityRequest) (*gnmipb.CapabilityResponse, error) {
-	if !PAMAuthenAndAuthor(ctx, false) {
+	if srv.config.UserAuth && !PAMAuthenAndAuthor(ctx, false) {
 		return nil, status.Errorf(codes.PermissionDenied, "Invalid Username/Password")
 	}
 	dc, _ := sdc.NewTranslClient(nil , nil)
