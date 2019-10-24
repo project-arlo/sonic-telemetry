@@ -15,8 +15,23 @@ func PAMAuthenAndAuthor(ctx context.Context, admin_required bool) bool {
 	if !ok {
 		return false
 	}
-	username := md["username"][0]
-	passwd := md["password"][0]
+	
+	var username string
+	var passwd string
+	if username_a, ok := md["username"]; ok {
+		username = username_a[0]
+	}else {
+		return false
+	}
+	
+	if passwd_a, ok := md["password"]; ok {
+		passwd = passwd_a[0]
+	}else {
+		return false
+	}
+	
+	
+	
 
 	/*
 	 * mgmt-framework container does not have access to /etc/passwd, /etc/group,
