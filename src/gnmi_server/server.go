@@ -14,6 +14,7 @@ import (
 	"google.golang.org/grpc/peer"
 	"google.golang.org/grpc/reflection"
 	"google.golang.org/grpc/status"
+	// "github.com/msteinert/pam"
 	gnoi_system_pb "github.com/openconfig/gnoi/system"
 	sdc "sonic_data_client"
 	gnmipb "github.com/openconfig/gnmi/proto/gnmi"
@@ -94,8 +95,11 @@ func (srv *Server) Port() int64 {
 
 // Subscribe implements the gNMI Subscribe RPC.
 func (srv *Server) Subscribe(stream gnmipb.GNMI_SubscribeServer) error {
-	ctx := stream.Context()
 
+	ctx := stream.Context()
+	if !PAMAuthenAndAuthor(ctx, false) {
+		return status.Errorf(codes.PermissionDenied, "Invalid Username/Password")
+	}
 	pr, ok := peer.FromContext(ctx)
 	if !ok {
 		return grpc.Errorf(codes.InvalidArgument, "failed to get peer from ctx")
@@ -151,6 +155,9 @@ func (s *Server) checkEncodingAndModel(encoding gnmipb.Encoding, models []*gnmip
 
 // Get implements the Get RPC in gNMI spec.
 func (s *Server) Get(ctx context.Context, req *gnmipb.GetRequest) (*gnmipb.GetResponse, error) {
+	if !PAMAuthenAndAuthor(ctx, false) {
+		return nil, status.Errorf(codes.PermissionDenied, "Invalid Username/Password")
+	}
 	var err error
 
 	if req.GetType() != gnmipb.GetRequest_ALL {
@@ -205,6 +212,9 @@ func (s *Server) Get(ctx context.Context, req *gnmipb.GetRequest) (*gnmipb.GetRe
 
 // Set method is not implemented. Refer to gnxi for examples with openconfig integration
 func (srv *Server) Set(ctx context.Context,req *gnmipb.SetRequest) (*gnmipb.SetResponse, error) {
+		if !PAMAuthenAndAuthor(ctx, true) {
+			return nil, status.Errorf(codes.PermissionDenied, "Invalid Username/Password")
+		}
 		var results []*gnmipb.UpdateResult
 		var err error
 
@@ -280,8 +290,10 @@ func (srv *Server) Set(ctx context.Context,req *gnmipb.SetRequest) (*gnmipb.SetR
 }
 
 // Capabilities method is not implemented. Refer to gnxi for examples with openconfig integration
-func (srv *Server) Capabilities(context.Context, *gnmipb.CapabilityRequest) (*gnmipb.CapabilityResponse, error) {
-
+func (srv *Server) Capabilities(ctx context.Context, req *gnmipb.CapabilityRequest) (*gnmipb.CapabilityResponse, error) {
+	if !PAMAuthenAndAuthor(ctx, false) {
+		return nil, status.Errorf(codes.PermissionDenied, "Invalid Username/Password")
+	}
 	dc, _ := sdc.NewTranslClient(nil , nil)
 
 		/* Fetch the client capabitlities. */
@@ -314,4 +326,5 @@ func  isTargetDb ( target string) (bool) {
 
 	    return isDbClient
 }
+
 
