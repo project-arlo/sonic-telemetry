@@ -188,19 +188,22 @@ func (c *TranslClient) StreamRun(q *queue.PriorityQueue, stop chan struct{}, w *
 					return
 				}
 			}
-			//Send initial data now so we can send sync response.
-			val, err := transutil.TranslProcessGet(c.path2URI[sub.Path], nil)
-			if err != nil {
-				return
+			
+			if !subscribe.UpdatesOnly {
+				//Send initial data now so we can send sync response, unless updates_only is set.
+				val, err := transutil.TranslProcessGet(c.path2URI[sub.Path], nil)
+				if err != nil {
+					return
+				}
+				spbv := &spb.Value{
+					Prefix:       c.prefix,
+					Path:         sub.Path,
+					Timestamp:    time.Now().UnixNano(),
+					SyncResponse: false,
+					Val:          val,
+				}
+				c.q.Put(Value{spbv})
 			}
-			spbv := &spb.Value{
-				Prefix:       c.prefix,
-				Path:         sub.Path,
-				Timestamp:    time.Now().UnixNano(),
-				SyncResponse: false,
-				Val:          val,
-			}
-			c.q.Put(Value{spbv})
 			valueCache[c.path2URI[sub.Path]] = string(val.GetJsonIetfVal())
 			addTimer(c, ticker_map, &cases, cases_map, interval, sub, false)
 			//Heartbeat intervals are valid for SAMPLE in the case suppress_redundant is specified
