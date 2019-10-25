@@ -203,8 +203,9 @@ func (c *TranslClient) StreamRun(q *queue.PriorityQueue, stop chan struct{}, w *
 					Val:          val,
 				}
 				c.q.Put(Value{spbv})
+				valueCache[c.path2URI[sub.Path]] = string(val.GetJsonIetfVal())
 			}
-			valueCache[c.path2URI[sub.Path]] = string(val.GetJsonIetfVal())
+			
 			addTimer(c, ticker_map, &cases, cases_map, interval, sub, false)
 			//Heartbeat intervals are valid for SAMPLE in the case suppress_redundant is specified
 			if sub.SuppressRedundant && sub.HeartbeatInterval > 0 {
@@ -418,6 +419,7 @@ func (c *TranslClient) OnceRun(q *queue.PriorityQueue, once chan struct{}, w *sy
 	}
 	t1 := time.Now()
 	for gnmiPath, URIPath := range c.path2URI {
+		
 		val, err := transutil.TranslProcessGet(URIPath, nil)
 		if err != nil {
 			return
