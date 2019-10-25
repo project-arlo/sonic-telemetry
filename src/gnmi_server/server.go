@@ -98,8 +98,11 @@ func (srv *Server) Port() int64 {
 func (srv *Server) Subscribe(stream gnmipb.GNMI_SubscribeServer) error {
 
 	ctx := stream.Context()
-	if srv.config.UserAuth && !PAMAuthenAndAuthor(ctx, false) {
-		return status.Errorf(codes.PermissionDenied, "Invalid Username/Password")
+	if srv.config.UserAuth { 
+		err := PAMAuthenAndAuthor(ctx, false)
+		if err != nil {
+			return err
+		}
 	}
 	pr, ok := peer.FromContext(ctx)
 	if !ok {
@@ -156,8 +159,11 @@ func (s *Server) checkEncodingAndModel(encoding gnmipb.Encoding, models []*gnmip
 
 // Get implements the Get RPC in gNMI spec.
 func (s *Server) Get(ctx context.Context, req *gnmipb.GetRequest) (*gnmipb.GetResponse, error) {
-	if s.config.UserAuth && !PAMAuthenAndAuthor(ctx, false) {
-		return nil, status.Errorf(codes.PermissionDenied, "Invalid Username/Password")
+	if s.config.UserAuth { 
+		err := PAMAuthenAndAuthor(ctx, false)
+		if err != nil {
+			return nil, err
+		}
 	}
 	var err error
 
@@ -213,8 +219,11 @@ func (s *Server) Get(ctx context.Context, req *gnmipb.GetRequest) (*gnmipb.GetRe
 
 // Set method is not implemented. Refer to gnxi for examples with openconfig integration
 func (srv *Server) Set(ctx context.Context,req *gnmipb.SetRequest) (*gnmipb.SetResponse, error) {
-		if srv.config.UserAuth && !PAMAuthenAndAuthor(ctx, true) {
-			return nil, status.Errorf(codes.PermissionDenied, "Invalid Username/Password")
+		if srv.config.UserAuth { 
+			err := PAMAuthenAndAuthor(ctx, true)
+			if err != nil {
+				return nil, err
+			}
 		}
 		var results []*gnmipb.UpdateResult
 		var err error
@@ -292,8 +301,11 @@ func (srv *Server) Set(ctx context.Context,req *gnmipb.SetRequest) (*gnmipb.SetR
 
 // Capabilities method is not implemented. Refer to gnxi for examples with openconfig integration
 func (srv *Server) Capabilities(ctx context.Context, req *gnmipb.CapabilityRequest) (*gnmipb.CapabilityResponse, error) {
-	if srv.config.UserAuth && !PAMAuthenAndAuthor(ctx, false) {
-		return nil, status.Errorf(codes.PermissionDenied, "Invalid Username/Password")
+	if srv.config.UserAuth { 
+		err := PAMAuthenAndAuthor(ctx, false)
+		if err != nil {
+			return nil, err
+		}
 	}
 	dc, _ := sdc.NewTranslClient(nil , nil)
 
