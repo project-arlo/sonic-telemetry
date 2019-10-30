@@ -17,6 +17,7 @@ import (
 	gnoi_system_pb "github.com/openconfig/gnoi/system"
 	sdc "sonic_data_client"
 	gnmipb "github.com/openconfig/gnmi/proto/gnmi"
+	spb "proto/gnoi"
 	
 )
 
@@ -67,6 +68,7 @@ func NewServer(config *Config, opts []grpc.ServerOption) (*Server, error) {
 	}
 	gnmipb.RegisterGNMIServer(srv.s, srv)
 	gnoi_system_pb.RegisterSystemServer(srv.s, srv)
+	spb.RegisterSonicServiceServer(srv.s, srv)
 	log.V(1).Infof("Created Server on %s", srv.Address())
 
 	return srv, nil

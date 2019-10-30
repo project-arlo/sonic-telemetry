@@ -4,6 +4,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	gnoi_system_pb "github.com/openconfig/gnoi/system"
+	spb "proto/gnoi"
 	"time"
 	"math"
 	"crypto/tls"
@@ -41,13 +42,21 @@ func main() {
 	if err != nil {
 		panic(err.Error())
 	}
-	sc := gnoi_system_pb.NewSystemClient(conn)
-
+	
 	switch *module {
 	case "System":
+		sc := gnoi_system_pb.NewSystemClient(conn)
 		switch *rpc {
 		case "Time":
+
 			systemTime(sc, ctx)
+		}
+	case "Sonic":
+		switch *rpc {
+		case "showtechsupport":
+			sc := spb.NewSonicServiceClient(conn)
+			sonicShowTechSupport(sc, ctx)
+
 		}
 	}
 }
@@ -59,4 +68,12 @@ func systemTime(sc gnoi_system_pb.SystemClient, ctx context.Context) {
 		panic(err.Error())
 	}
 	fmt.Println(resp.Time)
+}
+func sonicShowTechSupport(sc spb.SonicServiceClient, ctx context.Context) {
+	fmt.Println("Sonic ShowTechsupport")
+	resp,err := sc.ShowTechsupport(ctx, new(spb.TechsupportRequest))
+	if err != nil {
+		panic(err.Error())
+	}
+	fmt.Println(resp.OutputFilename)
 }

@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+package gnoi.sonic;
+
+//option (types.gnoi_version) = "0.1.0";
+
+service SonicService {
+  rpc ShowTechsupport (TechsupportRequest) returns (TechsupportResponse) {}
+}
+
+message TechsupportRequest {
+  string date = 1;
+}
+message TechsupportResponse {
+  string output_filename = 1;
+}
+
+

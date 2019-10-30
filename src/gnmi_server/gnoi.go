@@ -5,6 +5,7 @@ import (
 	gnoi_system_pb "github.com/openconfig/gnoi/system"
 	log "github.com/golang/glog"
 	"time"
+	spb "proto/gnoi"
 )
 
 func (srv *Server) Reboot(context.Context, *gnoi_system_pb.RebootRequest) (*gnoi_system_pb.RebootResponse, error) {
@@ -42,3 +43,10 @@ func (srv *Server) Time(context.Context, *gnoi_system_pb.TimeRequest) (*gnoi_sys
 	return &tm, nil
 }
 
+
+func (srv *Server) ShowTechsupport(context.Context, *spb.TechsupportRequest) (*spb.TechsupportResponse, error) {
+	log.V(1).Info("gNOI: Sonic ShowTechsupport")
+	var resp spb.TechsupportResponse
+	resp.OutputFilename = "test"
+	return &resp, nil
+}
