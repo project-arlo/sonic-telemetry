@@ -52,11 +52,12 @@ func main() {
 			systemTime(sc, ctx)
 		}
 	case "Sonic":
+		sc := spb.NewSonicServiceClient(conn)
 		switch *rpc {
 		case "showtechsupport":
-			sc := spb.NewSonicServiceClient(conn)
 			sonicShowTechSupport(sc, ctx)
-
+		case "my-echo":
+			sonicMyEcho(sc, ctx)
 		}
 	}
 }
@@ -76,4 +77,12 @@ func sonicShowTechSupport(sc spb.SonicServiceClient, ctx context.Context) {
 		panic(err.Error())
 	}
 	fmt.Println(resp.OutputFilename)
+}
+func sonicMyEcho(sc spb.SonicServiceClient, ctx context.Context) {
+	fmt.Println("Sonic my-echo")
+	resp,err := sc.MyEcho(ctx, new(spb.MyEchoRequest))
+	if err != nil {
+		panic(err.Error())
+	}
+	fmt.Println(resp.Message)
 }

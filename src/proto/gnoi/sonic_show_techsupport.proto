@@ -6,6 +6,7 @@ package gnoi.sonic;
 
 service SonicService {
   rpc ShowTechsupport (TechsupportRequest) returns (TechsupportResponse) {}
+  rpc MyEcho (MyEchoRequest) returns (MyEchoResponse) {}
 }
 
 message TechsupportRequest {
@@ -16,3 +17,10 @@ message TechsupportResponse {
 }
 
 
+message MyEchoRequest {
+	string message = 1;
+	string error_type = 2;
+}
+message MyEchoResponse {
+	string message = 1;
+}
