@@ -162,6 +162,21 @@ func TranslProcessUpdate(uri string, t *gnmipb.TypedValue) error {
 	return nil
 }
 
+/* Action/rpc request handling. */
+func TranslProcessAction(uri string, payload []byte) ([]byte, error) {
+	var req translib.ActionRequest
+	req.Path = uri
+	req.Payload = payload
+
+	resp, err := translib.Action(req)
+
+	if err != nil{
+		log.V(2).Infof("Action operation failed with error =%v", resp.ErrSrc)
+		return nil, fmt.Errorf("Action failed for this message")
+	}
+	return resp.Payload, nil
+}
+
 /* Fetch the supported models. */
 func GetModels() []gnmipb.ModelData {
 
@@ -185,3 +200,5 @@ func isTranslibSuccess(err error) bool {
 
         return true
 }
+
+

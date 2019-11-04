@@ -4,6 +4,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	gnoi_system_pb "github.com/openconfig/gnoi/system"
+	spb "proto/gnoi"
 	"time"
 	"math"
 	"crypto/tls"
@@ -12,6 +13,8 @@ import (
 	"os/signal"
 	"fmt"
 	"flag"
+	"encoding/json"
+	"strings"
 	"google.golang.org/grpc/metadata"
 )
 
@@ -19,6 +22,7 @@ var (
 	module = flag.String("module", "System", "gNOI Module")
 	rpc = flag.String("rpc", "Time", "rpc call in specified module to call")
 	target = flag.String("target", "localhost:8080", "Address:port of gNOI Server")
+	args = flag.String("jsonin", "", "RPC Arguments in json format")
 	username = flag.String("username", "", "Username if required")
 	password = flag.String("password", "", "Password if required")
 )
@@ -44,13 +48,22 @@ func main() {
 	if err != nil {
 		panic(err.Error())
 	}
-	sc := gnoi_system_pb.NewSystemClient(conn)
-
+	
 	switch *module {
 	case "System":
+		sc := gnoi_system_pb.NewSystemClient(conn)
 		switch *rpc {
 		case "Time":
+
 			systemTime(sc, ctx)
+		}
+	case "Sonic":
+		sc := spb.NewSonicServiceClient(conn)
+		switch *rpc {
+		case "showtechsupport":
+			sonicShowTechSupport(sc, ctx)
+		case "sum":
+			sonicSum(sc, ctx)
 		}
 	}
 }
@@ -64,7 +77,32 @@ func systemTime(sc gnoi_system_pb.SystemClient, ctx context.Context) {
 	}
 	fmt.Println(resp.Time)
 }
+func sonicShowTechSupport(sc spb.SonicServiceClient, ctx context.Context) {
+	fmt.Println("Sonic ShowTechsupport")
+	resp,err := sc.ShowTechsupport(ctx, new(spb.TechsupportRequest))
+	if err != nil {
+		panic(err.Error())
+	}
+	fmt.Println(resp.Output.OutputFilename)
+}
+func sonicSum(sc spb.SonicServiceClient, ctx context.Context) {
+	fmt.Println("Sonic sum")
+	req := &spb.SumRequest{
+		Input: &spb.SumRequest_Input{
 
+		},
+	}
+	nargs := strings.Replace(string(*args), "sonic-tests:input", "input", 1)
+	json.Unmarshal([]byte(nargs), &req)
+	fmt.Println(req)
+
+	resp,err := sc.Sum(ctx, req)
+
+	if err != nil {
+		panic(err.Error())
+	}
+	fmt.Println(resp.Output.Result)
+}
 
 func setUserPass(ctx context.Context) context.Context {
 	if len(*username) > 0 {
