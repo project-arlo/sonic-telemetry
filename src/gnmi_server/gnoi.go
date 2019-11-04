@@ -9,6 +9,9 @@ import (
 	transutil "transl_utils"
 	"google.golang.org/grpc/status"
 	"google.golang.org/grpc/codes"
+	"encoding/json"
+	"strings"
+	"fmt"
 )
 
 func (srv *Server) Reboot(context.Context, *gnoi_system_pb.RebootRequest) (*gnoi_system_pb.RebootResponse, error) {
@@ -50,7 +53,7 @@ func (srv *Server) Time(context.Context, *gnoi_system_pb.TimeRequest) (*gnoi_sys
 func (srv *Server) ShowTechsupport(context.Context, *spb.TechsupportRequest) (*spb.TechsupportResponse, error) {
 	log.V(1).Info("gNOI: Sonic ShowTechsupport")
 	var resp spb.TechsupportResponse
-	// resp.OutputFilename = "test"
+
 	jsresp, err:= transutil.TranslProcessAction("sonic-show-techsupport:sonic-show-techsupport-info", []byte("{\"sonic-show-techsupport-info:input\": {\"date\": \"2019-10-31T09:00:00Z\"}"))
 	if err != nil {
 		return nil, status.Error(codes.Unknown, err.Error())
@@ -59,14 +62,20 @@ func (srv *Server) ShowTechsupport(context.Context, *spb.TechsupportRequest) (*s
 	return &resp, nil
 }
 
-func (srv *Server) MyEcho(context.Context, *spb.MyEchoRequest) (*spb.MyEchoResponse, error) {
-	log.V(1).Info("gNOI: Sonic MyEcho")
-	var resp spb.MyEchoResponse
-	// resp.OutputFilename = "test"
-	jsresp, err:= transutil.TranslProcessAction("/restconf/operations/api-tests:my-echo", []byte("{\"api-tests:input\": {\"message\": \"2019-10-31T09:00:00Z\"}"))
+func (srv *Server) Sum(stc context.Context, req *spb.SumRequest) (*spb.SumResponse, error) {
+	log.V(1).Info("gNOI: Sonic Sum")
+	var resp spb.SumResponse
+	reqstr := fmt.Sprintf("{\"sonic-tests:input\": {\"left\": %d, \"right\": %d}}", req.Input.Left, req.Input.Right)
+	jsresp, err:= transutil.TranslProcessAction("/sonic-tests:sum", []byte(reqstr))
+	fmt.Println(string(jsresp))
 	if err != nil {
 		return nil, status.Error(codes.Unknown, err.Error())
 	}
-	resp.Message = string(jsresp)
+	jsresp = []byte(strings.Replace(string(jsresp), "sonic-tests:output", "output", 1))
+	err = json.Unmarshal(jsresp, &resp)
+	if err != nil {
+		return nil, status.Error(codes.Unknown, err.Error())
+	}
 	return &resp, nil
 }
+

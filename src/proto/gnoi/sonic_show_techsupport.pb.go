@@ -10,8 +10,8 @@ It is generated from these files:
 It has these top-level messages:
 	TechsupportRequest
 	TechsupportResponse
-	MyEchoRequest
-	MyEchoResponse
+	SumRequest
+	SumResponse
 */
 package gnoi_sonic
 
@@ -67,51 +67,85 @@ func (m *TechsupportResponse) GetOutputFilename() string {
 	return ""
 }
 
-type MyEchoRequest struct {
-	Message   string `protobuf:"bytes,1,opt,name=message" json:"message,omitempty"`
-	ErrorType string `protobuf:"bytes,2,opt,name=error_type,json=errorType" json:"error_type,omitempty"`
+type SumRequest struct {
+	Input *SumRequest_Input `protobuf:"bytes,1,opt,name=input" json:"input,omitempty"`
 }
 
-func (m *MyEchoRequest) Reset()                    { *m = MyEchoRequest{} }
-func (m *MyEchoRequest) String() string            { return proto.CompactTextString(m) }
-func (*MyEchoRequest) ProtoMessage()               {}
-func (*MyEchoRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{2} }
+func (m *SumRequest) Reset()                    { *m = SumRequest{} }
+func (m *SumRequest) String() string            { return proto.CompactTextString(m) }
+func (*SumRequest) ProtoMessage()               {}
+func (*SumRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{2} }
 
-func (m *MyEchoRequest) GetMessage() string {
+func (m *SumRequest) GetInput() *SumRequest_Input {
 	if m != nil {
-		return m.Message
+		return m.Input
 	}
-	return ""
+	return nil
 }
 
-func (m *MyEchoRequest) GetErrorType() string {
+type SumRequest_Input struct {
+	Left  int32 `protobuf:"varint,1,opt,name=left" json:"left,omitempty"`
+	Right int32 `protobuf:"varint,2,opt,name=right" json:"right,omitempty"`
+}
+
+func (m *SumRequest_Input) Reset()                    { *m = SumRequest_Input{} }
+func (m *SumRequest_Input) String() string            { return proto.CompactTextString(m) }
+func (*SumRequest_Input) ProtoMessage()               {}
+func (*SumRequest_Input) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{2, 0} }
+
+func (m *SumRequest_Input) GetLeft() int32 {
 	if m != nil {
-		return m.ErrorType
+		return m.Left
 	}
-	return ""
+	return 0
 }
 
-type MyEchoResponse struct {
-	Message string `protobuf:"bytes,1,opt,name=message" json:"message,omitempty"`
-}
-
-func (m *MyEchoResponse) Reset()                    { *m = MyEchoResponse{} }
-func (m *MyEchoResponse) String() string            { return proto.CompactTextString(m) }
-func (*MyEchoResponse) ProtoMessage()               {}
-func (*MyEchoResponse) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{3} }
-
-func (m *MyEchoResponse) GetMessage() string {
+func (m *SumRequest_Input) GetRight() int32 {
 	if m != nil {
-		return m.Message
+		return m.Right
 	}
-	return ""
+	return 0
+}
+
+type SumResponse struct {
+	Output *SumResponse_Output `protobuf:"bytes,1,opt,name=output" json:"output,omitempty"`
+}
+
+func (m *SumResponse) Reset()                    { *m = SumResponse{} }
+func (m *SumResponse) String() string            { return proto.CompactTextString(m) }
+func (*SumResponse) ProtoMessage()               {}
+func (*SumResponse) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{3} }
+
+func (m *SumResponse) GetOutput() *SumResponse_Output {
+	if m != nil {
+		return m.Output
+	}
+	return nil
+}
+
+type SumResponse_Output struct {
+	Result int32 `protobuf:"varint,1,opt,name=result" json:"result,omitempty"`
+}
+
+func (m *SumResponse_Output) Reset()                    { *m = SumResponse_Output{} }
+func (m *SumResponse_Output) String() string            { return proto.CompactTextString(m) }
+func (*SumResponse_Output) ProtoMessage()               {}
+func (*SumResponse_Output) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{3, 0} }
+
+func (m *SumResponse_Output) GetResult() int32 {
+	if m != nil {
+		return m.Result
+	}
+	return 0
 }
 
 func init() {
 	proto.RegisterType((*TechsupportRequest)(nil), "gnoi.sonic.TechsupportRequest")
 	proto.RegisterType((*TechsupportResponse)(nil), "gnoi.sonic.TechsupportResponse")
-	proto.RegisterType((*MyEchoRequest)(nil), "gnoi.sonic.MyEchoRequest")
-	proto.RegisterType((*MyEchoResponse)(nil), "gnoi.sonic.MyEchoResponse")
+	proto.RegisterType((*SumRequest)(nil), "gnoi.sonic.SumRequest")
+	proto.RegisterType((*SumRequest_Input)(nil), "gnoi.sonic.SumRequest.Input")
+	proto.RegisterType((*SumResponse)(nil), "gnoi.sonic.SumResponse")
+	proto.RegisterType((*SumResponse_Output)(nil), "gnoi.sonic.SumResponse.Output")
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -126,7 +160,7 @@ const _ = grpc.SupportPackageIsVersion4
 
 type SonicServiceClient interface {
 	ShowTechsupport(ctx context.Context, in *TechsupportRequest, opts ...grpc.CallOption) (*TechsupportResponse, error)
-	MyEcho(ctx context.Context, in *MyEchoRequest, opts ...grpc.CallOption) (*MyEchoResponse, error)
+	Sum(ctx context.Context, in *SumRequest, opts ...grpc.CallOption) (*SumResponse, error)
 }
 
 type sonicServiceClient struct {
@@ -146,9 +180,9 @@ func (c *sonicServiceClient) ShowTechsupport(ctx context.Context, in *Techsuppor
 	return out, nil
 }
 
-func (c *sonicServiceClient) MyEcho(ctx context.Context, in *MyEchoRequest, opts ...grpc.CallOption) (*MyEchoResponse, error) {
-	out := new(MyEchoResponse)
-	err := grpc.Invoke(ctx, "/gnoi.sonic.SonicService/MyEcho", in, out, c.cc, opts...)
+func (c *sonicServiceClient) Sum(ctx context.Context, in *SumRequest, opts ...grpc.CallOption) (*SumResponse, error) {
+	out := new(SumResponse)
+	err := grpc.Invoke(ctx, "/gnoi.sonic.SonicService/Sum", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -159,7 +193,7 @@ func (c *sonicServiceClient) MyEcho(ctx context.Context, in *MyEchoRequest, opts
 
 type SonicServiceServer interface {
 	ShowTechsupport(context.Context, *TechsupportRequest) (*TechsupportResponse, error)
-	MyEcho(context.Context, *MyEchoRequest) (*MyEchoResponse, error)
+	Sum(context.Context, *SumRequest) (*SumResponse, error)
 }
 
 func RegisterSonicServiceServer(s *grpc.Server, srv SonicServiceServer) {
@@ -184,20 +218,20 @@ func _SonicService_ShowTechsupport_Handler(srv interface{}, ctx context.Context,
 	return interceptor(ctx, in, info, handler)
 }
 
-func _SonicService_MyEcho_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(MyEchoRequest)
+func _SonicService_Sum_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SumRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(SonicServiceServer).MyEcho(ctx, in)
+		return srv.(SonicServiceServer).Sum(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/gnoi.sonic.SonicService/MyEcho",
+		FullMethod: "/gnoi.sonic.SonicService/Sum",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(SonicServiceServer).MyEcho(ctx, req.(*MyEchoRequest))
+		return srv.(SonicServiceServer).Sum(ctx, req.(*SumRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -211,8 +245,8 @@ var _SonicService_serviceDesc = grpc.ServiceDesc{
 			Handler:    _SonicService_ShowTechsupport_Handler,
 		},
 		{
-			MethodName: "MyEcho",
-			Handler:    _SonicService_MyEcho_Handler,
+			MethodName: "Sum",
+			Handler:    _SonicService_Sum_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
@@ -222,21 +256,24 @@ var _SonicService_serviceDesc = grpc.ServiceDesc{
 func init() { proto.RegisterFile("sonic_show_techsupport.proto", fileDescriptor0) }
 
 var fileDescriptor0 = []byte{
-	// 254 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x74, 0x51, 0x3d, 0x4f, 0xc3, 0x40,
-	0x0c, 0x25, 0x08, 0x15, 0xd5, 0x82, 0x56, 0x32, 0x4b, 0x88, 0xf8, 0xd2, 0x2d, 0x54, 0x0c, 0x19,
-	0x60, 0x47, 0x62, 0x00, 0xb1, 0xb0, 0x34, 0xd9, 0xa3, 0x10, 0x4c, 0x13, 0x89, 0xc6, 0xc7, 0x9d,
-	0x8f, 0x2a, 0xbf, 0x88, 0xbf, 0x89, 0xb8, 0xf4, 0xd4, 0x56, 0x90, 0xed, 0xee, 0xbd, 0xe7, 0x67,
-	0x3f, 0x1b, 0xce, 0x2c, 0xb7, 0x4d, 0x55, 0xd8, 0x9a, 0x57, 0x85, 0x50, 0x55, 0x5b, 0xa7, 0x35,
-	0x1b, 0x49, 0xb5, 0x61, 0x61, 0x84, 0x45, 0xcb, 0x4d, 0xea, 0x25, 0x6a, 0x06, 0x98, 0x6f, 0x04,
-	0x73, 0xfa, 0x74, 0x64, 0x05, 0x11, 0x0e, 0xde, 0x4a, 0xa1, 0x38, 0xba, 0x8a, 0x66, 0xe3, 0xb9,
-	0x7f, 0xab, 0x7b, 0x38, 0xd9, 0x51, 0x5a, 0xcd, 0xad, 0x25, 0xbc, 0x86, 0x29, 0x3b, 0xd1, 0x4e,
-	0x8a, 0xf7, 0xe6, 0x83, 0xda, 0x72, 0x19, 0xaa, 0x26, 0x3d, 0xfc, 0xb4, 0x46, 0xd5, 0x33, 0x1c,
-	0xbf, 0x74, 0x8f, 0x55, 0xcd, 0xa1, 0x49, 0x0c, 0x87, 0x4b, 0xb2, 0xb6, 0x5c, 0x84, 0x8a, 0xf0,
-	0xc5, 0x73, 0x00, 0x32, 0x86, 0x4d, 0x21, 0x9d, 0xa6, 0x78, 0xdf, 0x93, 0x63, 0x8f, 0xe4, 0x9d,
-	0x26, 0x75, 0x03, 0x93, 0xe0, 0xb4, 0x1e, 0x62, 0xd0, 0xea, 0xf6, 0x3b, 0x82, 0xa3, 0xec, 0x37,
-	0x69, 0x46, 0xe6, 0xab, 0xa9, 0x08, 0x73, 0x98, 0x66, 0x35, 0xaf, 0xb6, 0xa2, 0xe0, 0x45, 0xba,
-	0x59, 0x48, 0xfa, 0x77, 0x1b, 0xc9, 0xe5, 0x20, 0xdf, 0xb7, 0x57, 0x7b, 0xf8, 0x00, 0xa3, 0x7e,
-	0x24, 0x3c, 0xdd, 0x16, 0xef, 0x04, 0x4e, 0x92, 0xff, 0xa8, 0x60, 0xf1, 0x3a, 0xf2, 0xc7, 0xb9,
-	0xfb, 0x09, 0x00, 0x00, 0xff, 0xff, 0x2e, 0x1c, 0x45, 0x1c, 0xbc, 0x01, 0x00, 0x00,
+	// 293 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x74, 0x91, 0xc1, 0x4b, 0xc3, 0x30,
+	0x14, 0xc6, 0x37, 0xb5, 0x05, 0xdf, 0xc4, 0xc1, 0x53, 0xe6, 0x28, 0x43, 0x47, 0x2e, 0xee, 0x14,
+	0xb0, 0x82, 0x78, 0xf2, 0x28, 0x78, 0x12, 0xda, 0xdd, 0xcb, 0xac, 0x59, 0x1b, 0x68, 0x9b, 0xd8,
+	0x24, 0xee, 0xbf, 0xf1, 0x6f, 0x95, 0x26, 0x29, 0x75, 0xcc, 0xdd, 0xde, 0xfb, 0xfa, 0x7b, 0xef,
+	0xfb, 0xfa, 0x02, 0x0b, 0x25, 0x1a, 0x9e, 0x67, 0xaa, 0x14, 0xbb, 0x4c, 0xb3, 0xbc, 0x54, 0x46,
+	0x4a, 0xd1, 0x6a, 0x2a, 0x5b, 0xa1, 0x05, 0x42, 0xd1, 0x08, 0x4e, 0x2d, 0x42, 0x56, 0x80, 0xeb,
+	0x01, 0x48, 0xd8, 0x97, 0x61, 0x4a, 0x23, 0xc2, 0xd9, 0xe7, 0x46, 0xb3, 0xf9, 0x78, 0x39, 0x5e,
+	0x9d, 0x27, 0xb6, 0x26, 0x2f, 0x70, 0xb5, 0x47, 0x2a, 0x29, 0x1a, 0xc5, 0xf0, 0x1e, 0xa6, 0xc2,
+	0x68, 0x69, 0x74, 0xb6, 0xe5, 0x15, 0x6b, 0x36, 0x75, 0x3f, 0x75, 0xe9, 0xe4, 0x57, 0xaf, 0x12,
+	0x05, 0x90, 0x9a, 0xba, 0x77, 0x88, 0x21, 0xe0, 0x8d, 0x34, 0xda, 0xc2, 0x93, 0x78, 0x41, 0x87,
+	0x4c, 0x74, 0xc0, 0xe8, 0x5b, 0xc7, 0x24, 0x0e, 0x8d, 0x1e, 0x20, 0xb0, 0x7d, 0x17, 0xaf, 0x62,
+	0x5b, 0x37, 0x1b, 0x24, 0xb6, 0xc6, 0x6b, 0x08, 0x5a, 0x5e, 0x94, 0x7a, 0x7e, 0x62, 0x45, 0xd7,
+	0x90, 0x02, 0x26, 0x76, 0x9b, 0x0f, 0xfb, 0x04, 0xa1, 0x4b, 0xe5, 0x6d, 0x6f, 0x0f, 0x6c, 0x1d,
+	0x48, 0xdf, 0x2d, 0x95, 0x78, 0x3a, 0x5a, 0x42, 0xe8, 0x14, 0x9c, 0x41, 0xd8, 0x32, 0x65, 0xaa,
+	0xde, 0xdc, 0x77, 0xf1, 0xcf, 0x18, 0x2e, 0xd2, 0x6e, 0x4d, 0xca, 0xda, 0x6f, 0x9e, 0x33, 0x5c,
+	0xc3, 0x34, 0x2d, 0xc5, 0xee, 0xcf, 0xc9, 0x70, 0xcf, 0xed, 0xf0, 0xea, 0xd1, 0xdd, 0xd1, 0xef,
+	0x2e, 0x15, 0x19, 0xe1, 0x33, 0x9c, 0xa6, 0xa6, 0xc6, 0xd9, 0xff, 0xe7, 0x8a, 0x6e, 0x8e, 0xfc,
+	0x0f, 0x19, 0x7d, 0x84, 0xf6, 0xed, 0x1f, 0x7f, 0x03, 0x00, 0x00, 0xff, 0xff, 0xe8, 0x34, 0xfb,
+	0x3a, 0x1b, 0x02, 0x00, 0x00,
 }

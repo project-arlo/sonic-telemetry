@@ -13,12 +13,15 @@ import (
 	"os/signal"
 	"fmt"
 	"flag"
+	"encoding/json"
+	"strings"
 )
 
 var (
 	module = flag.String("module", "System", "gNOI Module")
 	rpc = flag.String("rpc", "Time", "rpc call in specified module to call")
 	target = flag.String("target", "localhost:8080", "Address:port of gNOI Server")
+	args = flag.String("jsonin", "", "RPC Arguments in json format")
 )
 
 func main() {
@@ -56,8 +59,8 @@ func main() {
 		switch *rpc {
 		case "showtechsupport":
 			sonicShowTechSupport(sc, ctx)
-		case "my-echo":
-			sonicMyEcho(sc, ctx)
+		case "sum":
+			sonicSum(sc, ctx)
 		}
 	}
 }
@@ -78,11 +81,21 @@ func sonicShowTechSupport(sc spb.SonicServiceClient, ctx context.Context) {
 	}
 	fmt.Println(resp.OutputFilename)
 }
-func sonicMyEcho(sc spb.SonicServiceClient, ctx context.Context) {
-	fmt.Println("Sonic my-echo")
-	resp,err := sc.MyEcho(ctx, new(spb.MyEchoRequest))
+func sonicSum(sc spb.SonicServiceClient, ctx context.Context) {
+	fmt.Println("Sonic sum")
+	req := &spb.SumRequest{
+		Input: &spb.SumRequest_Input{
+
+		},
+	}
+	nargs := strings.Replace(string(*args), "sonic-tests:input", "input", 1)
+	json.Unmarshal([]byte(nargs), &req)
+	fmt.Println(req)
+
+	resp,err := sc.Sum(ctx, req)
+
 	if err != nil {
 		panic(err.Error())
 	}
-	fmt.Println(resp.Message)
+	fmt.Println(resp.Output.Result)
 }
