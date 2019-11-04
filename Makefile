@@ -9,7 +9,7 @@ GO_DEP_PATH=$(abspath .)/$(BUILD_DIR)
 GO_MGMT_PATH=$(TOP_DIR)/sonic-mgmt-framework
 GO_SONIC_TELEMETRY_PATH=$(TOP_DIR)
 CVL_GOPATH=$(GO_MGMT_PATH)/gopkgs:$(GO_MGMT_PATH):$(GO_MGMT_PATH)/src/cvl/build
-GOPATH = $(CVL_GOPATH):$(GO_DEP_PATH):$(GO_MGMT_PATH):/tmp/go:$(GO_SONIC_TELEMETRY_PATH):$(TELEM_DIR)
+GOPATH = $(CVL_GOPATH):$(GO_DEP_PATH):$(GO_MGMT_PATH):/tmp/go:$(GO_SONIC_TELEMETRY_PATH):$(TELEM_DIR):$(HOME)/go
 INSTALL := /usr/bin/install
 
 SRC_FILES=$(shell find . -name '*.go' | grep -v '_test.go' | grep -v '/tests/')
