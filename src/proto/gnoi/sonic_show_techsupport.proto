@@ -10,23 +10,29 @@ service SonicService {
 }
 
 message TechsupportRequest {
-  string date = 1;
+    message Input {
+        string date = 1;
+    }
+    Input input = 1;
 }
 message TechsupportResponse {
-  string output_filename = 1;
+    message Output {
+        string output_filename = 1;
+    }
+    Output output = 1;
 }
 
 
 message SumRequest {
-	message Input {
-		int32 left = 1;
-		int32 right = 2;
-	}
-	Input input = 1;
+    message Input {
+        int32 left = 1;
+        int32 right = 2;
+    }
+    Input input = 1;
 }
 message SumResponse {
-	message Output {
-		int32 result = 1;
-	}
-	Output output = 1;
+    message Output {
+        int32 result = 1;
+    }
+    Output output = 1;
 }

@@ -79,7 +79,7 @@ func sonicShowTechSupport(sc spb.SonicServiceClient, ctx context.Context) {
 	if err != nil {
 		panic(err.Error())
 	}
-	fmt.Println(resp.OutputFilename)
+	fmt.Println(resp.Output.OutputFilename)
 }
 func sonicSum(sc spb.SonicServiceClient, ctx context.Context) {
 	fmt.Println("Sonic sum")

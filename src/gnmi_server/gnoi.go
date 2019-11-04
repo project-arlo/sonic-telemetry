@@ -54,11 +54,16 @@ func (srv *Server) ShowTechsupport(context.Context, *spb.TechsupportRequest) (*s
 	log.V(1).Info("gNOI: Sonic ShowTechsupport")
 	var resp spb.TechsupportResponse
 
-	jsresp, err:= transutil.TranslProcessAction("sonic-show-techsupport:sonic-show-techsupport-info", []byte("{\"sonic-show-techsupport-info:input\": {\"date\": \"2019-10-31T09:00:00Z\"}"))
+	jsresp, err:= transutil.TranslProcessAction("/sonic-show-techsupport:sonic-show-techsupport-info", []byte("{\"sonic-show-techsupport-info:input\": {\"date\": \"2019-10-31T09:00:00Z\"}"))
 	if err != nil {
 		return nil, status.Error(codes.Unknown, err.Error())
 	}
-	resp.OutputFilename = string(jsresp)
+
+	jsresp = []byte(strings.Replace(string(jsresp), "sonic-show-techsupport-info:output", "output", 1))
+	err = json.Unmarshal(jsresp, &resp)
+	if err != nil {
+		return nil, status.Error(codes.Unknown, err.Error())
+	}
 	return &resp, nil
 }
 
@@ -67,7 +72,7 @@ func (srv *Server) Sum(stc context.Context, req *spb.SumRequest) (*spb.SumRespon
 	var resp spb.SumResponse
 	reqstr := fmt.Sprintf("{\"sonic-tests:input\": {\"left\": %d, \"right\": %d}}", req.Input.Left, req.Input.Right)
 	jsresp, err:= transutil.TranslProcessAction("/sonic-tests:sum", []byte(reqstr))
-	fmt.Println(string(jsresp))
+	
 	if err != nil {
 		return nil, status.Error(codes.Unknown, err.Error())
 	}
