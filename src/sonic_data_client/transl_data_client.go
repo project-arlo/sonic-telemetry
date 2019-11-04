@@ -188,20 +188,24 @@ func (c *TranslClient) StreamRun(q *queue.PriorityQueue, stop chan struct{}, w *
 					return
 				}
 			}
-			//Send initial data now so we can send sync response.
-			val, err := transutil.TranslProcessGet(c.path2URI[sub.Path], nil)
-			if err != nil {
-				return
+			
+			if !subscribe.UpdatesOnly {
+				//Send initial data now so we can send sync response, unless updates_only is set.
+				val, err := transutil.TranslProcessGet(c.path2URI[sub.Path], nil)
+				if err != nil {
+					return
+				}
+				spbv := &spb.Value{
+					Prefix:       c.prefix,
+					Path:         sub.Path,
+					Timestamp:    time.Now().UnixNano(),
+					SyncResponse: false,
+					Val:          val,
+				}
+				c.q.Put(Value{spbv})
+				valueCache[c.path2URI[sub.Path]] = string(val.GetJsonIetfVal())
 			}
-			spbv := &spb.Value{
-				Prefix:       c.prefix,
-				Path:         sub.Path,
-				Timestamp:    time.Now().UnixNano(),
-				SyncResponse: false,
-				Val:          val,
-			}
-			c.q.Put(Value{spbv})
-			valueCache[c.path2URI[sub.Path]] = string(val.GetJsonIetfVal())
+			
 			addTimer(c, ticker_map, &cases, cases_map, interval, sub, false)
 			//Heartbeat intervals are valid for SAMPLE in the case suppress_redundant is specified
 			if sub.SuppressRedundant && sub.HeartbeatInterval > 0 {
@@ -361,12 +365,12 @@ func TranslSubscribe(gnmiPaths []*gnmipb.Path, stringPaths []string, pathMap map
 
 
 
-func (c *TranslClient) PollRun(q *queue.PriorityQueue, poll chan struct{}, w *sync.WaitGroup) {
+func (c *TranslClient) PollRun(q *queue.PriorityQueue, poll chan struct{}, w *sync.WaitGroup, subscribe *gnmipb.SubscriptionList) {
 	c.w = w
 	defer c.w.Done()
 	c.q = q
 	c.channel = poll
-
+	synced := false
 	for {
 		_, more := <-c.channel
 		if !more {
@@ -375,21 +379,24 @@ func (c *TranslClient) PollRun(q *queue.PriorityQueue, poll chan struct{}, w *sy
 		}
 		t1 := time.Now()
 		for gnmiPath, URIPath := range c.path2URI {
-			val, err := transutil.TranslProcessGet(URIPath, nil)
-			if err != nil {
-				return
-			}
+			if synced || !subscribe.UpdatesOnly {
 
-			spbv := &spb.Value{
-				Prefix:       c.prefix,
-				Path:         gnmiPath,
-				Timestamp:    time.Now().UnixNano(),
-				SyncResponse: false,
-				Val:          val,
-			}
+				val, err := transutil.TranslProcessGet(URIPath, nil)
+				if err != nil {
+					return
+				}
 
-			c.q.Put(Value{spbv})
-			log.V(6).Infof("Added spbv #%v", spbv)
+				spbv := &spb.Value{
+					Prefix:       c.prefix,
+					Path:         gnmiPath,
+					Timestamp:    time.Now().UnixNano(),
+					SyncResponse: false,
+					Val:          val,
+				}
+
+				c.q.Put(Value{spbv})
+				log.V(6).Infof("Added spbv #%v", spbv)
+			}
 		}
 
 		c.q.Put(Value{
@@ -398,10 +405,11 @@ func (c *TranslClient) PollRun(q *queue.PriorityQueue, poll chan struct{}, w *sy
 				SyncResponse: true,
 			},
 		})
+		synced = true
 		log.V(4).Infof("Sync done, poll time taken: %v ms", int64(time.Since(t1)/time.Millisecond))
 	}
 }
-func (c *TranslClient) OnceRun(q *queue.PriorityQueue, once chan struct{}, w *sync.WaitGroup) {
+func (c *TranslClient) OnceRun(q *queue.PriorityQueue, once chan struct{}, w *sync.WaitGroup, subscribe *gnmipb.SubscriptionList) {
 	c.w = w
 	defer c.w.Done()
 	c.q = q
@@ -415,21 +423,23 @@ func (c *TranslClient) OnceRun(q *queue.PriorityQueue, once chan struct{}, w *sy
 	}
 	t1 := time.Now()
 	for gnmiPath, URIPath := range c.path2URI {
+		
 		val, err := transutil.TranslProcessGet(URIPath, nil)
 		if err != nil {
 			return
 		}
+		if !subscribe.UpdatesOnly {
+			spbv := &spb.Value{
+				Prefix:       c.prefix,
+				Path:         gnmiPath,
+				Timestamp:    time.Now().UnixNano(),
+				SyncResponse: false,
+				Val:          val,
+			}
 
-		spbv := &spb.Value{
-			Prefix:       c.prefix,
-			Path:         gnmiPath,
-			Timestamp:    time.Now().UnixNano(),
-			SyncResponse: false,
-			Val:          val,
+			c.q.Put(Value{spbv})
+			log.V(6).Infof("Added spbv #%v", spbv)
 		}
-
-		c.q.Put(Value{spbv})
-		log.V(6).Infof("Added spbv #%v", spbv)
 	}
 
 	c.q.Put(Value{

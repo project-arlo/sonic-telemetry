@@ -42,7 +42,13 @@ func (srv *Server) SwitchControlProcessor(context.Context, *gnoi_system_pb.Switc
 	log.V(1).Info("gNOI: SwitchControlProcessor")
 	return nil, nil
 }
-func (srv *Server) Time(context.Context, *gnoi_system_pb.TimeRequest) (*gnoi_system_pb.TimeResponse, error) {
+func (srv *Server) Time(ctx context.Context, req *gnoi_system_pb.TimeRequest) (*gnoi_system_pb.TimeResponse, error) {
+	if srv.config.UserAuth { 
+		err := PAMAuthenAndAuthor(ctx, false)
+		if err != nil {
+			return nil, err
+		}
+	}
 	log.V(1).Info("gNOI: Time")
 	var tm gnoi_system_pb.TimeResponse
 	tm.Time = uint64(time.Now().UnixNano())
