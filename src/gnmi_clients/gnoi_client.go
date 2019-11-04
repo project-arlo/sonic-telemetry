@@ -26,7 +26,15 @@ var (
 	username = flag.String("username", "", "Username if required")
 	password = flag.String("password", "", "Password if required")
 )
-
+func setUserPass(ctx context.Context) context.Context {
+	if len(*username) > 0 {
+		ctx = metadata.AppendToOutgoingContext(ctx, "username", *username)
+	}
+	if len(*password) > 0 {
+		ctx = metadata.AppendToOutgoingContext(ctx, "password", *password)
+	}
+	return ctx
+}
 func main() {
 	flag.Parse()
 	tls_conf := tls.Config{InsecureSkipVerify: true}
@@ -64,6 +72,10 @@ func main() {
 			sonicShowTechSupport(sc, ctx)
 		case "sum":
 			sonicSum(sc, ctx)
+		case "saveConfig":
+			saveConfig(sc, ctx)
+		case "reloadConfig":
+			reloadConfig(sc, ctx)
 		}
 	}
 }
@@ -86,15 +98,12 @@ func sonicShowTechSupport(sc spb.SonicServiceClient, ctx context.Context) {
 	fmt.Println(resp.Output.OutputFilename)
 }
 func sonicSum(sc spb.SonicServiceClient, ctx context.Context) {
-	fmt.Println("Sonic sum")
+	fmt.Println("Sonic Sum")
 	req := &spb.SumRequest{
-		Input: &spb.SumRequest_Input{
-
-		},
+		Input: &spb.SumRequest_Input{},
 	}
 	nargs := strings.Replace(string(*args), "sonic-tests:input", "input", 1)
 	json.Unmarshal([]byte(nargs), &req)
-	fmt.Println(req)
 
 	resp,err := sc.Sum(ctx, req)
 
@@ -104,12 +113,66 @@ func sonicSum(sc spb.SonicServiceClient, ctx context.Context) {
 	fmt.Println(resp.Output.Result)
 }
 
-func setUserPass(ctx context.Context) context.Context {
-	if len(*username) > 0 {
-		ctx = metadata.AppendToOutgoingContext(ctx, "username", *username)
+func saveConfig(sc spb.SonicServiceClient, ctx context.Context) {
+	fmt.Println("Sonic SaveConfig")
+	req := &spb.SaveConfigRequest{
+		Input: &spb.SaveConfigRequest_Input{},
 	}
-	if len(*password) > 0 {
-		ctx = metadata.AppendToOutgoingContext(ctx, "password", *password)
+	nargs := strings.Replace(string(*args), "sonic-config-mgmt:input", "input", 1)
+	json.Unmarshal([]byte(nargs), &req)
+
+	resp,err := sc.SaveConfig(ctx, req)
+
+	if err != nil {
+		panic(err.Error())
 	}
-	return ctx
+	fmt.Println(resp.Output.Status)
+}
+
+func reloadConfig(sc spb.SonicServiceClient, ctx context.Context) {
+	fmt.Println("Sonic ReloadConfig")
+	req := &spb.ReloadConfigRequest{
+		Input: &spb.ReloadConfigRequest_Input{},
+	}
+	nargs := strings.Replace(string(*args), "sonic-config-mgmt:input", "input", 1)
+	json.Unmarshal([]byte(nargs), &req)
+
+	resp,err := sc.ReloadConfig(ctx, req)
+
+	if err != nil {
+		panic(err.Error())
+	}
+	fmt.Println(resp.Output.Status)
+}
+
+func loadMgmtConfig(sc spb.SonicServiceClient, ctx context.Context) {
+	fmt.Println("Sonic LoadMgmtConfig")
+	req := &spb.LoadMgmtConfigRequest{
+		Input: &spb.LoadMgmtConfigRequest_Input{},
+	}
+	nargs := strings.Replace(string(*args), "sonic-config-mgmt:input", "input", 1)
+	json.Unmarshal([]byte(nargs), &req)
+
+	resp,err := sc.LoadMgmtConfig(ctx, req)
+
+	if err != nil {
+		panic(err.Error())
+	}
+	fmt.Println(resp.Output.Status)
+}
+
+func loadMinigraph(sc spb.SonicServiceClient, ctx context.Context) {
+	fmt.Println("Sonic LoadMinigraph")
+	req := &spb.LoadMinigraphRequest{
+		Input: &spb.LoadMinigraphRequest_Input{},
+	}
+	nargs := strings.Replace(string(*args), "sonic-config-mgmt:input", "input", 1)
+	json.Unmarshal([]byte(nargs), &req)
+
+	resp,err := sc.LoadMinigraph(ctx, req)
+
+	if err != nil {
+		panic(err.Error())
+	}
+	fmt.Println(resp.Output.Status)
 }
