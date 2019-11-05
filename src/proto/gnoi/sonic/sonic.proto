@@ -5,13 +5,16 @@ package gnoi.sonic;
 //option (types.gnoi_version) = "0.1.0";
 
 service SonicService {
-  rpc ShowTechsupport (TechsupportRequest) returns (TechsupportResponse) {}
-  rpc Sum (SumRequest) returns (SumResponse) {}
 
-  rpc SaveConfig(SaveConfigRequest) returns (SaveConfigResponse) {}
-  rpc ReloadConfig(ReloadConfigRequest) returns (ReloadConfigResponse) {}
-  rpc LoadMgmtConfig(LoadMgmtConfigRequest) returns (LoadMgmtConfigResponse) {}
-  rpc LoadMinigraph(LoadMinigraphRequest) returns (LoadMinigraphResponse) {}
+    rpc ShowTechsupport (TechsupportRequest) returns (TechsupportResponse) {}
+
+    rpc Sum (SumRequest) returns (SumResponse) {}
+
+    rpc SaveConfig(SaveConfigRequest) returns (SaveConfigResponse) {}
+    rpc ReloadConfig(ReloadConfigRequest) returns (ReloadConfigResponse) {}
+    rpc LoadMgmtConfig(LoadMgmtConfigRequest) returns (LoadMgmtConfigResponse) {}
+    rpc LoadMinigraph(LoadMinigraphRequest) returns (LoadMinigraphResponse) {}
+
 
 }
 

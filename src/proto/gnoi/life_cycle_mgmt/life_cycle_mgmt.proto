@@ -1,0 +1,133 @@
+
+// Generic Network Operation Interface, GNOI, defines a set of RPC's used for
+// the operational aspects of network targets. These services are meant to be
+// used in conjunction with GNMI for all target state and operational aspects
+// of a network target. The gnoi.system.Service is the only mandatory vendor
+// implementation.
+
+syntax = "proto3";
+
+package gnoi.life_cycle_mgmt;
+
+import "github.com/openconfig/gnoi/types/types.proto";
+
+option (types.gnoi_version) = "0.1.0";
+
+// The gNOI service is a collection of operational RPC's that allow for the
+// management of a target outside of the configuration and telemetry pipeline.
+
+service life_cycle_mgmt {
+
+  // DownloadAndInstall downloads the image specified in the image-url specified in 
+  // the DownloadAndInstallRequest. The supported image-url path could a remote FTP server, 
+  // remote HTTP or HTTPS server or remote TFTP file system. Then, it installs the image onto the switch.
+  // 
+  rpc DownloadAndInstall(DownloadAndInstallRequest) returns (DownloadAndInstallResponse) {}
+
+  // GetUpgradeStatus retrieves the status of an image upgrade. Itis a mechanism for monitoring the status of the image file transfer 
+  // the status of the image installation. It will return file transfer state, transfer progress percentage and Image installation state
+
+  rpc GetUpgradeStatus(GetUpgradeStatusRequest) returns (GetUpgradeStatusResponse) {}
+
+  // CancelUpgrade cancels an active file download in progress. During the course of the image file transfer,
+  // CancelUpgrade will abort the image file transfer and the upgrade operation will terminate. 
+  // By the time CancelUpgrade is issued, if image file transfer is 100% complete and the image installation 
+  // is in progress, CancelUpgrade will not work. Also, CancelUpgrade  will not work once Activate is issued.
+  rpc CancelUpgrade(CancelUpgradeRequest) returns (CancelUpgradeResponse) {}
+
+  // Activate is a a two step process. In the first step, the boot partition is set to standby for subsequent boot.
+  // In the second step, a system reload is issued to boot the newly installed OS10 image from standby partition. 
+  // Activate image requires a system reload and hence is service affecting.
+  rpc Activate(ActivateRequest) returns (ActivateResponse) {}
+
+}
+
+message DownloadAndInstallRequest {
+  string image_url = 1; // Image Url 
+
+  // The Image URL will be of one of the following:
+  //ftp://userid:passwd@hostip/filepath
+  //http://hostip/filepath
+  //image://filepath
+  //scp://userid:passwd@hostip/filepath
+  //sftp://userid:passwd@hostip/filepath
+  //tftp://hostip/filepath
+}
+  
+message DownloadAndInstallResponse {
+  enum Di_resp_code {
+    di_command_sent_ok = 0;          // download_and_install command sent
+    di_command_error = 1;            // download_and_install command error
+  }
+  Di_resp_code response_code = 1;
+  string response_reason = 2;
+}
+
+message GetUpgradeStatusRequest {
+}
+
+message GetUpgradeStatusResponse {
+
+  enum Xfer_task_state {
+    xfer_idle = 0;			// state is idle
+    xfer_download = 1;			// state is file download in progress
+    xfer_download_failed = 2;		// state is file download failed
+    xfer_file_validation = 3;		// state is file validation in progress
+    xfer_file_validation_failed = 4;	// state is file validation failed
+    xfer_file_extraction = 5; 		// state is file extraction in progress
+    xfer_file_extraction_failed = 6;	// state is file extraction failed
+    xfer_transfer_failed = 7;		// state is file transfer operation failed
+  }
+
+  enum Global_state {
+    gs_idle = 0;			// idle stae
+    gs_download = 1;			// download in progress
+    gs_install = 2;			// install in progress
+  }
+  enum Install_task_state {
+    install_idle = 0;			// state is idle
+    install_install = 1;			// state is file installation in progress
+    install_install_failed = 2;		// state is file installation failed
+    install_set_boot = 3;			// state is set next boot partition in progress
+    install_set_boot_failed = 4;		// state is set next boot partition failed
+    install_reboot = 5;			// state is reboot in progress
+  }
+
+  uint32 file_progress = 1;		// file percentage
+  uint64 file_size = 2;			// file size in bytes
+  uint64 file_transfer_bytes = 3;	// number of bytes transferred 
+  uint32 file_transfer_rate = 4;	// current transfer rate 
+  uint64 xfer_task_end_time = 5;	// end time of task in seconds since epoch
+  uint64 xfer_task_start_time = 6;	// start time of task in seconds since epoch
+  Xfer_task_state xfer_task_state = 7;	// current state of file transfer
+  string xfer_task_state_detail = 8;	// current state detail of task
+  Global_state global_state = 9;	// global task state
+  uint64 install_task_end_time = 10;	// end time of task in seconds since epoch
+  uint64 install_task_start_time = 11;  // start time of task in seconds since epoch
+  Install_task_state install_task_state = 12;       // current state of installation
+  string install_task_state_detail = 13;// current state detail of task
+}
+
+message CancelUpgradeRequest {
+}
+
+message CancelUpgradeResponse {
+  enum Cancel_resp_code {
+    cancel_ok = 0;               // cancel response ok
+    cancel_error = 1;            // cancel response error
+  }
+  Cancel_resp_code response_code = 1;
+  string response_reason = 2;
+}
+
+message ActivateRequest {
+}
+
+message ActivateResponse {
+  enum Activate_resp_code {
+    activate_ok = 0;               // activate response ok
+    activate_error = 1;            // activate response error 
+  }
+  Activate_resp_code response_code = 1;
+  string response_reason = 2;
+}

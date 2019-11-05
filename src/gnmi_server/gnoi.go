@@ -5,7 +5,8 @@ import (
 	gnoi_system_pb "github.com/openconfig/gnoi/system"
 	log "github.com/golang/glog"
 	"time"
-	spb "proto/gnoi"
+	spb "proto/gnoi/sonic"
+	lcmpb "proto/gnoi/life_cycle_mgmt"
 	transutil "transl_utils"
 	"google.golang.org/grpc/status"
 	"google.golang.org/grpc/codes"
@@ -156,4 +157,17 @@ func (srv *Server) LoadMinigraph(ctx context.Context, req *spb.LoadMinigraphRequ
 		return nil, status.Error(codes.Unknown, err.Error())
 	}
 	return &resp, nil
+}
+
+func (srv *Server) Activate(ctx context.Context, req *lcmpb.ActivateRequest) (*lcmpb.ActivateResponse, error) {
+	return nil, nil
+}
+func (srv *Server) CancelUpgrade(ctx context.Context, req *lcmpb.CancelUpgradeRequest) (*lcmpb.CancelUpgradeResponse, error) {
+	return nil, nil
+}
+func (srv *Server) GetUpgradeStatus(ctx context.Context, req *lcmpb.GetUpgradeStatusRequest) (*lcmpb.GetUpgradeStatusResponse, error) {
+	return nil, nil
+}
+func (srv *Server) DownloadAndInstall(ctx context.Context, req *lcmpb.DownloadAndInstallRequest) (*lcmpb.DownloadAndInstallResponse, error) {
+	return nil, nil
 }
