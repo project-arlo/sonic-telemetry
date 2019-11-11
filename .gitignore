@@ -5,4 +5,4 @@ debian/sonic-telemetry.debhelper.log
 debian/sonic-telemetry.substvars
 debian/sonic-telemetry/
 telemetry
-
+*.swp

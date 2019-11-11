@@ -55,6 +55,7 @@ var (
 	targetAddr = flag.String("target_addr", "localhost:10161", "The target address in the format of host:port")
 	targetName = flag.String("target_name", "hostname.com", "The target name use to verify the hostname returned by TLS handshake")
 	timeOut    = flag.Duration("time_out", 10*time.Second, "Timeout for the Get request, 10 seconds by default")
+	pathTarget = flag.String("xpath_target", "", "name of the target for which the path is a member")
 )
 
 func buildPbUpdateList(pathValuePairs []string) []*pb.Update {
@@ -148,8 +149,10 @@ func main() {
 	}
 	replaceList := buildPbUpdateList(replaceOpt)
 	updateList := buildPbUpdateList(updateOpt)
-
+	var prefix pb.Path
+	prefix.Target = *pathTarget
 	setRequest := &pb.SetRequest{
+		Prefix:    &prefix,
 		Delete:  deleteList,
 		Replace: replaceList,
 		Update:  updateList,
