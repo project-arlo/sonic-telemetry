@@ -79,7 +79,15 @@ func systemTime(sc gnoi_system_pb.SystemClient, ctx context.Context) {
 }
 func sonicShowTechSupport(sc spb.SonicServiceClient, ctx context.Context) {
 	fmt.Println("Sonic ShowTechsupport")
-	resp,err := sc.ShowTechsupport(ctx, new(spb.TechsupportRequest))
+	req := &spb.TechsupportRequest {
+		Input: &spb.TechsupportRequest_Input{
+
+		},
+	}
+	nargs := strings.Replace(string(*args), "sonic-tests:input", "input", 1)
+	json.Unmarshal([]byte(nargs), &req)
+	fmt.Println(req)
+	resp,err := sc.ShowTechsupport(ctx, req)
 	if err != nil {
 		panic(err.Error())
 	}
