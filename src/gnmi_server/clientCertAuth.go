@@ -7,7 +7,6 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/status"
-	"fmt"
 )
 func ClientCertAuthenAndAuthor(ctx context.Context, admin_required bool) error {
 	p, ok := peer.FromContext(ctx)
