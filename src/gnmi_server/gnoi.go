@@ -90,3 +90,70 @@ func (srv *Server) Sum(stc context.Context, req *spb.SumRequest) (*spb.SumRespon
 	return &resp, nil
 }
 
+func (srv *Server) SaveConfig(ctx context.Context, req *spb.SaveConfigRequest) (*spb.SaveConfigResponse, error) {
+	log.V(1).Info("gNOI: Sonic SaveConfig")
+	var resp spb.SaveConfigResponse
+	reqstr := fmt.Sprintf("{\"save_config:input\": {\"file_path\": \"%s\"}", req.Input.FilePath)
+	jsresp, err:= transutil.TranslProcessAction("/sonic-config-mgmt:save_config", []byte(reqstr))
+	if err != nil {
+		return nil, status.Error(codes.Unknown, err.Error())
+	}
+
+	jsresp = []byte(strings.Replace(string(jsresp), "save_config:output", "output", 1))
+	err = json.Unmarshal(jsresp, &resp)
+	if err != nil {
+		return nil, status.Error(codes.Unknown, err.Error())
+	}
+	return &resp, nil
+}
+
+func (srv *Server) ReloadConfig(ctx context.Context, req *spb.ReloadConfigRequest) (*spb.ReloadConfigResponse, error) {
+	log.V(1).Info("gNOI: Sonic ReloadConfig")
+	var resp spb.ReloadConfigResponse
+	reqstr := fmt.Sprintf("{\"reload_config:input\": {\"file_path\": \"%s\"}", req.Input.FilePath)
+	jsresp, err:= transutil.TranslProcessAction("/sonic-config-mgmt:reload_config", []byte(reqstr))
+	if err != nil {
+		return nil, status.Error(codes.Unknown, err.Error())
+	}
+
+	jsresp = []byte(strings.Replace(string(jsresp), "reload_config:output", "output", 1))
+	err = json.Unmarshal(jsresp, &resp)
+	if err != nil {
+		return nil, status.Error(codes.Unknown, err.Error())
+	}
+	return &resp, nil
+}
+
+func (srv *Server) LoadMgmtConfig(ctx context.Context, req *spb.LoadMgmtConfigRequest) (*spb.LoadMgmtConfigResponse, error) {
+	log.V(1).Info("gNOI: Sonic LoadMgmtConfig")
+	var resp spb.LoadMgmtConfigResponse
+	reqstr := fmt.Sprintf("{\"load_mgmt_config:input\": {\"file_path\": \"%s\"}", req.Input.FilePath)
+	jsresp, err:= transutil.TranslProcessAction("/sonic-config-mgmt:load_mgmt_config", []byte(reqstr))
+	if err != nil {
+		return nil, status.Error(codes.Unknown, err.Error())
+	}
+
+	jsresp = []byte(strings.Replace(string(jsresp), "load_mgmt_config:output", "output", 1))
+	err = json.Unmarshal(jsresp, &resp)
+	if err != nil {
+		return nil, status.Error(codes.Unknown, err.Error())
+	}
+	return &resp, nil
+}
+
+func (srv *Server) LoadMinigraph(ctx context.Context, req *spb.LoadMinigraphRequest) (*spb.LoadMinigraphResponse, error) {
+	log.V(1).Info("gNOI: Sonic LoadMinigraph")
+	var resp spb.LoadMinigraphResponse
+	reqstr := fmt.Sprintf("{\"load_minigraph:input\": {\"file_path\": \"%s\"}", req.Input.FilePath)
+	jsresp, err:= transutil.TranslProcessAction("/sonic-config-mgmt:load_minigraph", []byte(reqstr))
+	if err != nil {
+		return nil, status.Error(codes.Unknown, err.Error())
+	}
+
+	jsresp = []byte(strings.Replace(string(jsresp), "load_minigraph:output", "output", 1))
+	err = json.Unmarshal(jsresp, &resp)
+	if err != nil {
+		return nil, status.Error(codes.Unknown, err.Error())
+	}
+	return &resp, nil
+}
