@@ -43,8 +43,14 @@ func (srv *Server) SwitchControlProcessor(context.Context, *gnoi_system_pb.Switc
 	return nil, nil
 }
 func (srv *Server) Time(ctx context.Context, req *gnoi_system_pb.TimeRequest) (*gnoi_system_pb.TimeResponse, error) {
-	if srv.config.UserAuth { 
+	if srv.config.UserAuth.User { 
 		err := PAMAuthenAndAuthor(ctx, false)
+		if err != nil {
+			return nil, err
+		}
+	}
+	if srv.config.UserAuth.Cert { 
+		err := ClientCertAuthenAndAuthor(ctx, false)
 		if err != nil {
 			return nil, err
 		}

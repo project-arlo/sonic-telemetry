@@ -36,13 +36,18 @@ type Server struct {
 	cMu     sync.Mutex
 	clients map[string]*Client
 }
+type authTypes struct {
+	User bool
+	Cert bool
+	Jwt bool
+}
 
 // Config is a collection of values for Server
 type Config struct {
 	// Port for the Server to listen on. If 0 or unset the Server will pick a port
 	// for this Server.
 	Port int64
-	UserAuth bool
+	UserAuth authTypes
 }
 
 // New returns an initialized Server.
@@ -64,7 +69,7 @@ func NewServer(config *Config, opts []grpc.ServerOption) (*Server, error) {
 	if srv.config.Port < 0 {
 		srv.config.Port = 0
 	}
-	srv.lis, err = net.Listen("tcp", fmt.Sprintf(":%d", srv.config.Port))
+	srv.lis, err = net.Listen("tcp", fmt.Sprintf("localhost:%d", srv.config.Port))
 	if err != nil {
 		return nil, fmt.Errorf("failed to open listener port %d: %v", srv.config.Port, err)
 	}
@@ -100,8 +105,14 @@ func (srv *Server) Port() int64 {
 func (srv *Server) Subscribe(stream gnmipb.GNMI_SubscribeServer) error {
 
 	ctx := stream.Context()
-	if srv.config.UserAuth { 
+	if srv.config.UserAuth.User { 
 		err := PAMAuthenAndAuthor(ctx, false)
+		if err != nil {
+			return err
+		}
+	}
+	if srv.config.UserAuth.Cert { 
+		err := ClientCertAuthenAndAuthor(ctx, false)
 		if err != nil {
 			return err
 		}
@@ -160,9 +171,15 @@ func (s *Server) checkEncodingAndModel(encoding gnmipb.Encoding, models []*gnmip
 }
 
 // Get implements the Get RPC in gNMI spec.
-func (s *Server) Get(ctx context.Context, req *gnmipb.GetRequest) (*gnmipb.GetResponse, error) {
-	if s.config.UserAuth { 
+func (srv *Server) Get(ctx context.Context, req *gnmipb.GetRequest) (*gnmipb.GetResponse, error) {
+	if srv.config.UserAuth.User { 
 		err := PAMAuthenAndAuthor(ctx, false)
+		if err != nil {
+			return nil, err
+		}
+	}
+	if srv.config.UserAuth.Cert { 
+		err := ClientCertAuthenAndAuthor(ctx, false)
 		if err != nil {
 			return nil, err
 		}
@@ -173,7 +190,7 @@ func (s *Server) Get(ctx context.Context, req *gnmipb.GetRequest) (*gnmipb.GetRe
 		return nil, status.Errorf(codes.Unimplemented, "unsupported request type: %s", gnmipb.GetRequest_DataType_name[int32(req.GetType())])
 	}
 
-	if err = s.checkEncodingAndModel(req.GetEncoding(), req.GetUseModels()); err != nil {
+	if err = srv.checkEncodingAndModel(req.GetEncoding(), req.GetUseModels()); err != nil {
 		return nil, status.Error(codes.Unimplemented, err.Error())
 	}
 
@@ -221,8 +238,14 @@ func (s *Server) Get(ctx context.Context, req *gnmipb.GetRequest) (*gnmipb.GetRe
 
 // Set method is not implemented. Refer to gnxi for examples with openconfig integration
 func (srv *Server) Set(ctx context.Context,req *gnmipb.SetRequest) (*gnmipb.SetResponse, error) {
-		if srv.config.UserAuth { 
+		if srv.config.UserAuth.User { 
 			err := PAMAuthenAndAuthor(ctx, true)
+			if err != nil {
+				return nil, err
+			}
+		}
+		if srv.config.UserAuth.Cert { 
+			err := ClientCertAuthenAndAuthor(ctx, true)
 			if err != nil {
 				return nil, err
 			}
@@ -303,8 +326,14 @@ func (srv *Server) Set(ctx context.Context,req *gnmipb.SetRequest) (*gnmipb.SetR
 
 // Capabilities method is not implemented. Refer to gnxi for examples with openconfig integration
 func (srv *Server) Capabilities(ctx context.Context, req *gnmipb.CapabilityRequest) (*gnmipb.CapabilityResponse, error) {
-	if srv.config.UserAuth { 
+	if srv.config.UserAuth.User { 
 		err := PAMAuthenAndAuthor(ctx, false)
+		if err != nil {
+			return nil, err
+		}
+	}
+	if srv.config.UserAuth.Cert { 
+		err := ClientCertAuthenAndAuthor(ctx, false)
 		if err != nil {
 			return nil, err
 		}

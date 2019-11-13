@@ -86,3 +86,11 @@ func IsAdminGroup(username string) bool {
 	}
 	return false
 }
+
+func DoesUserExist(username string) bool {
+	_, err := user.Lookup(username)
+	if err != nil {
+		return false
+	}
+	return true
+}
