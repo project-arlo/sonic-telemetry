@@ -5,7 +5,7 @@ import (
 	"crypto/x509"
 	"flag"
 	"io/ioutil"
-
+	"time"
 	log "github.com/golang/glog"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
@@ -23,6 +23,8 @@ var (
 	insecure          = flag.Bool("insecure", false, "Skip providing TLS cert and key, for testing only!")
 	allowNoClientCert = flag.Bool("allow_no_client_auth", false, "When set, telemetry server will request but not require a client certificate.")
 	userAuth          = flag.String("client_auth", "none", "One of none|user|cert|jwt")
+	jwtRefInt         = flag.Uint64("jwt_refresh_int", 30, "Seconds before JWT expiry the token can be refreshed.")
+	jwtValInt         = flag.Uint64("jwt_valid_int", 3600, "Seconds that JWT token is valid for.")
 )
 
 func main() {
@@ -35,7 +37,8 @@ func main() {
 	}
 	var certificate tls.Certificate
 	var err error
-
+	gnmi.JwtRefreshInt = time.Duration(*jwtRefInt*uint64(time.Second))
+	gnmi.JwtValidInt = time.Duration(*jwtValInt*uint64(time.Second))
 	if *insecure {
 		certificate, err = testcert.NewCert()
 		if err != nil {
@@ -102,6 +105,7 @@ func main() {
 	if *userAuth == "jwt" {
 		cfg.UserAuth.Jwt = true
 		gnmi.GenerateJwtSecretKey()
+
 	}
 	if *userAuth == "cert" {
 		cfg.UserAuth.Cert = true

@@ -76,14 +76,10 @@ func JwtAuthenAndAuthor(ctx context.Context, admin_required bool) (*spb.JwtToken
 		return hmacSampleSecret, nil
 	})
 	if err != nil {
-		if err == jwt.ErrSignatureInvalid {
-			return &token, status.Errorf(codes.InvalidArgument, "Invalid JWT Signature")
-			
-		}
-		return &token, status.Errorf(codes.InvalidArgument, "Bad Request")
+		return &token, status.Errorf(codes.Unauthenticated, err.Error())
 	}
 	if !tkn.Valid {
-		return &token, status.Errorf(codes.InvalidArgument, "Invalid JWT Token")
+		return &token, status.Errorf(codes.Unauthenticated, "Invalid JWT Token")
 	}
 	return &token, nil
 }
