@@ -25,13 +25,17 @@ var (
 	args = flag.String("jsonin", "", "RPC Arguments in json format")
 	username = flag.String("username", "", "Username if required")
 	password = flag.String("password", "", "Password if required")
+	jwtToken = flag.String("jwt_token", "", "JWT Token if required")
 )
-func setUserPass(ctx context.Context) context.Context {
+func setUserCreds(ctx context.Context) context.Context {
 	if len(*username) > 0 {
 		ctx = metadata.AppendToOutgoingContext(ctx, "username", *username)
 	}
 	if len(*password) > 0 {
 		ctx = metadata.AppendToOutgoingContext(ctx, "password", *password)
+	}
+	if len(*jwtToken) > 0 {
+		ctx = metadata.AppendToOutgoingContext(ctx, "access_token", *jwtToken)
 	}
 	return ctx
 }
@@ -62,8 +66,9 @@ func main() {
 		sc := gnoi_system_pb.NewSystemClient(conn)
 		switch *rpc {
 		case "Time":
-
 			systemTime(sc, ctx)
+		default:
+			panic("Invalid RPC Name")
 		}
 	case "Sonic":
 		sc := spb.NewSonicServiceClient(conn)
@@ -76,13 +81,22 @@ func main() {
 			saveConfig(sc, ctx)
 		case "reloadConfig":
 			reloadConfig(sc, ctx)
+		case "authenticate":
+			authenticate(sc, ctx)
+		case "refresh":
+			refresh(sc, ctx)
+		default:
+			panic("Invalid RPC Name")
 		}
+	default:
+		panic("Invalid Module Name")
 	}
+
 }
 
 func systemTime(sc gnoi_system_pb.SystemClient, ctx context.Context) {
 	fmt.Println("System Time")
-	ctx = setUserPass(ctx)
+	ctx = setUserCreds(ctx)
 	resp,err := sc.Time(ctx, new(gnoi_system_pb.TimeRequest))
 	if err != nil {
 		panic(err.Error())
@@ -91,6 +105,7 @@ func systemTime(sc gnoi_system_pb.SystemClient, ctx context.Context) {
 }
 func sonicShowTechSupport(sc spb.SonicServiceClient, ctx context.Context) {
 	fmt.Println("Sonic ShowTechsupport")
+	ctx = setUserCreds(ctx)
 	req := &spb.TechsupportRequest {
 		Input: &spb.TechsupportRequest_Input{
 
@@ -107,6 +122,7 @@ func sonicShowTechSupport(sc spb.SonicServiceClient, ctx context.Context) {
 }
 func sonicSum(sc spb.SonicServiceClient, ctx context.Context) {
 	fmt.Println("Sonic Sum")
+	ctx = setUserCreds(ctx)
 	req := &spb.SumRequest{
 		Input: &spb.SumRequest_Input{},
 	}
@@ -123,6 +139,7 @@ func sonicSum(sc spb.SonicServiceClient, ctx context.Context) {
 
 func saveConfig(sc spb.SonicServiceClient, ctx context.Context) {
 	fmt.Println("Sonic SaveConfig")
+	ctx = setUserCreds(ctx)
 	req := &spb.SaveConfigRequest{
 		Input: &spb.SaveConfigRequest_Input{},
 	}
@@ -139,6 +156,7 @@ func saveConfig(sc spb.SonicServiceClient, ctx context.Context) {
 
 func reloadConfig(sc spb.SonicServiceClient, ctx context.Context) {
 	fmt.Println("Sonic ReloadConfig")
+	ctx = setUserCreds(ctx)
 	req := &spb.ReloadConfigRequest{
 		Input: &spb.ReloadConfigRequest_Input{},
 	}
@@ -155,6 +173,7 @@ func reloadConfig(sc spb.SonicServiceClient, ctx context.Context) {
 
 func loadMgmtConfig(sc spb.SonicServiceClient, ctx context.Context) {
 	fmt.Println("Sonic LoadMgmtConfig")
+	ctx = setUserCreds(ctx)
 	req := &spb.LoadMgmtConfigRequest{
 		Input: &spb.LoadMgmtConfigRequest_Input{},
 	}
@@ -171,6 +190,7 @@ func loadMgmtConfig(sc spb.SonicServiceClient, ctx context.Context) {
 
 func loadMinigraph(sc spb.SonicServiceClient, ctx context.Context) {
 	fmt.Println("Sonic LoadMinigraph")
+	ctx = setUserCreds(ctx)
 	req := &spb.LoadMinigraphRequest{
 		Input: &spb.LoadMinigraphRequest_Input{},
 	}
@@ -183,4 +203,32 @@ func loadMinigraph(sc spb.SonicServiceClient, ctx context.Context) {
 		panic(err.Error())
 	}
 	fmt.Println(resp.Output.Status)
+}
+
+func authenticate(sc spb.SonicServiceClient, ctx context.Context) {
+	fmt.Println("Sonic Authenticate")
+	ctx = setUserCreds(ctx)
+	req := &spb.AuthenticateRequest {}
+	
+	json.Unmarshal([]byte(*args), &req)
+	fmt.Println(req)
+	resp,err := sc.Authenticate(ctx, req)
+	if err != nil {
+		panic(err.Error())
+	}
+	fmt.Println(resp)
+}
+
+func refresh(sc spb.SonicServiceClient, ctx context.Context) {
+	fmt.Println("Sonic Refresh")
+	ctx = setUserCreds(ctx)
+	req := &spb.RefreshRequest {}
+	
+	json.Unmarshal([]byte(*args), &req)
+	fmt.Println(req)
+	resp,err := sc.Refresh(ctx, req)
+	if err != nil {
+		panic(err.Error())
+	}
+	fmt.Println(resp)
 }

@@ -103,16 +103,22 @@ func (srv *Server) Port() int64 {
 
 func authenticate(UserAuth authTypes, ctx context.Context, admin_required bool) error {
 	if UserAuth.User { 
-		err := BasicAuthenAndAuthor(ctx, false)
+		err := BasicAuthenAndAuthor(ctx, admin_required)
 		if err != nil {
 			return err
 		}
 	}
 	if UserAuth.Cert { 
-		err := ClientCertAuthenAndAuthor(ctx, false)
+		err := ClientCertAuthenAndAuthor(ctx, admin_required)
 		if err != nil {
 			return err
 		}
+	}
+	if UserAuth.Jwt {
+		_, err := JwtAuthenAndAuthor(ctx, admin_required)
+		if err != nil {
+			return err
+		}	
 	}
 	return nil
 }

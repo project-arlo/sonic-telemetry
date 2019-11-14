@@ -12,6 +12,7 @@ import (
 	"encoding/json"
 	"strings"
 	"fmt"
+	jwt "github.com/dgrijalva/jwt-go"
 )
 
 func (srv *Server) Reboot(ctx context.Context, req *gnoi_system_pb.RebootRequest) (*gnoi_system_pb.RebootResponse, error) {
@@ -209,4 +210,45 @@ func (srv *Server) LoadMinigraph(ctx context.Context, req *spb.LoadMinigraphRequ
 		return nil, status.Error(codes.Unknown, err.Error())
 	}
 	return &resp, nil
+}
+
+func (srv *Server) Authenticate(ctx context.Context, req *spb.AuthenticateRequest) (*spb.AuthenticateResponse, error) {
+	// Can't enforce normal authentication here.. maybe only enforce client cert auth if enabled?
+	// err := authenticate(srv.config.UserAuth, ctx, false)
+	// if err != nil {
+	// 	return nil, err
+	// }
+	log.V(1).Info("gNOI: Sonic Authenticate")
+
+
+
+	auth_success, _ := UserPwAuth(req.Username, req.Password)
+	if  auth_success {
+		return &spb.AuthenticateResponse{Token: tokenResp(req.Username)}, nil
+	}
+	return nil, status.Errorf(codes.PermissionDenied, "Invalid Username or Password")	
+
+}
+func (srv *Server) Refresh(ctx context.Context, req *spb.RefreshRequest) (*spb.RefreshResponse, error) {
+	err := authenticate(srv.config.UserAuth, ctx, false)
+	if err != nil {
+		return nil, err
+	}
+	log.V(1).Info("gNOI: Sonic Refresh")
+	
+	token, err := JwtAuthenAndAuthor(ctx, false)
+	if err != nil {
+		return nil, err
+	}
+
+	claims := &Claims{}
+	jwt.ParseWithClaims(token.AccessToken, claims, func(token *jwt.Token) (interface{}, error) {
+		return hmacSampleSecret, nil
+	})
+	if time.Unix(claims.ExpiresAt, 0).Sub(time.Now()) > JwtRefreshInt {
+		return nil, status.Errorf(codes.InvalidArgument, "Invalid JWT Token")
+	}
+	
+	return &spb.RefreshResponse{Token: tokenResp(claims.Username)}, nil
+
 }
