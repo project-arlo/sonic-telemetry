@@ -76,6 +76,8 @@ func main() {
 			saveConfig(sc, ctx)
 		case "reloadConfig":
 			reloadConfig(sc, ctx)
+		case "authenticate":
+			authenticate(sc, ctx)
 		}
 	}
 }
@@ -183,4 +185,17 @@ func loadMinigraph(sc spb.SonicServiceClient, ctx context.Context) {
 		panic(err.Error())
 	}
 	fmt.Println(resp.Output.Status)
+}
+
+func authenticate(sc spb.SonicServiceClient, ctx context.Context) {
+	fmt.Println("Sonic Authenticate")
+	req := &spb.AuthenticateRequest {}
+	
+	json.Unmarshal([]byte(*args), &req)
+	fmt.Println(req)
+	resp,err := sc.Authenticate(ctx, req)
+	if err != nil {
+		panic(err.Error())
+	}
+	fmt.Println(resp)
 }

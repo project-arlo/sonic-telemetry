@@ -99,10 +99,10 @@ func main() {
 	if *userAuth == "user" {
 		cfg.UserAuth.User = true
 	}
-	// if *userAuth == "jwt" {
-	// 	cfg.UserAuth.Jwt = true
-	// 	GenerateJwtSecretKey()
-	// }
+	if *userAuth == "jwt" {
+		cfg.UserAuth.Jwt = true
+		gnmi.GenerateJwtSecretKey()
+	}
 	if *userAuth == "cert" {
 		cfg.UserAuth.Cert = true
 	}
