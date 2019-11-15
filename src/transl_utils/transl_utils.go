@@ -8,6 +8,8 @@ import (
 	log "github.com/golang/glog"
 	gnmipb "github.com/openconfig/gnmi/proto/gnmi"
 	"translib"
+	"common_utils"
+	"context"
 )
 
 func GnmiTranslFullPath(prefix, path *gnmipb.Path) *gnmipb.Path {
@@ -75,11 +77,11 @@ func ConvertToURI(prefix *gnmipb.Path, path *gnmipb.Path, req *string) error {
 }
 
 /* Fill the values from TransLib. */
-func TranslProcessGet(uriPath string, op *string) (*gnmipb.TypedValue, error) {
+func TranslProcessGet(uriPath string, op *string, ctx context.Context) (*gnmipb.TypedValue, error) {
 	var jv []byte
 	var data []byte
-
-	req := translib.GetRequest{Path:uriPath}
+	rc, ctx := common_utils.GetContext(ctx)
+	req := translib.GetRequest{Path:uriPath, User: rc.Auth.User, Group: rc.Auth.Group}
 	resp, err1 := translib.Get(req)
 
 	if isTranslibSuccess(err1) {
@@ -103,7 +105,7 @@ func TranslProcessGet(uriPath string, op *string) (*gnmipb.TypedValue, error) {
 }
 
 /* Delete request handling. */
-func TranslProcessDelete(uri string) error {
+func TranslProcessDelete(uri string, ctx context.Context) error {
 	var str3 string
 	payload := []byte(str3)
 	req := translib.SetRequest{Path:uri, Payload:payload}
@@ -117,7 +119,7 @@ func TranslProcessDelete(uri string) error {
 }
 
 /* Replace request handling. */
-func TranslProcessReplace(uri string, t *gnmipb.TypedValue) error {
+func TranslProcessReplace(uri string, t *gnmipb.TypedValue, ctx context.Context) error {
 	/* Form the CURL request and send to client . */
 	str := string(t.GetJsonIetfVal())
 	str3 := strings.Replace(str, "\n", "", -1)
@@ -141,7 +143,7 @@ func TranslProcessReplace(uri string, t *gnmipb.TypedValue) error {
 }
 
 /* Update request handling. */
-func TranslProcessUpdate(uri string, t *gnmipb.TypedValue) error {
+func TranslProcessUpdate(uri string, t *gnmipb.TypedValue, ctx context.Context) error {
 	/* Form the CURL request and send to client . */
 	str := string(t.GetJsonIetfVal())
 	str3 := strings.Replace(str, "\n", "", -1)
@@ -163,7 +165,7 @@ func TranslProcessUpdate(uri string, t *gnmipb.TypedValue) error {
 }
 
 /* Action/rpc request handling. */
-func TranslProcessAction(uri string, payload []byte) ([]byte, error) {
+func TranslProcessAction(uri string, payload []byte, ctx context.Context) ([]byte, error) {
 	var req translib.ActionRequest
 	req.Path = uri
 	req.Payload = payload

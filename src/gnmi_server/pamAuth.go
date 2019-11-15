@@ -3,8 +3,41 @@ package gnmi_server
 import (
 	"golang.org/x/crypto/ssh"
 	"os/user"
+	"common_utils"
 )
 
+func PopulateAuthStruct(username string, auth *common_utils.AuthInfo) error {
+	usr, err := user.Lookup(username)
+	if err != nil {
+		return err
+	}
+
+	auth.User = username
+
+	// Get primary group
+	group, err := user.LookupGroupId(usr.Gid)
+	if err != nil {
+		return err
+	}
+	auth.Group = group.Name
+
+	// Lookup remaining groups
+	gids, err := usr.GroupIds()
+	if err != nil {
+		return err
+	}
+	auth.Groups = make([]string, len(gids))
+	for idx, gid := range gids {
+		group, err := user.LookupGroupId(gid)
+		if err != nil {
+			return err
+		}
+		auth.Groups[idx] = group.Name
+	}
+
+	// TODO: Populate roles list
+	return nil
+}
 
 func UserPwAuth(username string, passwd string) (bool, error) {
 	/*
