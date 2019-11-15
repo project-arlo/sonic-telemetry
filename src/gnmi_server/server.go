@@ -19,6 +19,7 @@ import (
 	sdc "sonic_data_client"
 	gnmipb "github.com/openconfig/gnmi/proto/gnmi"
 	spb "proto/gnoi"
+	"bytes"
 	
 )
 
@@ -36,20 +37,60 @@ type Server struct {
 	cMu     sync.Mutex
 	clients map[string]*Client
 }
-type authTypes struct {
-	User bool
-	Cert bool
-	Jwt bool
-}
-
+type AuthTypes map[string]bool
 // Config is a collection of values for Server
 type Config struct {
 	// Port for the Server to listen on. If 0 or unset the Server will pick a port
 	// for this Server.
 	Port int64
-	UserAuth authTypes
+	UserAuth AuthTypes
 }
 
+func (i AuthTypes) String() string {
+    b := new(bytes.Buffer)
+    for key, value := range i {
+        if value {
+                fmt.Fprintf(b, "%s ", key)
+        }
+    }
+    return b.String()
+}
+func (i AuthTypes) Any() bool {
+    for _, value := range i {
+    	if value {
+        	return true
+    	}
+    }
+	return false
+}
+func (i AuthTypes) Enabled(mode string) bool {
+	if value, exist := i[mode]; exist && value {
+		return true
+	}
+	return false
+}
+func (i AuthTypes) Set(mode string) error {
+	modes := strings.Split(mode, ",")
+	for _,m := range modes {
+		m = strings.Trim(m, " ")
+		if _, exist := i[m]; !exist {
+			return fmt.Errorf("Expecting one or more of 'cert', 'password' or 'jwt'")
+		}
+	    i[m] = true
+	}
+    return nil
+}
+func (i AuthTypes) Unset(mode string) error {
+	modes := strings.Split(mode, ",")
+	for _,m := range modes {
+		m = strings.Trim(m, " ")
+		if _, exist := i[m]; !exist {
+			return fmt.Errorf("Expecting one or more of 'cert', 'password' or 'jwt'")
+		}
+	    i[m] = false
+	}
+    return nil
+}
 // New returns an initialized Server.
 func NewServer(config *Config, opts []grpc.ServerOption) (*Server, error) {
 	if config == nil {
@@ -101,25 +142,33 @@ func (srv *Server) Port() int64 {
 	return srv.config.Port
 }
 
-func authenticate(UserAuth authTypes, ctx context.Context, admin_required bool) error {
-	if UserAuth.User { 
-		err := BasicAuthenAndAuthor(ctx, admin_required)
-		if err != nil {
-			return err
+func authenticate(UserAuth AuthTypes, ctx context.Context, admin_required bool) error {
+	var err error
+	success := false
+
+	if UserAuth.Enabled("password") {
+		err = BasicAuthenAndAuthor(ctx, admin_required)
+		if err == nil {
+			success = true
 		}
 	}
-	if UserAuth.Cert { 
-		err := ClientCertAuthenAndAuthor(ctx, admin_required)
-		if err != nil {
-			return err
+	if !success && UserAuth.Enabled("jwt") {
+		_,err = JwtAuthenAndAuthor(ctx, admin_required)
+		if err == nil {
+			success = true
 		}
 	}
-	if UserAuth.Jwt {
-		_, err := JwtAuthenAndAuthor(ctx, admin_required)
-		if err != nil {
-			return err
-		}	
+	if !success && UserAuth.Enabled("cert") {
+		err = ClientCertAuthenAndAuthor(ctx, admin_required)
+		if err == nil {
+			success = true
+		}
 	}
+
+	if !success {
+		return err
+	} 
+
 	return nil
 }
 

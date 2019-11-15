@@ -30,7 +30,7 @@ import (
 	"github.com/google/gnxi/utils"
 	"github.com/google/gnxi/utils/credentials"
 	"github.com/jipanyang/gnxi/utils/xpath"
-
+	"google.golang.org/grpc/metadata"
 	pb "github.com/openconfig/gnmi/proto/gnmi"
 )
 
@@ -68,6 +68,7 @@ var (
 	targetName       = flag.String("target_name", "hostname.com", "The target name use to verify the hostname returned by TLS handshake")
 	timeOut          = flag.Duration("time_out", 10*time.Second, "Timeout for the Get request, 10 seconds by default")
 	encodingName     = flag.String("encoding", "JSON_IETF", "value encoding format to be used")
+	jwtToken         = flag.String("jwt_token", "", "JWT Token if required")
 )
 
 func main() {
@@ -87,6 +88,10 @@ func main() {
 
 	ctx, cancel := context.WithTimeout(context.Background(), *timeOut)
 	defer cancel()
+
+	if len(*jwtToken) > 0 {
+		ctx = metadata.AppendToOutgoingContext(ctx, "access_token", *jwtToken)
+	}
 
 	encoding, ok := pb.Encoding_value[*encodingName]
 	if !ok {
