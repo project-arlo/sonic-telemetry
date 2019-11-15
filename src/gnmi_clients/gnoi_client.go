@@ -2,12 +2,8 @@ package main
 
 import (
 	"google.golang.org/grpc"
-	// "google.golang.org/grpc/credentials"
 	gnoi_system_pb "github.com/openconfig/gnoi/system"
 	spb "proto/gnoi"
-	// "time"
-	// "math"
-	// "crypto/tls"
 	"context"
 	"os"
 	"os/signal"
@@ -24,18 +20,10 @@ var (
 	rpc = flag.String("rpc", "Time", "rpc call in specified module to call")
 	target = flag.String("target", "localhost:8080", "Address:port of gNOI Server")
 	args = flag.String("jsonin", "", "RPC Arguments in json format")
-	// username = flag.String("username", "", "Username if required")
-	// password = flag.String("password", "", "Password if required")
 	jwtToken = flag.String("jwt_token", "", "JWT Token if required")
 	targetName = flag.String("target_name", "hostname.com", "The target name use to verify the hostname returned by TLS handshake")
 )
 func setUserCreds(ctx context.Context) context.Context {
-	// if len(*username) > 0 {
-	// 	ctx = metadata.AppendToOutgoingContext(ctx, "username", *username)
-	// }
-	// if len(*password) > 0 {
-	// 	ctx = metadata.AppendToOutgoingContext(ctx, "password", *password)
-	// }
 	if len(*jwtToken) > 0 {
 		ctx = metadata.AppendToOutgoingContext(ctx, "access_token", *jwtToken)
 	}
@@ -43,14 +31,7 @@ func setUserCreds(ctx context.Context) context.Context {
 }
 func main() {
 	flag.Parse()
-	// tls_conf := tls.Config{InsecureSkipVerify: true}
 	opts := credentials.ClientCredentials(*targetName)
-    // opts := []grpc.DialOption{
-    //         grpc.WithTimeout(time.Second * 3),
-    //         grpc.WithBlock(),
-    //         grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(math.MaxInt32)),
-    //         grpc.WithTransportCredentials(credentials.NewTLS(&tls_conf)),
-    // }
 
     ctx, cancel := context.WithCancel(context.Background())
     go func() {
