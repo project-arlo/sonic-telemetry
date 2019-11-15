@@ -15,7 +15,7 @@ import (
 )
 
 var (
-	userAuth = gnmi.AuthTypes{"user": false, "cert": false, "jwt": false}
+	userAuth = gnmi.AuthTypes{"password": false, "cert": false, "jwt": false}
 	port = flag.Int("port", -1, "port to listen on")
 	// Certificate files.
 	caCert            = flag.String("ca_crt", "", "CA certificate for client certificate validation. Optional.")
@@ -28,7 +28,7 @@ var (
 )
 
 func main() {
-	flag.Var(userAuth, "client_auth", "Client auth mode(s) - cert,user,jwt")
+	flag.Var(userAuth, "client_auth", "Client auth mode(s) - cert,password,jwt")
 	flag.Parse()
 
 	switch {

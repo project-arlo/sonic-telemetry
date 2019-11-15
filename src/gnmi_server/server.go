@@ -74,7 +74,7 @@ func (i AuthTypes) Set(mode string) error {
 	for _,m := range modes {
 		m = strings.Trim(m, " ")
 		if _, exist := i[m]; !exist {
-			return fmt.Errorf("Expecting one or more of 'cert', 'user' or 'jwt'")
+			return fmt.Errorf("Expecting one or more of 'cert', 'password' or 'jwt'")
 		}
 	    i[m] = true
 	}
@@ -85,7 +85,7 @@ func (i AuthTypes) Unset(mode string) error {
 	for _,m := range modes {
 		m = strings.Trim(m, " ")
 		if _, exist := i[m]; !exist {
-			return fmt.Errorf("Expecting one or more of 'cert', 'user' or 'jwt'")
+			return fmt.Errorf("Expecting one or more of 'cert', 'password' or 'jwt'")
 		}
 	    i[m] = false
 	}
@@ -146,7 +146,7 @@ func authenticate(UserAuth AuthTypes, ctx context.Context, admin_required bool) 
 	var err error
 	success := false
 
-	if UserAuth.Enabled("user") {
+	if UserAuth.Enabled("password") {
 		err = BasicAuthenAndAuthor(ctx, admin_required)
 		if err == nil {
 			success = true
