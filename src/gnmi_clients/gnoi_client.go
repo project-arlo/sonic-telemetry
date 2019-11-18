@@ -97,12 +97,12 @@ func sonicShowTechSupport(sc spb.SonicServiceClient, ctx context.Context) {
 	}
 	nargs := strings.Replace(string(*args), "sonic-show-techsupport:input", "input", 1)
 	json.Unmarshal([]byte(nargs), &req)
-	fmt.Println(req)
 	resp,err := sc.ShowTechsupport(ctx, req)
 	if err != nil {
 		panic(err.Error())
 	}
-	fmt.Println(resp.Output.OutputFilename)
+
+	fmt.Println(resp)
 }
 func sonicSum(sc spb.SonicServiceClient, ctx context.Context) {
 	fmt.Println("Sonic Sum")

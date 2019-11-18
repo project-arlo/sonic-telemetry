@@ -92,19 +92,25 @@ func (srv *Server) ShowTechsupport(ctx context.Context, req *spb.TechsupportRequ
 		return nil, err
 	}
 	log.V(1).Info("gNOI: Sonic ShowTechsupport")
-	var resp spb.TechsupportResponse
+	var jobj map[string]map[string]string
+	resp := &spb.TechsupportResponse{
+		Output: &spb.TechsupportResponse_Output {
+
+		},
+	}
 	reqstr := fmt.Sprintf("{\"sonic-show-techsupport-info:input\": {\"date\": \"%s\"}}", req.Input.Date)
 	jsresp, err:= transutil.TranslProcessAction("/sonic-show-techsupport:sonic-show-techsupport-info", []byte(reqstr))
 	if err != nil {
 		return nil, status.Error(codes.Unknown, err.Error())
 	}
-
-	jsresp = []byte(strings.Replace(string(jsresp), "sonic-show-techsupport-info:output", "output", 1))
-	err = json.Unmarshal(jsresp, &resp)
+	jsresp = []byte(strings.Replace(string(jsresp), "sonic-show-techsupport:output", "output", 1))
+	err = json.Unmarshal(jsresp, &jobj)
 	if err != nil {
 		return nil, status.Error(codes.Unknown, err.Error())
 	}
-	return &resp, nil
+	resp.Output.OutputFilename = jobj["output"]["output-filename"]
+	fmt.Println(resp)
+	return resp, nil
 }
 
 func (srv *Server) Sum(ctx context.Context, req *spb.SumRequest) (*spb.SumResponse, error) {
