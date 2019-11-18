@@ -157,7 +157,7 @@ func loadConfigDB(t *testing.T, rclient *redis.Client, mpi map[string]interface{
 func prepareConfigDb(t *testing.T) {
 	rclient := getConfigDbClient(t)
 	defer rclient.Close()
-	rclient.FlushDb()
+	rclient.FlushDB()
 
 	fileName := "../../testdata/COUNTERS_PORT_ALIAS_MAP.txt"
 	countersPortAliasMapByte, err := ioutil.ReadFile(fileName)
@@ -179,7 +179,7 @@ func prepareConfigDb(t *testing.T) {
 func prepareDb(t *testing.T) {
 	rclient := getRedisClient(t)
 	defer rclient.Close()
-	rclient.FlushDb()
+	rclient.FlushDB()
 	//Enable keysapce notification
 	os.Setenv("PATH", "$PATH:/usr/bin:/sbin:/bin:/usr/local/bin:/usr/local/Cellar/redis/4.0.8/bin")
 	cmd := exec.Command("redis-cli", "config", "set", "notify-keyspace-events", "KEA")
