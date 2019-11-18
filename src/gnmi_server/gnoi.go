@@ -59,7 +59,7 @@ func (srv *Server) Time(ctx context.Context, req *gnoi_system_pb.TimeRequest) (*
 func (srv *Server) ShowTechsupport(ctx context.Context, req *spb.TechsupportRequest) (*spb.TechsupportResponse, error) {
 	log.V(1).Info("gNOI: Sonic ShowTechsupport")
 	var resp spb.TechsupportResponse
-	reqstr := fmt.Sprintf("{\"sonic-show-techsupport-info:input\": {\"date\": \"%s\"}", req.Input.Date)
+	reqstr := fmt.Sprintf("{\"sonic-show-techsupport-info:input\": {\"date\": \"%s\"}}", req.Input.Date)
 	jsresp, err:= transutil.TranslProcessAction("/sonic-show-techsupport:sonic-show-techsupport-info", []byte(reqstr))
 	if err != nil {
 		return nil, status.Error(codes.Unknown, err.Error())
