@@ -8,10 +8,8 @@ service SonicService {
   rpc ShowTechsupport (TechsupportRequest) returns (TechsupportResponse) {}
   rpc Sum (SumRequest) returns (SumResponse) {}
 
-  rpc SaveConfig(SaveConfigRequest) returns (SaveConfigResponse) {}
-  rpc ReloadConfig(ReloadConfigRequest) returns (ReloadConfigResponse) {}
-  rpc LoadMgmtConfig(LoadMgmtConfigRequest) returns (LoadMgmtConfigResponse) {}
-  rpc LoadMinigraph(LoadMinigraphRequest) returns (LoadMinigraphResponse) {}
+  rpc CopyConfig(CopyConfigRequest) returns (CopyConfigResponse) {}
+
 
   rpc Authenticate(AuthenticateRequest) returns (AuthenticateResponse) {}
   rpc Refresh(RefreshRequest) returns (RefreshResponse) {}
@@ -47,57 +45,24 @@ message SumResponse {
 }
 
 
-message SaveConfigRequest {
+message CopyConfigRequest {
     message Input {
-        string FilePath = 1;
+        string source = 1;
+        bool overwrite = 2;
+        string destination = 3;
     }
     Input input = 1;
 }
-message SaveConfigResponse {
+message CopyConfigResponse {
     message Output {
-        string Status = 1;
+        int32 status = 1;
+        string status_detail = 2;
     }
     Output output = 1;
 }
 
-message ReloadConfigRequest {
-    message Input {
-        string FilePath = 1;
-    }
-    Input input = 1;
-}
-message ReloadConfigResponse {
-    message Output {
-        string Status = 1;
-    }
-    Output output = 1;
-}
 
-message LoadMgmtConfigRequest {
-    message Input {
-        string FilePath = 1;
-    }
-    Input input = 1;
-}
-message LoadMgmtConfigResponse {
-    message Output {
-        string Status = 1;
-    }
-    Output output = 1;
-}
 
-message LoadMinigraphRequest {
-    message Input {
-        string FilePath = 1;
-    }
-    Input input = 1;
-}
-message LoadMinigraphResponse {
-    message Output {
-        string Status = 1;
-    }
-    Output output = 1;
-}
 
 message JwtToken {
     string access_token = 1;
