@@ -61,10 +61,8 @@ func main() {
 			sonicShowTechSupport(sc, ctx)
 		case "sum":
 			sonicSum(sc, ctx)
-		case "saveConfig":
-			saveConfig(sc, ctx)
-		case "reloadConfig":
-			reloadConfig(sc, ctx)
+		case "copyConfig":
+			copyConfig(sc, ctx)
 		case "authenticate":
 			authenticate(sc, ctx)
 		case "refresh":
@@ -121,73 +119,23 @@ func sonicSum(sc spb.SonicServiceClient, ctx context.Context) {
 	fmt.Println(resp.Output.Result)
 }
 
-func saveConfig(sc spb.SonicServiceClient, ctx context.Context) {
-	fmt.Println("Sonic SaveConfig")
+func copyConfig(sc spb.SonicServiceClient, ctx context.Context) {
+	fmt.Println("Sonic CopyConfig")
 	ctx = setUserCreds(ctx)
-	req := &spb.SaveConfigRequest{
-		Input: &spb.SaveConfigRequest_Input{},
+	req := &spb.CopyConfigRequest{
+		Input: &spb.CopyConfigRequest_Input{},
 	}
 	nargs := strings.Replace(string(*args), "sonic-config-mgmt:input", "input", 1)
 	json.Unmarshal([]byte(nargs), &req)
 
-	resp,err := sc.SaveConfig(ctx, req)
+	resp,err := sc.CopyConfig(ctx, req)
 
 	if err != nil {
 		panic(err.Error())
 	}
-	fmt.Println(resp.Output.Status)
+	fmt.Println(resp)
 }
 
-func reloadConfig(sc spb.SonicServiceClient, ctx context.Context) {
-	fmt.Println("Sonic ReloadConfig")
-	ctx = setUserCreds(ctx)
-	req := &spb.ReloadConfigRequest{
-		Input: &spb.ReloadConfigRequest_Input{},
-	}
-	nargs := strings.Replace(string(*args), "sonic-config-mgmt:input", "input", 1)
-	json.Unmarshal([]byte(nargs), &req)
-
-	resp,err := sc.ReloadConfig(ctx, req)
-
-	if err != nil {
-		panic(err.Error())
-	}
-	fmt.Println(resp.Output.Status)
-}
-
-func loadMgmtConfig(sc spb.SonicServiceClient, ctx context.Context) {
-	fmt.Println("Sonic LoadMgmtConfig")
-	ctx = setUserCreds(ctx)
-	req := &spb.LoadMgmtConfigRequest{
-		Input: &spb.LoadMgmtConfigRequest_Input{},
-	}
-	nargs := strings.Replace(string(*args), "sonic-config-mgmt:input", "input", 1)
-	json.Unmarshal([]byte(nargs), &req)
-
-	resp,err := sc.LoadMgmtConfig(ctx, req)
-
-	if err != nil {
-		panic(err.Error())
-	}
-	fmt.Println(resp.Output.Status)
-}
-
-func loadMinigraph(sc spb.SonicServiceClient, ctx context.Context) {
-	fmt.Println("Sonic LoadMinigraph")
-	ctx = setUserCreds(ctx)
-	req := &spb.LoadMinigraphRequest{
-		Input: &spb.LoadMinigraphRequest_Input{},
-	}
-	nargs := strings.Replace(string(*args), "sonic-config-mgmt:input", "input", 1)
-	json.Unmarshal([]byte(nargs), &req)
-
-	resp,err := sc.LoadMinigraph(ctx, req)
-
-	if err != nil {
-		panic(err.Error())
-	}
-	fmt.Println(resp.Output.Status)
-}
 
 func authenticate(sc spb.SonicServiceClient, ctx context.Context) {
 	fmt.Println("Sonic Authenticate")
