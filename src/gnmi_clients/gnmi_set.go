@@ -70,7 +70,7 @@ func buildPbUpdateList(pathValuePairs []string) []*pb.Update {
 			log.Exitf("invalid path-value pair: %v", item)
 		}
 		pathValuePair[0] = modName[2][0:lc]
-		pathValuePair[1] = modName[2][lc+1:len(modName[2])]
+		pathValuePair[1] = modName[2][lc+1:]
 
 
 		if len(pathValuePair) != 2 || len(pathValuePair[1]) == 0 {
