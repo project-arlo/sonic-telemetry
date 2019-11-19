@@ -30,8 +30,10 @@ import (
     "github.com/xeipuuv/gojsonschema"
     // Register supported client types.
     spb "proto"
+    sgpb "proto/gnoi"
     sdc "sonic_data_client"
     gclient "github.com/jipanyang/gnmi/client/gnmi"
+    gnoi_system_pb "github.com/openconfig/gnoi/system"
 )
 
 var clientTypes = []string{gclient.Type}
@@ -1486,8 +1488,64 @@ func TestCapabilities(t *testing.T) {
 
 }
 
+func TestGNOI(t *testing.T) {
+    s := createServer(t)
+    go runServer(t, s)
+
+    // prepareDb(t)
+
+    //t.Log("Start gNMI client")
+    tlsConfig := &tls.Config{InsecureSkipVerify: true}
+    opts := []grpc.DialOption{grpc.WithTransportCredentials(credentials.NewTLS(tlsConfig))}
+
+    //targetAddr := "30.57.185.38:8080"
+    targetAddr := "127.0.0.1:8081"
+    conn, err := grpc.Dial(targetAddr, opts...)
+    if err != nil {
+        t.Fatalf("Dialing to %q failed: %v", targetAddr, err)
+    }
+    defer conn.Close()
+
+    
+    ctx, cancel := context.WithTimeout(context.Background(), 240*time.Second)
+    defer cancel()
+
+    t.Run("SystemTime", func(t *testing.T) {
+        sc := gnoi_system_pb.NewSystemClient(conn)
+        resp,err := sc.Time(ctx, new(gnoi_system_pb.TimeRequest))
+        if err != nil {
+            t.Fatal(err.Error())
+        }
+        ctime := uint64(time.Now().UnixNano())
+        if ctime - resp.Time < 0 || ctime - resp.Time > 1e9 {
+            t.Fatalf("Invalid System Time %d", resp.Time)
+        }
+    })
+    t.Run("SonicShowTechsupport", func(t *testing.T) {
+        sc := sgpb.NewSonicServiceClient(conn)
+        rtime := time.Now().AddDate(0,-1,0)
+        req := &sgpb.TechsupportRequest {
+            Input: &sgpb.TechsupportRequest_Input{
+                Date: rtime.Format("20060102_150405"),
+            },
+        }
+        resp,err := sc.ShowTechsupport(ctx, req)
+        if err != nil {
+            t.Fatal(err.Error())
+        }
+
+        if len(resp.Output.OutputFilename) == 0 {
+            t.Fatalf("Invalid Output Filename: %s", resp.Output.OutputFilename)
+        }
+    })
+
+
+}
+
 
 func init() {
     // Inform gNMI server to use redis tcp localhost connection
     sdc.UseRedisLocalTcpPort = true
 }
+
+
