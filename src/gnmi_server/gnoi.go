@@ -85,6 +85,33 @@ func (srv *Server) Time(ctx context.Context, req *gnoi_system_pb.TimeRequest) (*
 	return &tm, nil
 }
 
+func (srv *Server) CopyConfig(ctx context.Context, req *spb.CopyConfigRequest) (*spb.CopyConfigResponse, error) {
+	err := authenticate(srv.config.UserAuth, ctx, false)
+	if err != nil {
+		return nil, err
+	}
+	log.V(1).Info("gNOI: Sonic CopyConfig")
+	var jobj map[string]map[string]interface{}
+	resp := &spb.CopyConfigResponse{
+		Output: &spb.CopyConfigResponse_Output {
+
+		},
+	}
+	reqstr := fmt.Sprintf("{\"sonic-config-mgmt:input\": {\"source\": \"%s\", \"overwrite\": %t, \"destination\": \"%s\"}}", req.Input.Source, req.Input.Overwrite, req.Input.Destination)
+	jsresp, err:= transutil.TranslProcessAction("/sonic-config-mgmt:copy", []byte(reqstr))
+	if err != nil {
+		return nil, status.Error(codes.Unknown, err.Error())
+	}
+	jsresp = []byte(strings.Replace(string(jsresp), "sonic-config-mgmt:output", "output", 1))
+	err = json.Unmarshal(jsresp, &jobj)
+	if err != nil {
+		return nil, status.Error(codes.Unknown, err.Error())
+	}
+	resp.Output.Status = jobj["output"]["status"].(int32)
+	resp.Output.StatusDetail = jobj["output"]["status-detail"].(string)
+	
+	return resp, nil
+}
 
 func (srv *Server) ShowTechsupport(ctx context.Context, req *spb.TechsupportRequest) (*spb.TechsupportResponse, error) {
 	err := authenticate(srv.config.UserAuth, ctx, false)
@@ -109,7 +136,7 @@ func (srv *Server) ShowTechsupport(ctx context.Context, req *spb.TechsupportRequ
 		return nil, status.Error(codes.Unknown, err.Error())
 	}
 	resp.Output.OutputFilename = jobj["output"]["output-filename"]
-	fmt.Println(resp)
+	
 	return resp, nil
 }
 
@@ -134,89 +161,7 @@ func (srv *Server) Sum(ctx context.Context, req *spb.SumRequest) (*spb.SumRespon
 	return &resp, nil
 }
 
-func (srv *Server) SaveConfig(ctx context.Context, req *spb.SaveConfigRequest) (*spb.SaveConfigResponse, error) {
-	err := authenticate(srv.config.UserAuth, ctx, false)
-	if err != nil {
-		return nil, err
-	}
-	log.V(1).Info("gNOI: Sonic SaveConfig")
-	var resp spb.SaveConfigResponse
-	reqstr := fmt.Sprintf("{\"save_config:input\": {\"file_path\": \"%s\"}", req.Input.FilePath)
-	jsresp, err:= transutil.TranslProcessAction("/sonic-config-mgmt:save_config", []byte(reqstr))
-	if err != nil {
-		return nil, status.Error(codes.Unknown, err.Error())
-	}
 
-	jsresp = []byte(strings.Replace(string(jsresp), "save_config:output", "output", 1))
-	err = json.Unmarshal(jsresp, &resp)
-	if err != nil {
-		return nil, status.Error(codes.Unknown, err.Error())
-	}
-	return &resp, nil
-}
-
-func (srv *Server) ReloadConfig(ctx context.Context, req *spb.ReloadConfigRequest) (*spb.ReloadConfigResponse, error) {
-	err := authenticate(srv.config.UserAuth, ctx, false)
-	if err != nil {
-		return nil, err
-	}
-	log.V(1).Info("gNOI: Sonic ReloadConfig")
-	var resp spb.ReloadConfigResponse
-	reqstr := fmt.Sprintf("{\"reload_config:input\": {\"file_path\": \"%s\"}", req.Input.FilePath)
-	jsresp, err:= transutil.TranslProcessAction("/sonic-config-mgmt:reload_config", []byte(reqstr))
-	if err != nil {
-		return nil, status.Error(codes.Unknown, err.Error())
-	}
-
-	jsresp = []byte(strings.Replace(string(jsresp), "reload_config:output", "output", 1))
-	err = json.Unmarshal(jsresp, &resp)
-	if err != nil {
-		return nil, status.Error(codes.Unknown, err.Error())
-	}
-	return &resp, nil
-}
-
-func (srv *Server) LoadMgmtConfig(ctx context.Context, req *spb.LoadMgmtConfigRequest) (*spb.LoadMgmtConfigResponse, error) {
-	err := authenticate(srv.config.UserAuth, ctx, false)
-	if err != nil {
-		return nil, err
-	}
-	log.V(1).Info("gNOI: Sonic LoadMgmtConfig")
-	var resp spb.LoadMgmtConfigResponse
-	reqstr := fmt.Sprintf("{\"load_mgmt_config:input\": {\"file_path\": \"%s\"}", req.Input.FilePath)
-	jsresp, err:= transutil.TranslProcessAction("/sonic-config-mgmt:load_mgmt_config", []byte(reqstr))
-	if err != nil {
-		return nil, status.Error(codes.Unknown, err.Error())
-	}
-
-	jsresp = []byte(strings.Replace(string(jsresp), "load_mgmt_config:output", "output", 1))
-	err = json.Unmarshal(jsresp, &resp)
-	if err != nil {
-		return nil, status.Error(codes.Unknown, err.Error())
-	}
-	return &resp, nil
-}
-
-func (srv *Server) LoadMinigraph(ctx context.Context, req *spb.LoadMinigraphRequest) (*spb.LoadMinigraphResponse, error) {
-	err := authenticate(srv.config.UserAuth, ctx, false)
-	if err != nil {
-		return nil, err
-	}
-	log.V(1).Info("gNOI: Sonic LoadMinigraph")
-	var resp spb.LoadMinigraphResponse
-	reqstr := fmt.Sprintf("{\"load_minigraph:input\": {\"file_path\": \"%s\"}", req.Input.FilePath)
-	jsresp, err:= transutil.TranslProcessAction("/sonic-config-mgmt:load_minigraph", []byte(reqstr))
-	if err != nil {
-		return nil, status.Error(codes.Unknown, err.Error())
-	}
-
-	jsresp = []byte(strings.Replace(string(jsresp), "load_minigraph:output", "output", 1))
-	err = json.Unmarshal(jsresp, &resp)
-	if err != nil {
-		return nil, status.Error(codes.Unknown, err.Error())
-	}
-	return &resp, nil
-}
 
 func (srv *Server) Authenticate(ctx context.Context, req *spb.AuthenticateRequest) (*spb.AuthenticateResponse, error) {
 	// Can't enforce normal authentication here.. maybe only enforce client cert auth if enabled?
