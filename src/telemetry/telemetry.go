@@ -5,7 +5,7 @@ import (
 	"crypto/x509"
 	"flag"
 	"io/ioutil"
-
+	"time"
 	log "github.com/golang/glog"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
@@ -15,6 +15,7 @@ import (
 )
 
 var (
+	userAuth = gnmi.AuthTypes{"password": false, "cert": false, "jwt": false}
 	port = flag.Int("port", -1, "port to listen on")
 	// Certificate files.
 	caCert            = flag.String("ca_crt", "", "CA certificate for client certificate validation. Optional.")
@@ -22,10 +23,12 @@ var (
 	serverKey         = flag.String("server_key", "", "TLS server private key")
 	insecure          = flag.Bool("insecure", false, "Skip providing TLS cert and key, for testing only!")
 	allowNoClientCert = flag.Bool("allow_no_client_auth", false, "When set, telemetry server will request but not require a client certificate.")
-	userAuth          = flag.Bool("user_auth", false, "When set, telemetry server will require username/password authentication.")
+	jwtRefInt         = flag.Uint64("jwt_refresh_int", 30, "Seconds before JWT expiry the token can be refreshed.")
+	jwtValInt         = flag.Uint64("jwt_valid_int", 3600, "Seconds that JWT token is valid for.")
 )
 
 func main() {
+	flag.Var(userAuth, "client_auth", "Client auth mode(s) - cert,password,jwt")
 	flag.Parse()
 
 	switch {
@@ -35,7 +38,8 @@ func main() {
 	}
 	var certificate tls.Certificate
 	var err error
-
+	gnmi.JwtRefreshInt = time.Duration(*jwtRefInt*uint64(time.Second))
+	gnmi.JwtValidInt = time.Duration(*jwtValInt*uint64(time.Second))
 	if *insecure {
 		certificate, err = testcert.NewCert()
 		if err != nil {
@@ -95,7 +99,10 @@ func main() {
 	opts := []grpc.ServerOption{grpc.Creds(credentials.NewTLS(tlsCfg))}
 	cfg := &gnmi.Config{}
 	cfg.Port = int64(*port)
-	cfg.UserAuth = *userAuth
+	cfg.UserAuth = userAuth
+
+	gnmi.GenerateJwtSecretKey()
+
 	s, err := gnmi.NewServer(cfg, opts)
 	if err != nil {
 		log.Errorf("Failed to create gNMI server: %v", err)

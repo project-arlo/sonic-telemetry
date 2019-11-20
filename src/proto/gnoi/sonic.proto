@@ -13,6 +13,9 @@ service SonicService {
   rpc LoadMgmtConfig(LoadMgmtConfigRequest) returns (LoadMgmtConfigResponse) {}
   rpc LoadMinigraph(LoadMinigraphRequest) returns (LoadMinigraphResponse) {}
 
+  rpc Authenticate(AuthenticateRequest) returns (AuthenticateResponse) {}
+  rpc Refresh(RefreshRequest) returns (RefreshResponse) {}
+
 }
 
 message TechsupportRequest {
@@ -94,4 +97,25 @@ message LoadMinigraphResponse {
         string Status = 1;
     }
     Output output = 1;
+}
+
+message JwtToken {
+    string access_token = 1;
+    string type = 2;
+    int64 expires_in = 3; 
+}
+message AuthenticateRequest {
+    string username = 1;
+    string password = 2;
+}
+
+message AuthenticateResponse {
+    JwtToken Token = 1;
+}
+
+message RefreshRequest {
+}
+
+message RefreshResponse {
+    JwtToken Token = 1;
 }

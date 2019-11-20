@@ -12,42 +12,72 @@ import (
 	"encoding/json"
 	"strings"
 	"fmt"
+	jwt "github.com/dgrijalva/jwt-go"
 )
 
-func (srv *Server) Reboot(context.Context, *gnoi_system_pb.RebootRequest) (*gnoi_system_pb.RebootResponse, error) {
+func (srv *Server) Reboot(ctx context.Context, req *gnoi_system_pb.RebootRequest) (*gnoi_system_pb.RebootResponse, error) {
+	err := authenticate(srv.config.UserAuth, ctx, false)
+	if err != nil {
+		return nil, err
+	}
 	log.V(1).Info("gNOI: Reboot")
 	return nil, nil
 }
-func (srv *Server) RebootStatus(context.Context, *gnoi_system_pb.RebootStatusRequest) (*gnoi_system_pb.RebootStatusResponse, error) {
+func (srv *Server) RebootStatus(ctx context.Context, req *gnoi_system_pb.RebootStatusRequest) (*gnoi_system_pb.RebootStatusResponse, error) {
+	err := authenticate(srv.config.UserAuth, ctx, false)
+	if err != nil {
+		return nil, err
+	}
 	log.V(1).Info("gNOI: RebootStatus")
 	return nil, nil
 }
-func (srv *Server) CancelReboot(context.Context, *gnoi_system_pb.CancelRebootRequest) (*gnoi_system_pb.CancelRebootResponse, error) {
+func (srv *Server) CancelReboot(ctx context.Context, req *gnoi_system_pb.CancelRebootRequest) (*gnoi_system_pb.CancelRebootResponse, error) {
+	err := authenticate(srv.config.UserAuth, ctx, false)
+	if err != nil {
+		return nil, err
+	}
 	log.V(1).Info("gNOI: CancelReboot")
 	return nil, nil
 }
-func (srv *Server) Ping(*gnoi_system_pb.PingRequest, gnoi_system_pb.System_PingServer) error {
+func (srv *Server) Ping(req *gnoi_system_pb.PingRequest, rs gnoi_system_pb.System_PingServer) error {
+	ctx := rs.Context()
+	err := authenticate(srv.config.UserAuth, ctx, false)
+	if err != nil {
+		return err
+	}
 	log.V(1).Info("gNOI: Ping")
 	return nil
 }
-func (srv *Server) Traceroute(*gnoi_system_pb.TracerouteRequest, gnoi_system_pb.System_TracerouteServer) error {
+func (srv *Server) Traceroute(req *gnoi_system_pb.TracerouteRequest, rs gnoi_system_pb.System_TracerouteServer) error {
+	ctx := rs.Context()
+	err := authenticate(srv.config.UserAuth, ctx, false)
+	if err != nil {
+		return err
+	}
 	log.V(1).Info("gNOI: Traceroute")
 	return nil
 }
-func (srv *Server) SetPackage(gnoi_system_pb.System_SetPackageServer) error {
+func (srv *Server) SetPackage(rs gnoi_system_pb.System_SetPackageServer) error {
+	ctx := rs.Context()
+	err := authenticate(srv.config.UserAuth, ctx, false)
+	if err != nil {
+		return err
+	}
 	log.V(1).Info("gNOI: SetPackage")
 	return nil
 }
-func (srv *Server) SwitchControlProcessor(context.Context, *gnoi_system_pb.SwitchControlProcessorRequest) (*gnoi_system_pb.SwitchControlProcessorResponse, error) {
+func (srv *Server) SwitchControlProcessor(ctx context.Context, req *gnoi_system_pb.SwitchControlProcessorRequest) (*gnoi_system_pb.SwitchControlProcessorResponse, error) {
+	err := authenticate(srv.config.UserAuth, ctx, false)
+	if err != nil {
+		return nil, err
+	}
 	log.V(1).Info("gNOI: SwitchControlProcessor")
 	return nil, nil
 }
 func (srv *Server) Time(ctx context.Context, req *gnoi_system_pb.TimeRequest) (*gnoi_system_pb.TimeResponse, error) {
-	if srv.config.UserAuth { 
-		err := PAMAuthenAndAuthor(ctx, false)
-		if err != nil {
-			return nil, err
-		}
+	err := authenticate(srv.config.UserAuth, ctx, false)
+	if err != nil {
+		return nil, err
 	}
 	log.V(1).Info("gNOI: Time")
 	var tm gnoi_system_pb.TimeResponse
@@ -57,23 +87,37 @@ func (srv *Server) Time(ctx context.Context, req *gnoi_system_pb.TimeRequest) (*
 
 
 func (srv *Server) ShowTechsupport(ctx context.Context, req *spb.TechsupportRequest) (*spb.TechsupportResponse, error) {
+	err := authenticate(srv.config.UserAuth, ctx, false)
+	if err != nil {
+		return nil, err
+	}
 	log.V(1).Info("gNOI: Sonic ShowTechsupport")
-	var resp spb.TechsupportResponse
+	var jobj map[string]map[string]string
+	resp := &spb.TechsupportResponse{
+		Output: &spb.TechsupportResponse_Output {
+
+		},
+	}
 	reqstr := fmt.Sprintf("{\"sonic-show-techsupport-info:input\": {\"date\": \"%s\"}}", req.Input.Date)
 	jsresp, err:= transutil.TranslProcessAction("/sonic-show-techsupport:sonic-show-techsupport-info", []byte(reqstr))
 	if err != nil {
 		return nil, status.Error(codes.Unknown, err.Error())
 	}
-
-	jsresp = []byte(strings.Replace(string(jsresp), "sonic-show-techsupport-info:output", "output", 1))
-	err = json.Unmarshal(jsresp, &resp)
+	jsresp = []byte(strings.Replace(string(jsresp), "sonic-show-techsupport:output", "output", 1))
+	err = json.Unmarshal(jsresp, &jobj)
 	if err != nil {
 		return nil, status.Error(codes.Unknown, err.Error())
 	}
-	return &resp, nil
+	resp.Output.OutputFilename = jobj["output"]["output-filename"]
+	fmt.Println(resp)
+	return resp, nil
 }
 
-func (srv *Server) Sum(stc context.Context, req *spb.SumRequest) (*spb.SumResponse, error) {
+func (srv *Server) Sum(ctx context.Context, req *spb.SumRequest) (*spb.SumResponse, error) {
+	err := authenticate(srv.config.UserAuth, ctx, false)
+	if err != nil {
+		return nil, err
+	}
 	log.V(1).Info("gNOI: Sonic Sum")
 	var resp spb.SumResponse
 	reqstr := fmt.Sprintf("{\"sonic-tests:input\": {\"left\": %d, \"right\": %d}}", req.Input.Left, req.Input.Right)
@@ -91,6 +135,10 @@ func (srv *Server) Sum(stc context.Context, req *spb.SumRequest) (*spb.SumRespon
 }
 
 func (srv *Server) SaveConfig(ctx context.Context, req *spb.SaveConfigRequest) (*spb.SaveConfigResponse, error) {
+	err := authenticate(srv.config.UserAuth, ctx, false)
+	if err != nil {
+		return nil, err
+	}
 	log.V(1).Info("gNOI: Sonic SaveConfig")
 	var resp spb.SaveConfigResponse
 	reqstr := fmt.Sprintf("{\"save_config:input\": {\"file_path\": \"%s\"}", req.Input.FilePath)
@@ -108,6 +156,10 @@ func (srv *Server) SaveConfig(ctx context.Context, req *spb.SaveConfigRequest) (
 }
 
 func (srv *Server) ReloadConfig(ctx context.Context, req *spb.ReloadConfigRequest) (*spb.ReloadConfigResponse, error) {
+	err := authenticate(srv.config.UserAuth, ctx, false)
+	if err != nil {
+		return nil, err
+	}
 	log.V(1).Info("gNOI: Sonic ReloadConfig")
 	var resp spb.ReloadConfigResponse
 	reqstr := fmt.Sprintf("{\"reload_config:input\": {\"file_path\": \"%s\"}", req.Input.FilePath)
@@ -125,6 +177,10 @@ func (srv *Server) ReloadConfig(ctx context.Context, req *spb.ReloadConfigReques
 }
 
 func (srv *Server) LoadMgmtConfig(ctx context.Context, req *spb.LoadMgmtConfigRequest) (*spb.LoadMgmtConfigResponse, error) {
+	err := authenticate(srv.config.UserAuth, ctx, false)
+	if err != nil {
+		return nil, err
+	}
 	log.V(1).Info("gNOI: Sonic LoadMgmtConfig")
 	var resp spb.LoadMgmtConfigResponse
 	reqstr := fmt.Sprintf("{\"load_mgmt_config:input\": {\"file_path\": \"%s\"}", req.Input.FilePath)
@@ -142,6 +198,10 @@ func (srv *Server) LoadMgmtConfig(ctx context.Context, req *spb.LoadMgmtConfigRe
 }
 
 func (srv *Server) LoadMinigraph(ctx context.Context, req *spb.LoadMinigraphRequest) (*spb.LoadMinigraphResponse, error) {
+	err := authenticate(srv.config.UserAuth, ctx, false)
+	if err != nil {
+		return nil, err
+	}
 	log.V(1).Info("gNOI: Sonic LoadMinigraph")
 	var resp spb.LoadMinigraphResponse
 	reqstr := fmt.Sprintf("{\"load_minigraph:input\": {\"file_path\": \"%s\"}", req.Input.FilePath)
@@ -156,4 +216,45 @@ func (srv *Server) LoadMinigraph(ctx context.Context, req *spb.LoadMinigraphRequ
 		return nil, status.Error(codes.Unknown, err.Error())
 	}
 	return &resp, nil
+}
+
+func (srv *Server) Authenticate(ctx context.Context, req *spb.AuthenticateRequest) (*spb.AuthenticateResponse, error) {
+	// Can't enforce normal authentication here.. maybe only enforce client cert auth if enabled?
+	// err := authenticate(srv.config.UserAuth, ctx, false)
+	// if err != nil {
+	// 	return nil, err
+	// }
+	log.V(1).Info("gNOI: Sonic Authenticate")
+
+
+
+	auth_success, _ := UserPwAuth(req.Username, req.Password)
+	if  auth_success {
+		return &spb.AuthenticateResponse{Token: tokenResp(req.Username)}, nil
+	}
+	return nil, status.Errorf(codes.PermissionDenied, "Invalid Username or Password")	
+
+}
+func (srv *Server) Refresh(ctx context.Context, req *spb.RefreshRequest) (*spb.RefreshResponse, error) {
+	err := authenticate(srv.config.UserAuth, ctx, false)
+	if err != nil {
+		return nil, err
+	}
+	log.V(1).Info("gNOI: Sonic Refresh")
+	
+	token, err := JwtAuthenAndAuthor(ctx, false)
+	if err != nil {
+		return nil, err
+	}
+
+	claims := &Claims{}
+	jwt.ParseWithClaims(token.AccessToken, claims, func(token *jwt.Token) (interface{}, error) {
+		return hmacSampleSecret, nil
+	})
+	if time.Unix(claims.ExpiresAt, 0).Sub(time.Now()) > JwtRefreshInt {
+		return nil, status.Errorf(codes.InvalidArgument, "Invalid JWT Token")
+	}
+	
+	return &spb.RefreshResponse{Token: tokenResp(claims.Username)}, nil
+
 }

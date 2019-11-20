@@ -19,6 +19,7 @@ import (
 	sdc "sonic_data_client"
 	gnmipb "github.com/openconfig/gnmi/proto/gnmi"
 	spb "proto/gnoi"
+	"bytes"
 	
 )
 
@@ -36,15 +37,60 @@ type Server struct {
 	cMu     sync.Mutex
 	clients map[string]*Client
 }
-
+type AuthTypes map[string]bool
 // Config is a collection of values for Server
 type Config struct {
 	// Port for the Server to listen on. If 0 or unset the Server will pick a port
 	// for this Server.
 	Port int64
-	UserAuth bool
+	UserAuth AuthTypes
 }
 
+func (i AuthTypes) String() string {
+    b := new(bytes.Buffer)
+    for key, value := range i {
+        if value {
+                fmt.Fprintf(b, "%s ", key)
+        }
+    }
+    return b.String()
+}
+func (i AuthTypes) Any() bool {
+    for _, value := range i {
+    	if value {
+        	return true
+    	}
+    }
+	return false
+}
+func (i AuthTypes) Enabled(mode string) bool {
+	if value, exist := i[mode]; exist && value {
+		return true
+	}
+	return false
+}
+func (i AuthTypes) Set(mode string) error {
+	modes := strings.Split(mode, ",")
+	for _,m := range modes {
+		m = strings.Trim(m, " ")
+		if _, exist := i[m]; !exist {
+			return fmt.Errorf("Expecting one or more of 'cert', 'password' or 'jwt'")
+		}
+	    i[m] = true
+	}
+    return nil
+}
+func (i AuthTypes) Unset(mode string) error {
+	modes := strings.Split(mode, ",")
+	for _,m := range modes {
+		m = strings.Trim(m, " ")
+		if _, exist := i[m]; !exist {
+			return fmt.Errorf("Expecting one or more of 'cert', 'password' or 'jwt'")
+		}
+	    i[m] = false
+	}
+    return nil
+}
 // New returns an initialized Server.
 func NewServer(config *Config, opts []grpc.ServerOption) (*Server, error) {
 	if config == nil {
@@ -64,7 +110,7 @@ func NewServer(config *Config, opts []grpc.ServerOption) (*Server, error) {
 	if srv.config.Port < 0 {
 		srv.config.Port = 0
 	}
-	srv.lis, err = net.Listen("tcp", fmt.Sprintf(":%d", srv.config.Port))
+	srv.lis, err = net.Listen("tcp", fmt.Sprintf("localhost:%d", srv.config.Port))
 	if err != nil {
 		return nil, fmt.Errorf("failed to open listener port %d: %v", srv.config.Port, err)
 	}
@@ -96,15 +142,43 @@ func (srv *Server) Port() int64 {
 	return srv.config.Port
 }
 
+func authenticate(UserAuth AuthTypes, ctx context.Context, admin_required bool) error {
+	var err error
+	success := false
+
+	if UserAuth.Enabled("password") {
+		err = BasicAuthenAndAuthor(ctx, admin_required)
+		if err == nil {
+			success = true
+		}
+	}
+	if !success && UserAuth.Enabled("jwt") {
+		_,err = JwtAuthenAndAuthor(ctx, admin_required)
+		if err == nil {
+			success = true
+		}
+	}
+	if !success && UserAuth.Enabled("cert") {
+		err = ClientCertAuthenAndAuthor(ctx, admin_required)
+		if err == nil {
+			success = true
+		}
+	}
+
+	if !success {
+		return err
+	} 
+
+	return nil
+}
+
 // Subscribe implements the gNMI Subscribe RPC.
 func (srv *Server) Subscribe(stream gnmipb.GNMI_SubscribeServer) error {
 
 	ctx := stream.Context()
-	if srv.config.UserAuth { 
-		err := PAMAuthenAndAuthor(ctx, false)
-		if err != nil {
-			return err
-		}
+	err := authenticate(srv.config.UserAuth, ctx, false)
+	if err != nil {
+		return err
 	}
 	pr, ok := peer.FromContext(ctx)
 	if !ok {
@@ -134,7 +208,7 @@ func (srv *Server) Subscribe(stream gnmipb.GNMI_SubscribeServer) error {
 	srv.clients[c.String()] = c
 	srv.cMu.Unlock()
 
-	err := c.Run(stream)
+	err = c.Run(stream)
 	srv.cMu.Lock()
 	delete(srv.clients, c.String())
 	srv.cMu.Unlock()
@@ -160,20 +234,17 @@ func (s *Server) checkEncodingAndModel(encoding gnmipb.Encoding, models []*gnmip
 }
 
 // Get implements the Get RPC in gNMI spec.
-func (s *Server) Get(ctx context.Context, req *gnmipb.GetRequest) (*gnmipb.GetResponse, error) {
-	if s.config.UserAuth { 
-		err := PAMAuthenAndAuthor(ctx, false)
-		if err != nil {
-			return nil, err
-		}
+func (srv *Server) Get(ctx context.Context, req *gnmipb.GetRequest) (*gnmipb.GetResponse, error) {
+	err := authenticate(srv.config.UserAuth, ctx, false)
+	if err != nil {
+		return nil, err
 	}
-	var err error
 
 	if req.GetType() != gnmipb.GetRequest_ALL {
 		return nil, status.Errorf(codes.Unimplemented, "unsupported request type: %s", gnmipb.GetRequest_DataType_name[int32(req.GetType())])
 	}
 
-	if err = s.checkEncodingAndModel(req.GetEncoding(), req.GetUseModels()); err != nil {
+	if err = srv.checkEncodingAndModel(req.GetEncoding(), req.GetUseModels()); err != nil {
 		return nil, status.Error(codes.Unimplemented, err.Error())
 	}
 
@@ -221,76 +292,74 @@ func (s *Server) Get(ctx context.Context, req *gnmipb.GetRequest) (*gnmipb.GetRe
 
 // Set method is not implemented. Refer to gnxi for examples with openconfig integration
 func (srv *Server) Set(ctx context.Context,req *gnmipb.SetRequest) (*gnmipb.SetResponse, error) {
-		if srv.config.UserAuth { 
-			err := PAMAuthenAndAuthor(ctx, true)
-			if err != nil {
-				return nil, err
-			}
-		}
-		var results []*gnmipb.UpdateResult
-		var err error
+	err := authenticate(srv.config.UserAuth, ctx, true)
+	if err != nil {
+		return nil, err
+	}
+	var results []*gnmipb.UpdateResult
+	
 
-		/* Fetch the prefix. */
-		prefix := req.GetPrefix()
+	/* Fetch the prefix. */
+	prefix := req.GetPrefix()
 
-               /* Create Transl client. */
-		dc, _ := sdc.NewTranslClient(prefix, nil)
+           /* Create Transl client. */
+	dc, _ := sdc.NewTranslClient(prefix, nil)
 
-		/* DELETE */
-		for _, path := range req.GetDelete() {
-			log.V(2).Infof("Delete path: %v", path)
+	/* DELETE */
+	for _, path := range req.GetDelete() {
+		log.V(2).Infof("Delete path: %v", path)
 
-			err := dc.Set(path, nil, sdc.DELETE)
+		err := dc.Set(path, nil, sdc.DELETE)
 
-			if err != nil {
-				return nil, err
-			}
-
-			res := gnmipb.UpdateResult{
-							Path: path,
-	      						Op:   gnmipb.UpdateResult_DELETE,
-     			    		          }
-
-			/* Add to Set response results. */
-     			results = append(results, &res)
-
+		if err != nil {
+			return nil, err
 		}
 
-		/* REPLACE */
-		for _, path := range req.GetReplace(){
-			log.V(2).Infof("Replace path: %v ", path)
+		res := gnmipb.UpdateResult{
+						Path: path,
+      						Op:   gnmipb.UpdateResult_DELETE,
+ 			    		          }
 
-			err = dc.Set(path.GetPath(), path.GetVal(), sdc.REPLACE)
+		/* Add to Set response results. */
+ 			results = append(results, &res)
 
-			if err != nil {
-				return nil, err
-			}
-			res := gnmipb.UpdateResult{
-							Path: path.GetPath(),
-	      						Op:   gnmipb.UpdateResult_REPLACE,
-    				                  }
-			/* Add to Set response results. */
-     			results = append(results, &res)
+	}
+
+	/* REPLACE */
+	for _, path := range req.GetReplace(){
+		log.V(2).Infof("Replace path: %v ", path)
+
+		err = dc.Set(path.GetPath(), path.GetVal(), sdc.REPLACE)
+
+		if err != nil {
+			return nil, err
+		}
+		res := gnmipb.UpdateResult{
+						Path: path.GetPath(),
+      						Op:   gnmipb.UpdateResult_REPLACE,
+				                  }
+		/* Add to Set response results. */
+ 			results = append(results, &res)
+	}
+
+
+	/* UPDATE */
+	for _, path := range req.GetUpdate(){
+		log.V(2).Infof("Update path: %v ", path)
+
+		err = dc.Set(path.GetPath(), path.GetVal(), sdc.UPDATE)
+
+		if err != nil {
+			return nil, err
 		}
 
-
-		/* UPDATE */
-		for _, path := range req.GetUpdate(){
-			log.V(2).Infof("Update path: %v ", path)
-
-			err = dc.Set(path.GetPath(), path.GetVal(), sdc.UPDATE)
-
-			if err != nil {
-				return nil, err
-			}
-
-			res := gnmipb.UpdateResult{
-							Path: path.GetPath(),
-	      						Op:   gnmipb.UpdateResult_UPDATE,
-     					          }
-			/* Add to Set response results. */
-     			results = append(results, &res)
-		}
+		res := gnmipb.UpdateResult{
+						Path: path.GetPath(),
+      						Op:   gnmipb.UpdateResult_UPDATE,
+ 					          }
+		/* Add to Set response results. */
+ 			results = append(results, &res)
+	}
 
 
 
@@ -303,11 +372,9 @@ func (srv *Server) Set(ctx context.Context,req *gnmipb.SetRequest) (*gnmipb.SetR
 
 // Capabilities method is not implemented. Refer to gnxi for examples with openconfig integration
 func (srv *Server) Capabilities(ctx context.Context, req *gnmipb.CapabilityRequest) (*gnmipb.CapabilityResponse, error) {
-	if srv.config.UserAuth { 
-		err := PAMAuthenAndAuthor(ctx, false)
-		if err != nil {
-			return nil, err
-		}
+	err := authenticate(srv.config.UserAuth, ctx, false)
+	if err != nil {
+		return nil, err
 	}
 	dc, _ := sdc.NewTranslClient(nil , nil)
 
