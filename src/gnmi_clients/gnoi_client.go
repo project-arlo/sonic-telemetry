@@ -136,6 +136,55 @@ func copyConfig(sc spb.SonicServiceClient, ctx context.Context) {
 	fmt.Println(resp)
 }
 
+func imageInstall(sc spb.SonicServiceClient, ctx context.Context) {
+	fmt.Println("Sonic ImageInstall")
+	ctx = setUserCreds(ctx)
+	req := &spb.ImageInstallRequest{
+		Input: &spb.ImageInstallRequest_Input{},
+	}
+	nargs := strings.Replace(string(*args), "sonic-image-mgmt:input", "input", 1)
+	json.Unmarshal([]byte(nargs), &req)
+
+	resp,err := sc.ImageInstall(ctx, req)
+
+	if err != nil {
+		panic(err.Error())
+	}
+	fmt.Println(resp)
+}
+func imageRemove(sc spb.SonicServiceClient, ctx context.Context) {
+	fmt.Println("Sonic ImageRemove")
+	ctx = setUserCreds(ctx)
+	req := &spb.ImageRemoveRequest{
+		Input: &spb.ImageRemoveRequest_Input{},
+	}
+	nargs := strings.Replace(string(*args), "sonic-image-mgmt:input", "input", 1)
+	json.Unmarshal([]byte(nargs), &req)
+
+	resp,err := sc.ImageRemove(ctx, req)
+
+	if err != nil {
+		panic(err.Error())
+	}
+	fmt.Println(resp)
+}
+
+func imageDefault(sc spb.SonicServiceClient, ctx context.Context) {
+	fmt.Println("Sonic ImageDefault")
+	ctx = setUserCreds(ctx)
+	req := &spb.ImageDefaultRequest{
+		Input: &spb.ImageDefaultRequest_Input{},
+	}
+	nargs := strings.Replace(string(*args), "sonic-image-mgmt:input", "input", 1)
+	json.Unmarshal([]byte(nargs), &req)
+
+	resp,err := sc.ImageDefault(ctx, req)
+
+	if err != nil {
+		panic(err.Error())
+	}
+	fmt.Println(resp)
+}
 
 func authenticate(sc spb.SonicServiceClient, ctx context.Context) {
 	fmt.Println("Sonic Authenticate")

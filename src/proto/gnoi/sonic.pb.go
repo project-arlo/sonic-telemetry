@@ -8,12 +8,19 @@ It is generated from these files:
 	sonic.proto
 
 It has these top-level messages:
+	SonicOutput
 	TechsupportRequest
 	TechsupportResponse
 	SumRequest
 	SumResponse
 	CopyConfigRequest
 	CopyConfigResponse
+	ImageInstallRequest
+	ImageInstallResponse
+	ImageRemoveRequest
+	ImageRemoveResponse
+	ImageDefaultRequest
+	ImageDefaultResponse
 	JwtToken
 	AuthenticateRequest
 	AuthenticateResponse
@@ -42,6 +49,30 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.ProtoPackageIsVersion2 // please upgrade the proto package
 
+type SonicOutput struct {
+	Status       int32  `protobuf:"varint,1,opt,name=status" json:"status,omitempty"`
+	StatusDetail string `protobuf:"bytes,2,opt,name=status_detail,json=statusDetail" json:"status_detail,omitempty"`
+}
+
+func (m *SonicOutput) Reset()                    { *m = SonicOutput{} }
+func (m *SonicOutput) String() string            { return proto.CompactTextString(m) }
+func (*SonicOutput) ProtoMessage()               {}
+func (*SonicOutput) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{0} }
+
+func (m *SonicOutput) GetStatus() int32 {
+	if m != nil {
+		return m.Status
+	}
+	return 0
+}
+
+func (m *SonicOutput) GetStatusDetail() string {
+	if m != nil {
+		return m.StatusDetail
+	}
+	return ""
+}
+
 type TechsupportRequest struct {
 	Input *TechsupportRequest_Input `protobuf:"bytes,1,opt,name=input" json:"input,omitempty"`
 }
@@ -49,7 +80,7 @@ type TechsupportRequest struct {
 func (m *TechsupportRequest) Reset()                    { *m = TechsupportRequest{} }
 func (m *TechsupportRequest) String() string            { return proto.CompactTextString(m) }
 func (*TechsupportRequest) ProtoMessage()               {}
-func (*TechsupportRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{0} }
+func (*TechsupportRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{1} }
 
 func (m *TechsupportRequest) GetInput() *TechsupportRequest_Input {
 	if m != nil {
@@ -65,7 +96,7 @@ type TechsupportRequest_Input struct {
 func (m *TechsupportRequest_Input) Reset()                    { *m = TechsupportRequest_Input{} }
 func (m *TechsupportRequest_Input) String() string            { return proto.CompactTextString(m) }
 func (*TechsupportRequest_Input) ProtoMessage()               {}
-func (*TechsupportRequest_Input) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{0, 0} }
+func (*TechsupportRequest_Input) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{1, 0} }
 
 func (m *TechsupportRequest_Input) GetDate() string {
 	if m != nil {
@@ -81,7 +112,7 @@ type TechsupportResponse struct {
 func (m *TechsupportResponse) Reset()                    { *m = TechsupportResponse{} }
 func (m *TechsupportResponse) String() string            { return proto.CompactTextString(m) }
 func (*TechsupportResponse) ProtoMessage()               {}
-func (*TechsupportResponse) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{1} }
+func (*TechsupportResponse) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{2} }
 
 func (m *TechsupportResponse) GetOutput() *TechsupportResponse_Output {
 	if m != nil {
@@ -97,7 +128,7 @@ type TechsupportResponse_Output struct {
 func (m *TechsupportResponse_Output) Reset()                    { *m = TechsupportResponse_Output{} }
 func (m *TechsupportResponse_Output) String() string            { return proto.CompactTextString(m) }
 func (*TechsupportResponse_Output) ProtoMessage()               {}
-func (*TechsupportResponse_Output) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{1, 0} }
+func (*TechsupportResponse_Output) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{2, 0} }
 
 func (m *TechsupportResponse_Output) GetOutputFilename() string {
 	if m != nil {
@@ -113,7 +144,7 @@ type SumRequest struct {
 func (m *SumRequest) Reset()                    { *m = SumRequest{} }
 func (m *SumRequest) String() string            { return proto.CompactTextString(m) }
 func (*SumRequest) ProtoMessage()               {}
-func (*SumRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{2} }
+func (*SumRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{3} }
 
 func (m *SumRequest) GetInput() *SumRequest_Input {
 	if m != nil {
@@ -130,7 +161,7 @@ type SumRequest_Input struct {
 func (m *SumRequest_Input) Reset()                    { *m = SumRequest_Input{} }
 func (m *SumRequest_Input) String() string            { return proto.CompactTextString(m) }
 func (*SumRequest_Input) ProtoMessage()               {}
-func (*SumRequest_Input) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{2, 0} }
+func (*SumRequest_Input) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{3, 0} }
 
 func (m *SumRequest_Input) GetLeft() int32 {
 	if m != nil {
@@ -153,7 +184,7 @@ type SumResponse struct {
 func (m *SumResponse) Reset()                    { *m = SumResponse{} }
 func (m *SumResponse) String() string            { return proto.CompactTextString(m) }
 func (*SumResponse) ProtoMessage()               {}
-func (*SumResponse) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{3} }
+func (*SumResponse) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{4} }
 
 func (m *SumResponse) GetOutput() *SumResponse_Output {
 	if m != nil {
@@ -169,7 +200,7 @@ type SumResponse_Output struct {
 func (m *SumResponse_Output) Reset()                    { *m = SumResponse_Output{} }
 func (m *SumResponse_Output) String() string            { return proto.CompactTextString(m) }
 func (*SumResponse_Output) ProtoMessage()               {}
-func (*SumResponse_Output) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{3, 0} }
+func (*SumResponse_Output) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{4, 0} }
 
 func (m *SumResponse_Output) GetResult() int32 {
 	if m != nil {
@@ -185,7 +216,7 @@ type CopyConfigRequest struct {
 func (m *CopyConfigRequest) Reset()                    { *m = CopyConfigRequest{} }
 func (m *CopyConfigRequest) String() string            { return proto.CompactTextString(m) }
 func (*CopyConfigRequest) ProtoMessage()               {}
-func (*CopyConfigRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{4} }
+func (*CopyConfigRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{5} }
 
 func (m *CopyConfigRequest) GetInput() *CopyConfigRequest_Input {
 	if m != nil {
@@ -203,7 +234,7 @@ type CopyConfigRequest_Input struct {
 func (m *CopyConfigRequest_Input) Reset()                    { *m = CopyConfigRequest_Input{} }
 func (m *CopyConfigRequest_Input) String() string            { return proto.CompactTextString(m) }
 func (*CopyConfigRequest_Input) ProtoMessage()               {}
-func (*CopyConfigRequest_Input) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{4, 0} }
+func (*CopyConfigRequest_Input) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{5, 0} }
 
 func (m *CopyConfigRequest_Input) GetSource() string {
 	if m != nil {
@@ -227,43 +258,163 @@ func (m *CopyConfigRequest_Input) GetDestination() string {
 }
 
 type CopyConfigResponse struct {
-	Output *CopyConfigResponse_Output `protobuf:"bytes,1,opt,name=output" json:"output,omitempty"`
+	Output *SonicOutput `protobuf:"bytes,1,opt,name=output" json:"output,omitempty"`
 }
 
 func (m *CopyConfigResponse) Reset()                    { *m = CopyConfigResponse{} }
 func (m *CopyConfigResponse) String() string            { return proto.CompactTextString(m) }
 func (*CopyConfigResponse) ProtoMessage()               {}
-func (*CopyConfigResponse) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{5} }
+func (*CopyConfigResponse) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{6} }
 
-func (m *CopyConfigResponse) GetOutput() *CopyConfigResponse_Output {
+func (m *CopyConfigResponse) GetOutput() *SonicOutput {
 	if m != nil {
 		return m.Output
 	}
 	return nil
 }
 
-type CopyConfigResponse_Output struct {
-	Status       int32  `protobuf:"varint,1,opt,name=status" json:"status,omitempty"`
-	StatusDetail string `protobuf:"bytes,2,opt,name=status_detail,json=statusDetail" json:"status_detail,omitempty"`
+type ImageInstallRequest struct {
+	Input *ImageInstallRequest_Input `protobuf:"bytes,1,opt,name=input" json:"input,omitempty"`
 }
 
-func (m *CopyConfigResponse_Output) Reset()                    { *m = CopyConfigResponse_Output{} }
-func (m *CopyConfigResponse_Output) String() string            { return proto.CompactTextString(m) }
-func (*CopyConfigResponse_Output) ProtoMessage()               {}
-func (*CopyConfigResponse_Output) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{5, 0} }
+func (m *ImageInstallRequest) Reset()                    { *m = ImageInstallRequest{} }
+func (m *ImageInstallRequest) String() string            { return proto.CompactTextString(m) }
+func (*ImageInstallRequest) ProtoMessage()               {}
+func (*ImageInstallRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{7} }
 
-func (m *CopyConfigResponse_Output) GetStatus() int32 {
+func (m *ImageInstallRequest) GetInput() *ImageInstallRequest_Input {
 	if m != nil {
-		return m.Status
+		return m.Input
 	}
-	return 0
+	return nil
 }
 
-func (m *CopyConfigResponse_Output) GetStatusDetail() string {
+type ImageInstallRequest_Input struct {
+	Imagename string `protobuf:"bytes,2,opt,name=imagename" json:"imagename,omitempty"`
+}
+
+func (m *ImageInstallRequest_Input) Reset()                    { *m = ImageInstallRequest_Input{} }
+func (m *ImageInstallRequest_Input) String() string            { return proto.CompactTextString(m) }
+func (*ImageInstallRequest_Input) ProtoMessage()               {}
+func (*ImageInstallRequest_Input) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{7, 0} }
+
+func (m *ImageInstallRequest_Input) GetImagename() string {
 	if m != nil {
-		return m.StatusDetail
+		return m.Imagename
 	}
 	return ""
+}
+
+type ImageInstallResponse struct {
+	Output *SonicOutput `protobuf:"bytes,1,opt,name=output" json:"output,omitempty"`
+}
+
+func (m *ImageInstallResponse) Reset()                    { *m = ImageInstallResponse{} }
+func (m *ImageInstallResponse) String() string            { return proto.CompactTextString(m) }
+func (*ImageInstallResponse) ProtoMessage()               {}
+func (*ImageInstallResponse) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{8} }
+
+func (m *ImageInstallResponse) GetOutput() *SonicOutput {
+	if m != nil {
+		return m.Output
+	}
+	return nil
+}
+
+type ImageRemoveRequest struct {
+	Input *ImageRemoveRequest_Input `protobuf:"bytes,1,opt,name=input" json:"input,omitempty"`
+}
+
+func (m *ImageRemoveRequest) Reset()                    { *m = ImageRemoveRequest{} }
+func (m *ImageRemoveRequest) String() string            { return proto.CompactTextString(m) }
+func (*ImageRemoveRequest) ProtoMessage()               {}
+func (*ImageRemoveRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{9} }
+
+func (m *ImageRemoveRequest) GetInput() *ImageRemoveRequest_Input {
+	if m != nil {
+		return m.Input
+	}
+	return nil
+}
+
+type ImageRemoveRequest_Input struct {
+	Imagename string `protobuf:"bytes,1,opt,name=imagename" json:"imagename,omitempty"`
+}
+
+func (m *ImageRemoveRequest_Input) Reset()                    { *m = ImageRemoveRequest_Input{} }
+func (m *ImageRemoveRequest_Input) String() string            { return proto.CompactTextString(m) }
+func (*ImageRemoveRequest_Input) ProtoMessage()               {}
+func (*ImageRemoveRequest_Input) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{9, 0} }
+
+func (m *ImageRemoveRequest_Input) GetImagename() string {
+	if m != nil {
+		return m.Imagename
+	}
+	return ""
+}
+
+type ImageRemoveResponse struct {
+	Output *SonicOutput `protobuf:"bytes,1,opt,name=output" json:"output,omitempty"`
+}
+
+func (m *ImageRemoveResponse) Reset()                    { *m = ImageRemoveResponse{} }
+func (m *ImageRemoveResponse) String() string            { return proto.CompactTextString(m) }
+func (*ImageRemoveResponse) ProtoMessage()               {}
+func (*ImageRemoveResponse) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{10} }
+
+func (m *ImageRemoveResponse) GetOutput() *SonicOutput {
+	if m != nil {
+		return m.Output
+	}
+	return nil
+}
+
+type ImageDefaultRequest struct {
+	Input *ImageDefaultRequest_Input `protobuf:"bytes,1,opt,name=input" json:"input,omitempty"`
+}
+
+func (m *ImageDefaultRequest) Reset()                    { *m = ImageDefaultRequest{} }
+func (m *ImageDefaultRequest) String() string            { return proto.CompactTextString(m) }
+func (*ImageDefaultRequest) ProtoMessage()               {}
+func (*ImageDefaultRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{11} }
+
+func (m *ImageDefaultRequest) GetInput() *ImageDefaultRequest_Input {
+	if m != nil {
+		return m.Input
+	}
+	return nil
+}
+
+type ImageDefaultRequest_Input struct {
+	Imagename string `protobuf:"bytes,1,opt,name=imagename" json:"imagename,omitempty"`
+}
+
+func (m *ImageDefaultRequest_Input) Reset()                    { *m = ImageDefaultRequest_Input{} }
+func (m *ImageDefaultRequest_Input) String() string            { return proto.CompactTextString(m) }
+func (*ImageDefaultRequest_Input) ProtoMessage()               {}
+func (*ImageDefaultRequest_Input) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{11, 0} }
+
+func (m *ImageDefaultRequest_Input) GetImagename() string {
+	if m != nil {
+		return m.Imagename
+	}
+	return ""
+}
+
+type ImageDefaultResponse struct {
+	Output *SonicOutput `protobuf:"bytes,1,opt,name=output" json:"output,omitempty"`
+}
+
+func (m *ImageDefaultResponse) Reset()                    { *m = ImageDefaultResponse{} }
+func (m *ImageDefaultResponse) String() string            { return proto.CompactTextString(m) }
+func (*ImageDefaultResponse) ProtoMessage()               {}
+func (*ImageDefaultResponse) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{12} }
+
+func (m *ImageDefaultResponse) GetOutput() *SonicOutput {
+	if m != nil {
+		return m.Output
+	}
+	return nil
 }
 
 type JwtToken struct {
@@ -275,7 +426,7 @@ type JwtToken struct {
 func (m *JwtToken) Reset()                    { *m = JwtToken{} }
 func (m *JwtToken) String() string            { return proto.CompactTextString(m) }
 func (*JwtToken) ProtoMessage()               {}
-func (*JwtToken) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{6} }
+func (*JwtToken) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{13} }
 
 func (m *JwtToken) GetAccessToken() string {
 	if m != nil {
@@ -306,7 +457,7 @@ type AuthenticateRequest struct {
 func (m *AuthenticateRequest) Reset()                    { *m = AuthenticateRequest{} }
 func (m *AuthenticateRequest) String() string            { return proto.CompactTextString(m) }
 func (*AuthenticateRequest) ProtoMessage()               {}
-func (*AuthenticateRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{7} }
+func (*AuthenticateRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{14} }
 
 func (m *AuthenticateRequest) GetUsername() string {
 	if m != nil {
@@ -329,7 +480,7 @@ type AuthenticateResponse struct {
 func (m *AuthenticateResponse) Reset()                    { *m = AuthenticateResponse{} }
 func (m *AuthenticateResponse) String() string            { return proto.CompactTextString(m) }
 func (*AuthenticateResponse) ProtoMessage()               {}
-func (*AuthenticateResponse) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{8} }
+func (*AuthenticateResponse) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{15} }
 
 func (m *AuthenticateResponse) GetToken() *JwtToken {
 	if m != nil {
@@ -344,7 +495,7 @@ type RefreshRequest struct {
 func (m *RefreshRequest) Reset()                    { *m = RefreshRequest{} }
 func (m *RefreshRequest) String() string            { return proto.CompactTextString(m) }
 func (*RefreshRequest) ProtoMessage()               {}
-func (*RefreshRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{9} }
+func (*RefreshRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{16} }
 
 type RefreshResponse struct {
 	Token *JwtToken `protobuf:"bytes,1,opt,name=Token" json:"Token,omitempty"`
@@ -353,7 +504,7 @@ type RefreshResponse struct {
 func (m *RefreshResponse) Reset()                    { *m = RefreshResponse{} }
 func (m *RefreshResponse) String() string            { return proto.CompactTextString(m) }
 func (*RefreshResponse) ProtoMessage()               {}
-func (*RefreshResponse) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{10} }
+func (*RefreshResponse) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{17} }
 
 func (m *RefreshResponse) GetToken() *JwtToken {
 	if m != nil {
@@ -363,6 +514,7 @@ func (m *RefreshResponse) GetToken() *JwtToken {
 }
 
 func init() {
+	proto.RegisterType((*SonicOutput)(nil), "gnoi.sonic.SonicOutput")
 	proto.RegisterType((*TechsupportRequest)(nil), "gnoi.sonic.TechsupportRequest")
 	proto.RegisterType((*TechsupportRequest_Input)(nil), "gnoi.sonic.TechsupportRequest.Input")
 	proto.RegisterType((*TechsupportResponse)(nil), "gnoi.sonic.TechsupportResponse")
@@ -374,7 +526,15 @@ func init() {
 	proto.RegisterType((*CopyConfigRequest)(nil), "gnoi.sonic.CopyConfigRequest")
 	proto.RegisterType((*CopyConfigRequest_Input)(nil), "gnoi.sonic.CopyConfigRequest.Input")
 	proto.RegisterType((*CopyConfigResponse)(nil), "gnoi.sonic.CopyConfigResponse")
-	proto.RegisterType((*CopyConfigResponse_Output)(nil), "gnoi.sonic.CopyConfigResponse.Output")
+	proto.RegisterType((*ImageInstallRequest)(nil), "gnoi.sonic.ImageInstallRequest")
+	proto.RegisterType((*ImageInstallRequest_Input)(nil), "gnoi.sonic.ImageInstallRequest.Input")
+	proto.RegisterType((*ImageInstallResponse)(nil), "gnoi.sonic.ImageInstallResponse")
+	proto.RegisterType((*ImageRemoveRequest)(nil), "gnoi.sonic.ImageRemoveRequest")
+	proto.RegisterType((*ImageRemoveRequest_Input)(nil), "gnoi.sonic.ImageRemoveRequest.Input")
+	proto.RegisterType((*ImageRemoveResponse)(nil), "gnoi.sonic.ImageRemoveResponse")
+	proto.RegisterType((*ImageDefaultRequest)(nil), "gnoi.sonic.ImageDefaultRequest")
+	proto.RegisterType((*ImageDefaultRequest_Input)(nil), "gnoi.sonic.ImageDefaultRequest.Input")
+	proto.RegisterType((*ImageDefaultResponse)(nil), "gnoi.sonic.ImageDefaultResponse")
 	proto.RegisterType((*JwtToken)(nil), "gnoi.sonic.JwtToken")
 	proto.RegisterType((*AuthenticateRequest)(nil), "gnoi.sonic.AuthenticateRequest")
 	proto.RegisterType((*AuthenticateResponse)(nil), "gnoi.sonic.AuthenticateResponse")
@@ -396,6 +556,9 @@ type SonicServiceClient interface {
 	ShowTechsupport(ctx context.Context, in *TechsupportRequest, opts ...grpc.CallOption) (*TechsupportResponse, error)
 	Sum(ctx context.Context, in *SumRequest, opts ...grpc.CallOption) (*SumResponse, error)
 	CopyConfig(ctx context.Context, in *CopyConfigRequest, opts ...grpc.CallOption) (*CopyConfigResponse, error)
+	ImageInstall(ctx context.Context, in *ImageInstallRequest, opts ...grpc.CallOption) (*ImageInstallResponse, error)
+	ImageRemove(ctx context.Context, in *ImageRemoveRequest, opts ...grpc.CallOption) (*ImageRemoveResponse, error)
+	ImageDefault(ctx context.Context, in *ImageDefaultRequest, opts ...grpc.CallOption) (*ImageDefaultResponse, error)
 	Authenticate(ctx context.Context, in *AuthenticateRequest, opts ...grpc.CallOption) (*AuthenticateResponse, error)
 	Refresh(ctx context.Context, in *RefreshRequest, opts ...grpc.CallOption) (*RefreshResponse, error)
 }
@@ -435,6 +598,33 @@ func (c *sonicServiceClient) CopyConfig(ctx context.Context, in *CopyConfigReque
 	return out, nil
 }
 
+func (c *sonicServiceClient) ImageInstall(ctx context.Context, in *ImageInstallRequest, opts ...grpc.CallOption) (*ImageInstallResponse, error) {
+	out := new(ImageInstallResponse)
+	err := grpc.Invoke(ctx, "/gnoi.sonic.SonicService/ImageInstall", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *sonicServiceClient) ImageRemove(ctx context.Context, in *ImageRemoveRequest, opts ...grpc.CallOption) (*ImageRemoveResponse, error) {
+	out := new(ImageRemoveResponse)
+	err := grpc.Invoke(ctx, "/gnoi.sonic.SonicService/ImageRemove", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *sonicServiceClient) ImageDefault(ctx context.Context, in *ImageDefaultRequest, opts ...grpc.CallOption) (*ImageDefaultResponse, error) {
+	out := new(ImageDefaultResponse)
+	err := grpc.Invoke(ctx, "/gnoi.sonic.SonicService/ImageDefault", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *sonicServiceClient) Authenticate(ctx context.Context, in *AuthenticateRequest, opts ...grpc.CallOption) (*AuthenticateResponse, error) {
 	out := new(AuthenticateResponse)
 	err := grpc.Invoke(ctx, "/gnoi.sonic.SonicService/Authenticate", in, out, c.cc, opts...)
@@ -459,6 +649,9 @@ type SonicServiceServer interface {
 	ShowTechsupport(context.Context, *TechsupportRequest) (*TechsupportResponse, error)
 	Sum(context.Context, *SumRequest) (*SumResponse, error)
 	CopyConfig(context.Context, *CopyConfigRequest) (*CopyConfigResponse, error)
+	ImageInstall(context.Context, *ImageInstallRequest) (*ImageInstallResponse, error)
+	ImageRemove(context.Context, *ImageRemoveRequest) (*ImageRemoveResponse, error)
+	ImageDefault(context.Context, *ImageDefaultRequest) (*ImageDefaultResponse, error)
 	Authenticate(context.Context, *AuthenticateRequest) (*AuthenticateResponse, error)
 	Refresh(context.Context, *RefreshRequest) (*RefreshResponse, error)
 }
@@ -521,6 +714,60 @@ func _SonicService_CopyConfig_Handler(srv interface{}, ctx context.Context, dec 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _SonicService_ImageInstall_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ImageInstallRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SonicServiceServer).ImageInstall(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/gnoi.sonic.SonicService/ImageInstall",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SonicServiceServer).ImageInstall(ctx, req.(*ImageInstallRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _SonicService_ImageRemove_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ImageRemoveRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SonicServiceServer).ImageRemove(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/gnoi.sonic.SonicService/ImageRemove",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SonicServiceServer).ImageRemove(ctx, req.(*ImageRemoveRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _SonicService_ImageDefault_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ImageDefaultRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SonicServiceServer).ImageDefault(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/gnoi.sonic.SonicService/ImageDefault",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SonicServiceServer).ImageDefault(ctx, req.(*ImageDefaultRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _SonicService_Authenticate_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(AuthenticateRequest)
 	if err := dec(in); err != nil {
@@ -574,6 +821,18 @@ var _SonicService_serviceDesc = grpc.ServiceDesc{
 			Handler:    _SonicService_CopyConfig_Handler,
 		},
 		{
+			MethodName: "ImageInstall",
+			Handler:    _SonicService_ImageInstall_Handler,
+		},
+		{
+			MethodName: "ImageRemove",
+			Handler:    _SonicService_ImageRemove_Handler,
+		},
+		{
+			MethodName: "ImageDefault",
+			Handler:    _SonicService_ImageDefault_Handler,
+		},
+		{
 			MethodName: "Authenticate",
 			Handler:    _SonicService_Authenticate_Handler,
 		},
@@ -589,44 +848,53 @@ var _SonicService_serviceDesc = grpc.ServiceDesc{
 func init() { proto.RegisterFile("sonic.proto", fileDescriptor0) }
 
 var fileDescriptor0 = []byte{
-	// 612 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x94, 0x55, 0xed, 0x6e, 0xd3, 0x30,
-	0x14, 0x5d, 0xe9, 0x5a, 0xd6, 0xdb, 0xb2, 0xc1, 0xdd, 0x34, 0xa6, 0xec, 0x83, 0xe2, 0xf1, 0x25,
-	0x7e, 0x54, 0x5a, 0x91, 0x10, 0x20, 0x0d, 0x09, 0x36, 0x90, 0x86, 0x34, 0x21, 0xa5, 0xfd, 0x5f,
-	0x42, 0x7a, 0xdb, 0x5a, 0xb4, 0x71, 0xb0, 0x9d, 0x95, 0xbd, 0xc1, 0x9e, 0x81, 0x97, 0xe0, 0x15,
-	0x51, 0x6d, 0x27, 0x4d, 0xb6, 0x76, 0x88, 0x7f, 0xbe, 0xc7, 0xe7, 0x7e, 0x9c, 0x63, 0x3b, 0x81,
-	0xba, 0x12, 0x11, 0x0f, 0x5b, 0xb1, 0x14, 0x5a, 0x20, 0x0c, 0x23, 0xc1, 0x5b, 0x06, 0x61, 0x13,
-	0xc0, 0x2e, 0x85, 0x23, 0x95, 0xc4, 0xb1, 0x90, 0xda, 0xa7, 0x9f, 0x09, 0x29, 0x8d, 0xef, 0xa0,
-	0xc2, 0xa3, 0x38, 0xd1, 0x3b, 0xa5, 0x66, 0xe9, 0x45, 0xbd, 0xfd, 0xa4, 0x35, 0xcf, 0x68, 0xdd,
-	0xa4, 0xb7, 0xce, 0x66, 0x5c, 0xdf, 0xa6, 0x78, 0xbb, 0x50, 0x31, 0x31, 0x22, 0xac, 0xf6, 0x03,
-	0x4d, 0xa6, 0x46, 0xcd, 0x37, 0x6b, 0x76, 0x55, 0x82, 0xcd, 0x42, 0x01, 0x15, 0x8b, 0x48, 0x11,
-	0xbe, 0x87, 0xaa, 0x48, 0xf4, 0xbc, 0xe3, 0xb3, 0xa5, 0x1d, 0x6d, 0x42, 0xeb, 0xab, 0x61, 0xfb,
-	0x2e, 0xcb, 0x3b, 0x82, 0xaa, 0x45, 0xf0, 0x39, 0x6c, 0x58, 0xac, 0x37, 0xe0, 0x63, 0x8a, 0x82,
-	0x49, 0x3a, 0xc0, 0xba, 0x85, 0x3f, 0x3b, 0x94, 0x29, 0x80, 0x4e, 0x32, 0x49, 0x15, 0xb7, 0x8b,
-	0x8a, 0xf7, 0xf2, 0xfd, 0xe7, 0xb4, 0xa2, 0xd2, 0xa3, 0x9c, 0xd2, 0x31, 0x0d, 0x6c, 0x6e, 0xc5,
-	0x37, 0x6b, 0xdc, 0x82, 0x8a, 0xe4, 0xc3, 0x91, 0xde, 0xb9, 0x63, 0x40, 0x1b, 0xb0, 0x21, 0xd4,
-	0x4d, 0x35, 0x27, 0xfb, 0xf5, 0x35, 0xd9, 0x07, 0x37, 0xda, 0x2e, 0x96, 0xdb, 0xcc, 0xe4, 0x6e,
-	0x43, 0x55, 0x92, 0x4a, 0xc6, 0x69, 0x73, 0x17, 0xb1, 0x3f, 0x25, 0x78, 0x70, 0x22, 0xe2, 0xcb,
-	0x13, 0x11, 0x0d, 0xf8, 0x30, 0x55, 0xf9, 0xb6, 0xa8, 0xf2, 0x30, 0xdf, 0xee, 0x06, 0xbb, 0x28,
-	0xb6, 0x97, 0x8a, 0xdd, 0x86, 0xaa, 0x12, 0x89, 0x0c, 0x53, 0x5f, 0x5d, 0x84, 0x7b, 0x50, 0x13,
-	0x17, 0x24, 0xa7, 0x92, 0x6b, 0x32, 0xa2, 0xd7, 0xfc, 0x39, 0x80, 0x4d, 0xa8, 0xf7, 0x49, 0x69,
-	0x1e, 0x05, 0x9a, 0x8b, 0x68, 0xa7, 0x6c, 0x52, 0xf3, 0x10, 0xfb, 0x5d, 0x02, 0xcc, 0xcf, 0xe0,
-	0x2c, 0x3a, 0xbe, 0x66, 0xd1, 0xd3, 0x65, 0x33, 0x2f, 0x76, 0xea, 0x53, 0xde, 0x29, 0xa5, 0x03,
-	0x9d, 0xa8, 0xd4, 0x29, 0x1b, 0xe1, 0x21, 0xdc, 0xb3, 0xab, 0x5e, 0x9f, 0x74, 0xc0, 0xc7, 0x66,
-	0xf6, 0x9a, 0xdf, 0xb0, 0xe0, 0xa9, 0xc1, 0xd8, 0x37, 0x58, 0xfb, 0x32, 0xd5, 0x5d, 0xf1, 0x83,
-	0x22, 0x7c, 0x0c, 0x8d, 0x20, 0x0c, 0x49, 0xa9, 0x9e, 0x9e, 0xc5, 0xce, 0x86, 0xba, 0xc5, 0x2c,
-	0x05, 0x61, 0x55, 0x5f, 0xc6, 0xe4, 0x4a, 0x99, 0x35, 0xee, 0x03, 0xd0, 0xaf, 0x98, 0x4b, 0x52,
-	0x3d, 0x6e, 0x0d, 0x28, 0xfb, 0x35, 0x87, 0x9c, 0x45, 0xec, 0x1c, 0x36, 0x3f, 0x24, 0x7a, 0x44,
-	0x91, 0xe6, 0x61, 0xa0, 0x29, 0x3d, 0x31, 0x0f, 0xd6, 0x12, 0x45, 0x32, 0x77, 0x8f, 0xb3, 0x78,
-	0xb6, 0x17, 0x07, 0x4a, 0x4d, 0x85, 0xec, 0xbb, 0x4e, 0x59, 0xcc, 0x3e, 0xc2, 0x56, 0xb1, 0x9c,
-	0xb3, 0xf3, 0x25, 0x54, 0xba, 0xd9, 0xd4, 0xf5, 0xf6, 0x56, 0xde, 0xcd, 0x54, 0xa1, 0x6f, 0x29,
-	0xec, 0x3e, 0xac, 0xfb, 0x34, 0x90, 0xa4, 0x46, 0x6e, 0x1a, 0x76, 0x0c, 0x1b, 0x19, 0xf2, 0xff,
-	0x05, 0xdb, 0x57, 0x65, 0x68, 0x74, 0x66, 0x3b, 0x1d, 0x92, 0x17, 0x3c, 0x24, 0xec, 0xc2, 0x46,
-	0x67, 0x24, 0xa6, 0xb9, 0x07, 0x8e, 0x07, 0xb7, 0x7f, 0x6b, 0xbc, 0x47, 0xff, 0xf8, 0x32, 0xb0,
-	0x15, 0x7c, 0x03, 0xe5, 0x4e, 0x32, 0xc1, 0xed, 0xc5, 0x6f, 0xd8, 0x7b, 0xb8, 0xe4, 0x91, 0xb1,
-	0x15, 0x3c, 0x07, 0x98, 0x5f, 0x29, 0xdc, 0xbf, 0xf5, 0x79, 0x78, 0x07, 0xb7, 0xdf, 0x44, 0xb6,
-	0x82, 0x1d, 0x68, 0xe4, 0x0f, 0x01, 0x0b, 0xb3, 0x2f, 0x38, 0x6d, 0xaf, 0xb9, 0x9c, 0x90, 0x15,
-	0x3d, 0x85, 0xbb, 0xee, 0x0c, 0xd0, 0xcb, 0xd3, 0x8b, 0x47, 0xe5, 0xed, 0x2e, 0xdc, 0x4b, 0xab,
-	0x7c, 0xaf, 0x9a, 0x5f, 0xc1, 0xab, 0xbf, 0x01, 0x00, 0x00, 0xff, 0xff, 0xbc, 0xe7, 0xf7, 0x65,
-	0x19, 0x06, 0x00, 0x00,
+	// 758 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xa4, 0x96, 0xdf, 0x6f, 0x12, 0x41,
+	0x10, 0xc7, 0x8b, 0x2d, 0x58, 0xe6, 0xb0, 0xd5, 0x2d, 0x69, 0x9b, 0xeb, 0x2f, 0xdc, 0x5a, 0x6d,
+	0x7c, 0xc0, 0x14, 0x13, 0xe3, 0x8f, 0x68, 0xa2, 0xad, 0x35, 0x34, 0x69, 0x34, 0x07, 0xef, 0x78,
+	0xc2, 0x02, 0x1b, 0xe1, 0xf6, 0xbc, 0xdd, 0x2b, 0xf6, 0xdd, 0x07, 0xff, 0x1b, 0xff, 0x45, 0xc3,
+	0xfe, 0x38, 0x6e, 0xe1, 0x68, 0x6b, 0x7d, 0xdb, 0x99, 0x9b, 0xfd, 0xce, 0x7e, 0x66, 0x67, 0x16,
+	0xc0, 0xe1, 0x2c, 0xa0, 0xed, 0x6a, 0x18, 0x31, 0xc1, 0x10, 0xf4, 0x02, 0x46, 0xab, 0xd2, 0x83,
+	0xcf, 0xc0, 0x69, 0x8c, 0x17, 0x9f, 0x63, 0x11, 0xc6, 0x02, 0xad, 0x43, 0x81, 0x0b, 0x5f, 0xc4,
+	0x7c, 0x33, 0x57, 0xc9, 0x1d, 0xe6, 0x3d, 0x6d, 0xa1, 0x7d, 0xb8, 0xa7, 0x56, 0xad, 0x0e, 0x11,
+	0x3e, 0x1d, 0x6c, 0xde, 0xa9, 0xe4, 0x0e, 0x8b, 0x5e, 0x49, 0x39, 0x4f, 0xa4, 0x0f, 0x0f, 0x01,
+	0x35, 0x49, 0xbb, 0xcf, 0xe3, 0x30, 0x64, 0x91, 0xf0, 0xc8, 0x8f, 0x98, 0x70, 0x81, 0x5e, 0x43,
+	0x9e, 0x06, 0x61, 0x2c, 0xa4, 0xa2, 0x53, 0x7b, 0x54, 0x9d, 0x64, 0xaf, 0xce, 0x86, 0x57, 0xeb,
+	0xe3, 0x58, 0x4f, 0x6d, 0x71, 0xb7, 0x20, 0x2f, 0x6d, 0x84, 0x60, 0xa9, 0xe3, 0x0b, 0x22, 0x35,
+	0x8a, 0x9e, 0x5c, 0xe3, 0xdf, 0x39, 0x58, 0xb3, 0x04, 0x78, 0xc8, 0x02, 0x4e, 0xd0, 0x3b, 0x28,
+	0x30, 0x49, 0xa3, 0x33, 0x3e, 0x9e, 0x9b, 0x51, 0x6d, 0xa8, 0x2a, 0x76, 0x4f, 0xef, 0x72, 0x8f,
+	0xa0, 0xa0, 0xab, 0xf1, 0x04, 0x56, 0x95, 0xaf, 0xd5, 0xa5, 0x03, 0x12, 0xf8, 0x43, 0x73, 0x80,
+	0x15, 0xe5, 0x3e, 0xd5, 0x5e, 0xcc, 0x01, 0x1a, 0xf1, 0xd0, 0x10, 0xd7, 0x6c, 0xe2, 0xed, 0x74,
+	0xfe, 0x49, 0x98, 0x4d, 0x7a, 0x94, 0x22, 0x1d, 0x90, 0xae, 0xd0, 0xf5, 0x97, 0x6b, 0x54, 0x86,
+	0x7c, 0x44, 0x7b, 0x7d, 0x21, 0xab, 0x9e, 0xf7, 0x94, 0x81, 0x7b, 0xe0, 0x48, 0x35, 0x8d, 0xfd,
+	0x62, 0x0a, 0x7b, 0x77, 0x26, 0x6d, 0x36, 0x6e, 0x25, 0xc1, 0x5d, 0x87, 0x42, 0x44, 0x78, 0x3c,
+	0x30, 0xc9, 0xb5, 0x85, 0xff, 0xe4, 0xe0, 0xc1, 0x31, 0x0b, 0x2f, 0x8f, 0x59, 0xd0, 0xa5, 0x3d,
+	0x43, 0xf9, 0xca, 0xa6, 0xdc, 0x4f, 0xa7, 0x9b, 0x89, 0xb6, 0x61, 0x5b, 0x06, 0x76, 0xdc, 0x6e,
+	0x2c, 0x8e, 0xda, 0xa6, 0xae, 0xda, 0x42, 0xdb, 0x50, 0x64, 0x17, 0x24, 0x1a, 0x45, 0x54, 0x10,
+	0x09, 0xbd, 0xec, 0x4d, 0x1c, 0xa8, 0x02, 0x4e, 0x87, 0x70, 0x41, 0x03, 0x5f, 0x50, 0x16, 0x6c,
+	0x2e, 0xca, 0xad, 0x69, 0x17, 0xfe, 0x08, 0x28, 0x7d, 0x04, 0x5d, 0xa1, 0x67, 0x53, 0x15, 0xda,
+	0xb0, 0x2a, 0x34, 0x99, 0x02, 0x53, 0x1a, 0x7c, 0x09, 0x6b, 0xf5, 0xa1, 0xdf, 0x23, 0xf5, 0x80,
+	0x0b, 0x7f, 0x30, 0x30, 0xe4, 0x6f, 0x6c, 0xf2, 0x83, 0xb4, 0x4c, 0x46, 0xbc, 0xcd, 0x7e, 0x60,
+	0xd8, 0xb7, 0xa1, 0x48, 0xc7, 0xc1, 0xb2, 0xad, 0xd4, 0x38, 0x4d, 0x1c, 0xf8, 0x13, 0x94, 0x6d,
+	0xa9, 0xdb, 0x32, 0x8c, 0x00, 0x49, 0x21, 0x8f, 0x0c, 0xd9, 0x05, 0xb9, 0xc9, 0x50, 0xce, 0x86,
+	0xdf, 0x84, 0x20, 0x37, 0x4d, 0x70, 0xaa, 0x8b, 0x67, 0x94, 0xfe, 0xf7, 0x12, 0x4e, 0x48, 0xd7,
+	0x8f, 0x07, 0xe2, 0xc6, 0x97, 0x60, 0xc7, 0xdf, 0x0a, 0xc1, 0x5c, 0x42, 0x22, 0x75, 0x5b, 0x86,
+	0xaf, 0xb0, 0x7c, 0x36, 0x12, 0x4d, 0xf6, 0x9d, 0x04, 0xe8, 0x21, 0x94, 0xfc, 0x76, 0x9b, 0x70,
+	0xde, 0x12, 0x63, 0x5b, 0x67, 0x75, 0x94, 0x4f, 0x85, 0x20, 0x58, 0x12, 0x97, 0xa1, 0xe9, 0x0a,
+	0xb9, 0x46, 0x3b, 0x00, 0xe4, 0x67, 0x48, 0x23, 0xc2, 0x5b, 0x54, 0xf5, 0xfc, 0xa2, 0x57, 0xd4,
+	0x9e, 0x7a, 0x80, 0xcf, 0x61, 0xed, 0x7d, 0x2c, 0xfa, 0x24, 0x10, 0xb4, 0xed, 0x8b, 0xe4, 0x9e,
+	0x5d, 0x58, 0x8e, 0x39, 0x89, 0x52, 0x78, 0x89, 0x3d, 0xfe, 0x16, 0xfa, 0x9c, 0x8f, 0x58, 0xd4,
+	0xd1, 0x99, 0x12, 0x1b, 0x7f, 0x80, 0xb2, 0x2d, 0xa7, 0xc9, 0x9f, 0x42, 0xbe, 0x99, 0x9c, 0xda,
+	0xa9, 0x95, 0xd3, 0xe0, 0x86, 0xd0, 0x53, 0x21, 0xf8, 0x3e, 0xac, 0x78, 0xa4, 0x1b, 0x11, 0xde,
+	0xd7, 0xa7, 0xc1, 0x6f, 0x61, 0x35, 0xf1, 0xfc, 0xbb, 0x60, 0xed, 0x57, 0x1e, 0x4a, 0xb2, 0xba,
+	0x0d, 0x12, 0x5d, 0xd0, 0x36, 0x41, 0x4d, 0x58, 0x6d, 0xf4, 0xd9, 0x28, 0xf5, 0xa6, 0xa3, 0xdd,
+	0xab, 0x7f, 0x5e, 0xdc, 0xbd, 0x6b, 0x7e, 0x0c, 0xf0, 0x02, 0x7a, 0x09, 0x8b, 0x8d, 0x78, 0x88,
+	0xd6, 0xb3, 0x9f, 0x6d, 0x77, 0x63, 0xce, 0xbb, 0x8a, 0x17, 0xd0, 0x39, 0xc0, 0xe4, 0xd9, 0x41,
+	0x3b, 0x57, 0xbe, 0x88, 0xee, 0xee, 0xbc, 0xcf, 0x89, 0x5c, 0x03, 0x4a, 0xe9, 0x37, 0x00, 0xed,
+	0x5d, 0xf3, 0xd0, 0xb8, 0x95, 0xf9, 0x01, 0x89, 0xe8, 0x17, 0x70, 0x52, 0x63, 0x69, 0xd7, 0x6b,
+	0x76, 0xf2, 0xdd, 0xbd, 0xb9, 0xdf, 0x67, 0x8e, 0xa9, 0xa7, 0x24, 0xe3, 0x98, 0xf6, 0x28, 0x66,
+	0x1c, 0x73, 0x6a, 0xc0, 0x94, 0x68, 0xba, 0x01, 0x6d, 0xd1, 0x8c, 0x4e, 0xb7, 0x45, 0xb3, 0x7a,
+	0x17, 0x2f, 0xa0, 0x13, 0xb8, 0xab, 0xfb, 0x0f, 0xb9, 0xe9, 0x70, 0xbb, 0x4d, 0xdd, 0xad, 0xcc,
+	0x6f, 0x46, 0xe5, 0x5b, 0x41, 0xfe, 0x8b, 0x7a, 0xfe, 0x37, 0x00, 0x00, 0xff, 0xff, 0x75, 0xc2,
+	0x7e, 0xa5, 0x54, 0x09, 0x00, 0x00,
 }
