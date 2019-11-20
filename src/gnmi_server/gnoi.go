@@ -97,12 +97,12 @@ func (srv *Server) CopyConfig(ctx context.Context, req *spb.CopyConfigRequest) (
 
 		},
 	}
-	reqstr := fmt.Sprintf("{\"copy:input\": {\"source\": \"%s\", \"overwrite\": %t, \"destination\": \"%s\"}}", req.Input.Source, req.Input.Overwrite, req.Input.Destination)
+	reqstr := fmt.Sprintf("{\"sonic-config-mgmt:input\": {\"source\": \"%s\", \"overwrite\": %t, \"destination\": \"%s\"}}", req.Input.Source, req.Input.Overwrite, req.Input.Destination)
 	jsresp, err:= transutil.TranslProcessAction("/sonic-config-mgmt:copy", []byte(reqstr))
 	if err != nil {
 		return nil, status.Error(codes.Unknown, err.Error())
 	}
-	jsresp = []byte(strings.Replace(string(jsresp), "copy:output", "output", 1))
+	jsresp = []byte(strings.Replace(string(jsresp), "sonic-config-mgmt:output", "output", 1))
 	err = json.Unmarshal(jsresp, &jobj)
 	if err != nil {
 		return nil, status.Error(codes.Unknown, err.Error())
