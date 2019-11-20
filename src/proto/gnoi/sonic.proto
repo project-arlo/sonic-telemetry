@@ -10,12 +10,19 @@ service SonicService {
 
   rpc CopyConfig(CopyConfigRequest) returns (CopyConfigResponse) {}
 
+  rpc ImageInstall(ImageInstallRequest) returns (ImageInstallResponse) {}
+  rpc ImageRemove(ImageRemoveRequest) returns (ImageRemoveResponse) {}
+  rpc ImageDefault(ImageDefaultRequest) returns (ImageDefaultResponse) {}
 
   rpc Authenticate(AuthenticateRequest) returns (AuthenticateResponse) {}
   rpc Refresh(RefreshRequest) returns (RefreshResponse) {}
 
 }
 
+message SonicOutput {
+    int32 status = 1;
+    string status_detail = 2;
+}
 message TechsupportRequest {
     message Input {
         string date = 1;
@@ -54,13 +61,37 @@ message CopyConfigRequest {
     Input input = 1;
 }
 message CopyConfigResponse {
-    message Output {
-        int32 status = 1;
-        string status_detail = 2;
-    }
-    Output output = 1;
+    SonicOutput output = 1;
 }
 
+
+message ImageInstallRequest {
+    message Input {
+        string imagename = 2;
+    }
+    Input input = 1;
+}
+message ImageInstallResponse {
+    SonicOutput output = 1;
+}
+message ImageRemoveRequest {
+    message Input {
+        string imagename = 1;
+    }
+    Input input = 1;
+}
+message ImageRemoveResponse {
+    SonicOutput output = 1;
+}
+message ImageDefaultRequest {
+    message Input {
+        string imagename = 1;
+    }
+    Input input = 1;
+}
+message ImageDefaultResponse {
+    SonicOutput output = 1;
+}
 
 
 
