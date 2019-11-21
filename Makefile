@@ -8,8 +8,8 @@ BUILD_DIR=build
 GO_DEP_PATH=$(abspath .)/$(BUILD_DIR)
 GO_MGMT_PATH=$(TOP_DIR)/sonic-mgmt-framework
 GO_SONIC_TELEMETRY_PATH=$(TOP_DIR)
-CVL_GOPATH=$(GO_MGMT_PATH)/gopkgs:$(GO_MGMT_PATH):$(GO_MGMT_PATH)/src/cvl/build
-GOPATH = $(CVL_GOPATH):$(GO_DEP_PATH):$(GO_MGMT_PATH):/tmp/go:$(GO_SONIC_TELEMETRY_PATH):$(TELEM_DIR):$(HOME)/go
+CVL_GOPATH=$(GO_MGMT_PATH)/build/gopkgs:$(GO_MGMT_PATH):$(GO_MGMT_PATH)/src/cvl/build
+GOPATH = $(CVL_GOPATH):$(GO_DEP_PATH):$(GO_MGMT_PATH):/tmp/go:$(GO_SONIC_TELEMETRY_PATH):$(TELEM_DIR)
 INSTALL := /usr/bin/install
 
 SRC_FILES=$(shell find . -name '*.go' | grep -v '_test.go' | grep -v '/tests/')
@@ -30,8 +30,7 @@ precheck:
 
 deps: $(BUILD_DIR)/.deps
 
-$(BUILD_DIR)/.deps:
-	touch $(BUILD_DIR)/.deps
+$(BUILD_DIR)/.deps: $(MAKEFILE_LIST)
 	GOPATH=$(GO_DEP_PATH) $(GO) get -u  github.com/Workiva/go-datastructures/queue
 	GOPATH=$(GO_DEP_PATH) $(GO) get -u github.com/openconfig/goyang
 	GOPATH=$(GO_DEP_PATH) $(GO) get -u github.com/openconfig/ygot/ygot
@@ -52,6 +51,7 @@ $(BUILD_DIR)/.deps:
 	GOPATH=$(GO_DEP_PATH) $(GO) get -u github.com/jipanyang/gnmi/client/gnmi
 	GOPATH=$(GO_DEP_PATH) $(GO) get -u github.com/xeipuuv/gojsonschema
 	GOPATH=$(GO_DEP_PATH) $(GO) get -u github.com/openconfig/gnoi/system
+	touch $@
 
 telemetry:$(BUILD_DIR)/telemetry $(BUILD_DIR)/dialout_client_cli $(BUILD_DIR)/gnmi_get $(BUILD_DIR)/gnmi_set $(BUILD_DIR)/gnmi_cli $(BUILD_DIR)/gnoi_client
 

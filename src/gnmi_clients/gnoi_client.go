@@ -61,10 +61,8 @@ func main() {
 			sonicShowTechSupport(sc, ctx)
 		case "sum":
 			sonicSum(sc, ctx)
-		case "saveConfig":
-			saveConfig(sc, ctx)
-		case "reloadConfig":
-			reloadConfig(sc, ctx)
+		case "copyConfig":
+			copyConfig(sc, ctx)
 		case "authenticate":
 			authenticate(sc, ctx)
 		case "refresh":
@@ -95,14 +93,14 @@ func sonicShowTechSupport(sc spb.SonicServiceClient, ctx context.Context) {
 
 		},
 	}
-	nargs := strings.Replace(string(*args), "sonic-tests:input", "input", 1)
+	nargs := strings.Replace(string(*args), "sonic-show-techsupport:input", "input", 1)
 	json.Unmarshal([]byte(nargs), &req)
-	fmt.Println(req)
 	resp,err := sc.ShowTechsupport(ctx, req)
 	if err != nil {
 		panic(err.Error())
 	}
-	fmt.Println(resp.Output.OutputFilename)
+
+	fmt.Println(resp)
 }
 func sonicSum(sc spb.SonicServiceClient, ctx context.Context) {
 	fmt.Println("Sonic Sum")
@@ -121,72 +119,71 @@ func sonicSum(sc spb.SonicServiceClient, ctx context.Context) {
 	fmt.Println(resp.Output.Result)
 }
 
-func saveConfig(sc spb.SonicServiceClient, ctx context.Context) {
-	fmt.Println("Sonic SaveConfig")
+func copyConfig(sc spb.SonicServiceClient, ctx context.Context) {
+	fmt.Println("Sonic CopyConfig")
 	ctx = setUserCreds(ctx)
-	req := &spb.SaveConfigRequest{
-		Input: &spb.SaveConfigRequest_Input{},
+	req := &spb.CopyConfigRequest{
+		Input: &spb.CopyConfigRequest_Input{},
 	}
 	nargs := strings.Replace(string(*args), "sonic-config-mgmt:input", "input", 1)
 	json.Unmarshal([]byte(nargs), &req)
 
-	resp,err := sc.SaveConfig(ctx, req)
+	resp,err := sc.CopyConfig(ctx, req)
 
 	if err != nil {
 		panic(err.Error())
 	}
-	fmt.Println(resp.Output.Status)
+	fmt.Println(resp)
 }
 
-func reloadConfig(sc spb.SonicServiceClient, ctx context.Context) {
-	fmt.Println("Sonic ReloadConfig")
+func imageInstall(sc spb.SonicServiceClient, ctx context.Context) {
+	fmt.Println("Sonic ImageInstall")
 	ctx = setUserCreds(ctx)
-	req := &spb.ReloadConfigRequest{
-		Input: &spb.ReloadConfigRequest_Input{},
+	req := &spb.ImageInstallRequest{
+		Input: &spb.ImageInstallRequest_Input{},
 	}
-	nargs := strings.Replace(string(*args), "sonic-config-mgmt:input", "input", 1)
+	nargs := strings.Replace(string(*args), "sonic-image-mgmt:input", "input", 1)
 	json.Unmarshal([]byte(nargs), &req)
 
-	resp,err := sc.ReloadConfig(ctx, req)
+	resp,err := sc.ImageInstall(ctx, req)
 
 	if err != nil {
 		panic(err.Error())
 	}
-	fmt.Println(resp.Output.Status)
+	fmt.Println(resp)
+}
+func imageRemove(sc spb.SonicServiceClient, ctx context.Context) {
+	fmt.Println("Sonic ImageRemove")
+	ctx = setUserCreds(ctx)
+	req := &spb.ImageRemoveRequest{
+		Input: &spb.ImageRemoveRequest_Input{},
+	}
+	nargs := strings.Replace(string(*args), "sonic-image-mgmt:input", "input", 1)
+	json.Unmarshal([]byte(nargs), &req)
+
+	resp,err := sc.ImageRemove(ctx, req)
+
+	if err != nil {
+		panic(err.Error())
+	}
+	fmt.Println(resp)
 }
 
-func loadMgmtConfig(sc spb.SonicServiceClient, ctx context.Context) {
-	fmt.Println("Sonic LoadMgmtConfig")
+func imageDefault(sc spb.SonicServiceClient, ctx context.Context) {
+	fmt.Println("Sonic ImageDefault")
 	ctx = setUserCreds(ctx)
-	req := &spb.LoadMgmtConfigRequest{
-		Input: &spb.LoadMgmtConfigRequest_Input{},
+	req := &spb.ImageDefaultRequest{
+		Input: &spb.ImageDefaultRequest_Input{},
 	}
-	nargs := strings.Replace(string(*args), "sonic-config-mgmt:input", "input", 1)
+	nargs := strings.Replace(string(*args), "sonic-image-mgmt:input", "input", 1)
 	json.Unmarshal([]byte(nargs), &req)
 
-	resp,err := sc.LoadMgmtConfig(ctx, req)
+	resp,err := sc.ImageDefault(ctx, req)
 
 	if err != nil {
 		panic(err.Error())
 	}
-	fmt.Println(resp.Output.Status)
-}
-
-func loadMinigraph(sc spb.SonicServiceClient, ctx context.Context) {
-	fmt.Println("Sonic LoadMinigraph")
-	ctx = setUserCreds(ctx)
-	req := &spb.LoadMinigraphRequest{
-		Input: &spb.LoadMinigraphRequest_Input{},
-	}
-	nargs := strings.Replace(string(*args), "sonic-config-mgmt:input", "input", 1)
-	json.Unmarshal([]byte(nargs), &req)
-
-	resp,err := sc.LoadMinigraph(ctx, req)
-
-	if err != nil {
-		panic(err.Error())
-	}
-	fmt.Println(resp.Output.Status)
+	fmt.Println(resp)
 }
 
 func authenticate(sc spb.SonicServiceClient, ctx context.Context) {
