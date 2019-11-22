@@ -40,10 +40,5 @@ func ClientCertAuthenAndAuthor(ctx context.Context, admin_required bool) (contex
 		return ctx, status.Errorf(codes.Unauthenticated, "")	
 	}
 
-	//Allow SET request only if user belong to admin group
-	if admin_required && IsAdminGroup(username) == false {
-		return ctx, status.Error(codes.Unauthenticated, "Not an admin user")
-	}
-
 	return ctx, nil
 }

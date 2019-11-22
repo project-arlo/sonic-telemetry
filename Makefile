@@ -8,7 +8,7 @@ BUILD_DIR=build
 GO_DEP_PATH=$(abspath .)/$(BUILD_DIR)
 GO_MGMT_PATH=$(TOP_DIR)/sonic-mgmt-framework
 GO_SONIC_TELEMETRY_PATH=$(TOP_DIR)
-CVL_GOPATH=$(GO_MGMT_PATH)/build/gopkgs:$(GO_MGMT_PATH):$(GO_MGMT_PATH)/src/cvl/build
+CVL_GOPATH=$(GO_MGMT_PATH)/gopkgs:$(GO_MGMT_PATH):$(GO_MGMT_PATH)/src/cvl/build
 GOPATH = $(CVL_GOPATH):$(GO_DEP_PATH):$(GO_MGMT_PATH):/tmp/go:$(GO_SONIC_TELEMETRY_PATH):$(TELEM_DIR)
 INSTALL := /usr/bin/install
 
@@ -51,6 +51,8 @@ $(BUILD_DIR)/.deps: $(MAKEFILE_LIST)
 	GOPATH=$(GO_DEP_PATH) $(GO) get -u github.com/jipanyang/gnmi/client/gnmi
 	GOPATH=$(GO_DEP_PATH) $(GO) get -u github.com/xeipuuv/gojsonschema
 	GOPATH=$(GO_DEP_PATH) $(GO) get -u github.com/openconfig/gnoi/system
+	GOPATH=$(GO_DEP_PATH) $(GO) get -u github.com/msteinert/pam
+
 	touch $@
 
 telemetry:$(BUILD_DIR)/telemetry $(BUILD_DIR)/dialout_client_cli $(BUILD_DIR)/gnmi_get $(BUILD_DIR)/gnmi_set $(BUILD_DIR)/gnmi_cli $(BUILD_DIR)/gnoi_client

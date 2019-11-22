@@ -37,11 +37,6 @@ func BasicAuthenAndAuthor(ctx context.Context, admin_required bool) (context.Con
 	if auth_success == false {
 		return ctx, status.Errorf(codes.PermissionDenied, "Invalid Password")	
 	}
-
-	//Allow SET request only if user belong to admin group
-	if admin_required && IsAdminGroup(username) == false {
-		return ctx, status.Errorf(codes.PermissionDenied, "Admin user required for this operation")
-	}
 	
 	return ctx, nil
 }

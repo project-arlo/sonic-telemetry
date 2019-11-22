@@ -108,7 +108,8 @@ func TranslProcessGet(uriPath string, op *string, ctx context.Context) (*gnmipb.
 func TranslProcessDelete(uri string, ctx context.Context) error {
 	var str3 string
 	payload := []byte(str3)
-	req := translib.SetRequest{Path:uri, Payload:payload}
+	rc, ctx := common_utils.GetContext(ctx)
+	req := translib.SetRequest{Path:uri, Payload:payload, User: rc.Auth.User, Group: rc.Auth.Group}
 	resp, err := translib.Delete(req)
 	if err != nil{
 		log.V(2).Infof("DELETE operation failed with error =%v", resp.ErrSrc)
@@ -126,7 +127,8 @@ func TranslProcessReplace(uri string, t *gnmipb.TypedValue, ctx context.Context)
 	log.V(2).Infof("Incoming JSON body is", str)
 
 	payload := []byte(str3)
-	req := translib.SetRequest{Path:uri, Payload:payload}
+	rc, ctx := common_utils.GetContext(ctx)
+	req := translib.SetRequest{Path:uri, Payload:payload, User: rc.Auth.User, Group: rc.Auth.Group}
 	resp, err1 := translib.Create(req)
 	if err1 != nil{
 		//If Create fails, it may be due to object already existing/can not be created
@@ -150,7 +152,8 @@ func TranslProcessUpdate(uri string, t *gnmipb.TypedValue, ctx context.Context) 
 	log.V(2).Infof("Incoming JSON body is", str)
 
 	payload := []byte(str3)
-	req := translib.SetRequest{Path:uri, Payload:payload}
+	rc, ctx := common_utils.GetContext(ctx)
+	req := translib.SetRequest{Path:uri, Payload:payload, User: rc.Auth.User, Group: rc.Auth.Group}
 	resp, err := translib.Create(req)
 	if err != nil{
 		//If Create fails, it may be due to object already existing/can not be created
@@ -166,7 +169,8 @@ func TranslProcessUpdate(uri string, t *gnmipb.TypedValue, ctx context.Context) 
 
 /* Action/rpc request handling. */
 func TranslProcessAction(uri string, payload []byte, ctx context.Context) ([]byte, error) {
-	var req translib.ActionRequest
+	rc, ctx := common_utils.GetContext(ctx)
+	req := translib.ActionRequest{User: rc.Auth.User, Group: rc.Auth.Group}
 	req.Path = uri
 	req.Payload = payload
 
