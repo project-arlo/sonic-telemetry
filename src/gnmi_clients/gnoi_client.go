@@ -65,6 +65,12 @@ func main() {
 			copyConfig(sc, ctx)
 		case "authenticate":
 			authenticate(sc, ctx)
+		case "imageInstall":
+			imageInstall(sc, ctx)
+		case "imageDefault":
+			imageDefault(sc, ctx)
+		case "imageRemove":
+			imageRemove(sc, ctx)
 		case "refresh":
 			refresh(sc, ctx)
 		default:
@@ -142,7 +148,7 @@ func imageInstall(sc spb.SonicServiceClient, ctx context.Context) {
 	req := &spb.ImageInstallRequest{
 		Input: &spb.ImageInstallRequest_Input{},
 	}
-	nargs := strings.Replace(string(*args), "sonic-image-mgmt:input", "input", 1)
+	nargs := strings.Replace(string(*args), "sonic-image-management:input", "input", 1)
 	json.Unmarshal([]byte(nargs), &req)
 
 	resp,err := sc.ImageInstall(ctx, req)
@@ -158,7 +164,7 @@ func imageRemove(sc spb.SonicServiceClient, ctx context.Context) {
 	req := &spb.ImageRemoveRequest{
 		Input: &spb.ImageRemoveRequest_Input{},
 	}
-	nargs := strings.Replace(string(*args), "sonic-image-mgmt:input", "input", 1)
+	nargs := strings.Replace(string(*args), "sonic-image-management:input", "input", 1)
 	json.Unmarshal([]byte(nargs), &req)
 
 	resp,err := sc.ImageRemove(ctx, req)
@@ -175,7 +181,7 @@ func imageDefault(sc spb.SonicServiceClient, ctx context.Context) {
 	req := &spb.ImageDefaultRequest{
 		Input: &spb.ImageDefaultRequest_Input{},
 	}
-	nargs := strings.Replace(string(*args), "sonic-image-mgmt:input", "input", 1)
+	nargs := strings.Replace(string(*args), "sonic-image-management:input", "input", 1)
 	json.Unmarshal([]byte(nargs), &req)
 
 	resp,err := sc.ImageDefault(ctx, req)

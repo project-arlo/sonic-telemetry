@@ -107,7 +107,7 @@ func (srv *Server) CopyConfig(ctx context.Context, req *spb.CopyConfigRequest) (
 	if err != nil {
 		return nil, status.Error(codes.Unknown, err.Error())
 	}
-	resp.Output.Status = jobj["output"]["status"].(int32)
+	resp.Output.Status = int32(jobj["output"]["status"].(float64))
 	resp.Output.StatusDetail = jobj["output"]["status-detail"].(string)
 	
 	return resp, nil
@@ -152,17 +152,17 @@ func (srv *Server) ImageInstall(ctx context.Context, req *spb.ImageInstallReques
 
 		},
 	}
-	reqstr := fmt.Sprintf("{\"sonic-image-mgmt:input\": {\"imagename\": \"%s\"}}", req.Input.Imagename)
-	jsresp, err:= transutil.TranslProcessAction("/sonic-image-mgmt:image-install", []byte(reqstr))
+	reqstr := fmt.Sprintf("{\"sonic-image-management:input\": {\"imagename\": \"%s\"}}", req.Input.Imagename)
+	jsresp, err:= transutil.TranslProcessAction("/sonic-image-management:image-install", []byte(reqstr))
 	if err != nil {
 		return nil, status.Error(codes.Unknown, err.Error())
 	}
-	jsresp = []byte(strings.Replace(string(jsresp), "sonic-image-mgmt:output", "output", 1))
+	jsresp = []byte(strings.Replace(string(jsresp), "sonic-image-management:output", "output", 1))
 	err = json.Unmarshal(jsresp, &jobj)
 	if err != nil {
 		return nil, status.Error(codes.Unknown, err.Error())
 	}
-	resp.Output.Status = jobj["output"]["status"].(int32)
+	resp.Output.Status = int32(jobj["output"]["status"].(float64))
 	resp.Output.StatusDetail = jobj["output"]["status-detail"].(string)
 	
 	return resp, nil
@@ -180,17 +180,17 @@ func (srv *Server) ImageRemove(ctx context.Context, req *spb.ImageRemoveRequest)
 
 		},
 	}
-	reqstr := fmt.Sprintf("{\"sonic-image-mgmt:input\": {\"imagename\": \"%s\"}}", req.Input.Imagename)
-	jsresp, err:= transutil.TranslProcessAction("/sonic-image-mgmt:image-remove", []byte(reqstr))
+	reqstr := fmt.Sprintf("{\"sonic-image-management:input\": {\"imagename\": \"%s\"}}", req.Input.Imagename)
+	jsresp, err:= transutil.TranslProcessAction("/sonic-image-management:image-remove", []byte(reqstr))
 	if err != nil {
 		return nil, status.Error(codes.Unknown, err.Error())
 	}
-	jsresp = []byte(strings.Replace(string(jsresp), "sonic-image-mgmt:output", "output", 1))
+	jsresp = []byte(strings.Replace(string(jsresp), "sonic-image-management:output", "output", 1))
 	err = json.Unmarshal(jsresp, &jobj)
 	if err != nil {
 		return nil, status.Error(codes.Unknown, err.Error())
 	}
-	resp.Output.Status = jobj["output"]["status"].(int32)
+	resp.Output.Status = int32(jobj["output"]["status"].(float64))
 	resp.Output.StatusDetail = jobj["output"]["status-detail"].(string)
 	
 	return resp, nil
@@ -208,17 +208,17 @@ func (srv *Server) ImageDefault(ctx context.Context, req *spb.ImageDefaultReques
 
 		},
 	}
-	reqstr := fmt.Sprintf("{\"sonic-image-mgmt:input\": {\"imagename\": \"%s\"}}", req.Input.Imagename)
-	jsresp, err:= transutil.TranslProcessAction("/sonic-image-mgmt:image-default", []byte(reqstr))
+	reqstr := fmt.Sprintf("{\"sonic-image-management:input\": {\"imagename\": \"%s\"}}", req.Input.Imagename)
+	jsresp, err:= transutil.TranslProcessAction("/sonic-image-management:image-default", []byte(reqstr))
 	if err != nil {
 		return nil, status.Error(codes.Unknown, err.Error())
 	}
-	jsresp = []byte(strings.Replace(string(jsresp), "sonic-image-mgmt:output", "output", 1))
+	jsresp = []byte(strings.Replace(string(jsresp), "sonic-image-management:output", "output", 1))
 	err = json.Unmarshal(jsresp, &jobj)
 	if err != nil {
 		return nil, status.Error(codes.Unknown, err.Error())
 	}
-	resp.Output.Status = jobj["output"]["status"].(int32)
+	resp.Output.Status = int32(jobj["output"]["status"].(float64))
 	resp.Output.StatusDetail = jobj["output"]["status-detail"].(string)
 	
 	return resp, nil
