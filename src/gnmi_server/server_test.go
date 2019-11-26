@@ -1506,7 +1506,7 @@ func TestGNOI(t *testing.T) {
     }
     defer conn.Close()
 
-    
+
     ctx, cancel := context.WithTimeout(context.Background(), 240*time.Second)
     defer cancel()
 
@@ -1539,7 +1539,41 @@ func TestGNOI(t *testing.T) {
         }
     })
 
+    type configData struct {
+	    source string
+	    destination string
+	    overwrite bool
+	    status int32
+    }
 
+    var cfg_data = []configData {
+	    configData{"running-configuration", "startup-configuration", false, 0},
+    	    configData{"running-configuration", "file://etc/sonic/config_db_test.json", false, 0},
+            configData{"file://etc/sonic/config_db_test.json", "running-configuration", false, 0},
+            configData{"startup-configuration", "running-configuration", false, 0},
+            configData{"file://etc/sonic/config_db_3.json", "running-configuration", false, 1}}
+    
+    for  _,v := range cfg_data {
+
+    t.Run("SonicCopyConfig", func(t *testing.T) {
+	    sc := sgpb.NewSonicServiceClient(conn)
+	    req := &sgpb.CopyConfigRequest {
+		Input: &sgpb.CopyConfigRequest_Input{
+		   Source: v.source,
+		   Destination: v.destination,
+		   Overwrite: v.overwrite,
+	},
+	}
+	t.Logf("source: %s dest: %s overwrite: %t", v.source, v.destination, v.overwrite)
+	resp, err := sc.CopyConfig(ctx, req)
+	if err != nil {
+		t.Fatal(err.Error())
+	}
+	if resp.Output.Status != v.status {
+		t.Fatalf("Copy Failed: status %d,  %s", resp.Output.Status, resp.Output.StatusDetail)
+	}
+    })
+    }
 }
 
 
