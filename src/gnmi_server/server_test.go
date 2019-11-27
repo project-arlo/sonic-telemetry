@@ -431,20 +431,6 @@ func unitTestFromFile(filename string) (UnitTest, error) {
             }
             new_op.wantRetCode = codes.Code(rt)
 
-            // for _,pp := range strings.Split(op["xpath"].(string), "/") {
-            //     p_name := pp
-            //     key_start := strings.Index(pp, "[")
-            //     key_end := strings.Index(pp, "]")
-            //     if key_start > -1 && key_end > -1 {
-            //         key_parts := strings.Split(pp[key_start+1:key_end], "=")
-            //         key_name := key_parts[0]
-            //         key_val := key_parts[1]
-            //         p_name = pp[:key_start]
-            //         path.Elem = append(path.Elem, &pb.PathElem{Name: p_name, Key:  map[string]string{key_name: key_val}})
-            //     } else {
-            //         path.Elem = append(path.Elem, &pb.PathElem{Name: p_name})
-            //     }
-            // }
             path, err := xpath.ToGNMIPath(op["xpath"].(string))
             if err != nil {
                 return st, fmt.Errorf("error in parsing xpath %q to gnmi path, %v", path, err)
