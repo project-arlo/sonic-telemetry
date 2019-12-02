@@ -62,14 +62,15 @@ func buildPbUpdateList(pathValuePairs []string) []*pb.Update {
 	var pbUpdateList []*pb.Update
 	for _, item := range pathValuePairs {
 		modName := strings.SplitN(item, "/", 3)
-
+		
 		pathValuePair := make([]string, 2)
 		lc := strings.LastIndex(modName[2],":")
 		
 		if lc == -1 {
 			log.Exitf("invalid path-value pair: %v", item)
 		}
-		pathValuePair[0] = modName[2][0:lc]
+		
+		pathValuePair[0] = "/" + modName[1] + "/" + modName[2][0:lc]
 		pathValuePair[1] = modName[2][lc+1:]
 
 

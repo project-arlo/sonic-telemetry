@@ -10,8 +10,7 @@ import (
 	"google.golang.org/grpc/status"
 	"google.golang.org/grpc/codes"
 	"encoding/json"
-	"strings"
-	"fmt"
+
 	jwt "github.com/dgrijalva/jwt-go"
 )
 
@@ -91,24 +90,26 @@ func (srv *Server) CopyConfig(ctx context.Context, req *spb.CopyConfigRequest) (
 		return nil, err
 	}
 	log.V(1).Info("gNOI: Sonic CopyConfig")
-	var jobj map[string]map[string]interface{}
+	
 	resp := &spb.CopyConfigResponse{
 		Output: &spb.SonicOutput {
 
 		},
 	}
-	reqstr := fmt.Sprintf("{\"sonic-config-mgmt:input\": {\"source\": \"%s\", \"overwrite\": %t, \"destination\": \"%s\"}}", req.Input.Source, req.Input.Overwrite, req.Input.Destination)
+	
+	reqstr, err := json.Marshal(req)
+	if err != nil {
+		return nil, status.Error(codes.Unknown, err.Error())
+	}
 	jsresp, err:= transutil.TranslProcessAction("/sonic-config-mgmt:copy", []byte(reqstr))
 	if err != nil {
 		return nil, status.Error(codes.Unknown, err.Error())
 	}
-	jsresp = []byte(strings.Replace(string(jsresp), "sonic-config-mgmt:output", "output", 1))
-	err = json.Unmarshal(jsresp, &jobj)
+	
+	err = json.Unmarshal(jsresp, resp)
 	if err != nil {
 		return nil, status.Error(codes.Unknown, err.Error())
 	}
-	resp.Output.Status = int32(jobj["output"]["status"].(float64))
-	resp.Output.StatusDetail = jobj["output"]["status-detail"].(string)
 	
 	return resp, nil
 }
@@ -119,23 +120,27 @@ func (srv *Server) ShowTechsupport(ctx context.Context, req *spb.TechsupportRequ
 		return nil, err
 	}
 	log.V(1).Info("gNOI: Sonic ShowTechsupport")
-	var jobj map[string]map[string]string
+	
 	resp := &spb.TechsupportResponse{
 		Output: &spb.TechsupportResponse_Output {
 
 		},
 	}
-	reqstr := fmt.Sprintf("{\"sonic-show-techsupport-info:input\": {\"date\": \"%s\"}}", req.Input.Date)
+	
+	reqstr, err := json.Marshal(req)
+	if err != nil {
+		return nil, status.Error(codes.Unknown, err.Error())
+	}
 	jsresp, err:= transutil.TranslProcessAction("/sonic-show-techsupport:sonic-show-techsupport-info", []byte(reqstr))
 	if err != nil {
 		return nil, status.Error(codes.Unknown, err.Error())
 	}
-	jsresp = []byte(strings.Replace(string(jsresp), "sonic-show-techsupport:output", "output", 1))
-	err = json.Unmarshal(jsresp, &jobj)
+	
+	err = json.Unmarshal(jsresp, resp)
 	if err != nil {
 		return nil, status.Error(codes.Unknown, err.Error())
 	}
-	resp.Output.OutputFilename = jobj["output"]["output-filename"]
+	
 	
 	return resp, nil
 }
@@ -146,24 +151,26 @@ func (srv *Server) ImageInstall(ctx context.Context, req *spb.ImageInstallReques
 		return nil, err
 	}
 	log.V(1).Info("gNOI: Sonic ImageInstall")
-	var jobj map[string]map[string]interface{}
+	
 	resp := &spb.ImageInstallResponse{
 		Output: &spb.SonicOutput {
 
 		},
 	}
-	reqstr := fmt.Sprintf("{\"sonic-image-management:input\": {\"imagename\": \"%s\"}}", req.Input.Imagename)
+	reqstr, err := json.Marshal(req)
+	if err != nil {
+		return nil, status.Error(codes.Unknown, err.Error())
+	}
 	jsresp, err:= transutil.TranslProcessAction("/sonic-image-management:image-install", []byte(reqstr))
 	if err != nil {
 		return nil, status.Error(codes.Unknown, err.Error())
 	}
-	jsresp = []byte(strings.Replace(string(jsresp), "sonic-image-management:output", "output", 1))
-	err = json.Unmarshal(jsresp, &jobj)
+	
+	err = json.Unmarshal(jsresp, resp)
 	if err != nil {
 		return nil, status.Error(codes.Unknown, err.Error())
 	}
-	resp.Output.Status = int32(jobj["output"]["status"].(float64))
-	resp.Output.StatusDetail = jobj["output"]["status-detail"].(string)
+
 	
 	return resp, nil
 }
@@ -174,24 +181,26 @@ func (srv *Server) ImageRemove(ctx context.Context, req *spb.ImageRemoveRequest)
 		return nil, err
 	}
 	log.V(1).Info("gNOI: Sonic ImageRemove")
-	var jobj map[string]map[string]interface{}
+	
 	resp := &spb.ImageRemoveResponse{
 		Output: &spb.SonicOutput {
 
 		},
 	}
-	reqstr := fmt.Sprintf("{\"sonic-image-management:input\": {\"imagename\": \"%s\"}}", req.Input.Imagename)
+	reqstr, err := json.Marshal(req)
+	if err != nil {
+		return nil, status.Error(codes.Unknown, err.Error())
+	}
 	jsresp, err:= transutil.TranslProcessAction("/sonic-image-management:image-remove", []byte(reqstr))
 	if err != nil {
 		return nil, status.Error(codes.Unknown, err.Error())
 	}
-	jsresp = []byte(strings.Replace(string(jsresp), "sonic-image-management:output", "output", 1))
-	err = json.Unmarshal(jsresp, &jobj)
+	
+	err = json.Unmarshal(jsresp, resp)
 	if err != nil {
 		return nil, status.Error(codes.Unknown, err.Error())
 	}
-	resp.Output.Status = int32(jobj["output"]["status"].(float64))
-	resp.Output.StatusDetail = jobj["output"]["status-detail"].(string)
+
 	
 	return resp, nil
 }
@@ -202,24 +211,26 @@ func (srv *Server) ImageDefault(ctx context.Context, req *spb.ImageDefaultReques
 		return nil, err
 	}
 	log.V(1).Info("gNOI: Sonic ImageDefault")
-	var jobj map[string]map[string]interface{}
+	
 	resp := &spb.ImageDefaultResponse{
 		Output: &spb.SonicOutput {
 
 		},
 	}
-	reqstr := fmt.Sprintf("{\"sonic-image-management:input\": {\"imagename\": \"%s\"}}", req.Input.Imagename)
+	reqstr, err := json.Marshal(req)
+	if err != nil {
+		return nil, status.Error(codes.Unknown, err.Error())
+	}
 	jsresp, err:= transutil.TranslProcessAction("/sonic-image-management:image-default", []byte(reqstr))
 	if err != nil {
 		return nil, status.Error(codes.Unknown, err.Error())
 	}
-	jsresp = []byte(strings.Replace(string(jsresp), "sonic-image-management:output", "output", 1))
-	err = json.Unmarshal(jsresp, &jobj)
+
+	err = json.Unmarshal(jsresp, resp)
 	if err != nil {
 		return nil, status.Error(codes.Unknown, err.Error())
 	}
-	resp.Output.Status = int32(jobj["output"]["status"].(float64))
-	resp.Output.StatusDetail = jobj["output"]["status-detail"].(string)
+
 	
 	return resp, nil
 }
@@ -232,19 +243,27 @@ func (srv *Server) Sum(ctx context.Context, req *spb.SumRequest) (*spb.SumRespon
 		return nil, err
 	}
 	log.V(1).Info("gNOI: Sonic Sum")
-	var resp spb.SumResponse
-	reqstr := fmt.Sprintf("{\"sonic-tests:input\": {\"left\": %d, \"right\": %d}}", req.Input.Left, req.Input.Right)
+	
+	resp := &spb.SumResponse{
+		Output: &spb.SumResponse_Output {
+
+		},
+	}
+	reqstr, err := json.Marshal(req)
+	if err != nil {
+		return nil, status.Error(codes.Unknown, err.Error())
+	}
 	jsresp, err:= transutil.TranslProcessAction("/sonic-tests:sum", []byte(reqstr))
 	
 	if err != nil {
 		return nil, status.Error(codes.Unknown, err.Error())
 	}
-	jsresp = []byte(strings.Replace(string(jsresp), "sonic-tests:output", "output", 1))
-	err = json.Unmarshal(jsresp, &resp)
+	
+	err = json.Unmarshal(jsresp, resp)
 	if err != nil {
 		return nil, status.Error(codes.Unknown, err.Error())
 	}
-	return &resp, nil
+	return resp, nil
 }
 
 
