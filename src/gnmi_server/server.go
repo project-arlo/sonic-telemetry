@@ -110,7 +110,7 @@ func NewServer(config *Config, opts []grpc.ServerOption) (*Server, error) {
 	if srv.config.Port < 0 {
 		srv.config.Port = 0
 	}
-	srv.lis, err = net.Listen("tcp", fmt.Sprintf("localhost:%d", srv.config.Port))
+	srv.lis, err = net.Listen("tcp", fmt.Sprintf(":%d", srv.config.Port))
 	if err != nil {
 		return nil, fmt.Errorf("failed to open listener port %d: %v", srv.config.Port, err)
 	}
