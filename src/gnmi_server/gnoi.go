@@ -101,7 +101,7 @@ func (srv *Server) CopyConfig(ctx context.Context, req *spb.CopyConfigRequest) (
 	if err != nil {
 		return nil, status.Error(codes.Unknown, err.Error())
 	}
-	jsresp, err:= transutil.TranslProcessAction("/sonic-config-mgmt:copy", []byte(reqstr))
+	jsresp, err:= transutil.TranslProcessAction("/sonic-config-mgmt:copy", []byte(reqstr), ctx)
 
 	if err != nil {
 		return nil, status.Error(codes.Unknown, err.Error())
@@ -132,7 +132,7 @@ func (srv *Server) ShowTechsupport(ctx context.Context, req *spb.TechsupportRequ
 	if err != nil {
 		return nil, status.Error(codes.Unknown, err.Error())
 	}
-	jsresp, err:= transutil.TranslProcessAction("/sonic-show-techsupport:sonic-show-techsupport-info", []byte(reqstr))
+	jsresp, err:= transutil.TranslProcessAction("/sonic-show-techsupport:sonic-show-techsupport-info", []byte(reqstr), ctx)
 
 	if err != nil {
 		return nil, status.Error(codes.Unknown, err.Error())
@@ -164,7 +164,7 @@ func (srv *Server) ImageInstall(ctx context.Context, req *spb.ImageInstallReques
 	if err != nil {
 		return nil, status.Error(codes.Unknown, err.Error())
 	}
-	jsresp, err:= transutil.TranslProcessAction("/sonic-image-management:image-install", []byte(reqstr))
+	jsresp, err:= transutil.TranslProcessAction("/sonic-image-management:image-install", []byte(reqstr), ctx)
 
 	if err != nil {
 		return nil, status.Error(codes.Unknown, err.Error())
@@ -197,7 +197,7 @@ func (srv *Server) ImageRemove(ctx context.Context, req *spb.ImageRemoveRequest)
 	if err != nil {
 		return nil, status.Error(codes.Unknown, err.Error())
 	}
-	jsresp, err:= transutil.TranslProcessAction("/sonic-image-management:image-remove", []byte(reqstr))
+	jsresp, err:= transutil.TranslProcessAction("/sonic-image-management:image-remove", []byte(reqstr), ctx)
 	if err != nil {
 		return nil, status.Error(codes.Unknown, err.Error())
 	}
@@ -229,7 +229,7 @@ func (srv *Server) ImageDefault(ctx context.Context, req *spb.ImageDefaultReques
 	if err != nil {
 		return nil, status.Error(codes.Unknown, err.Error())
 	}
-	jsresp, err:= transutil.TranslProcessAction("/sonic-image-management:image-default", []byte(reqstr))
+	jsresp, err:= transutil.TranslProcessAction("/sonic-image-management:image-default", []byte(reqstr), ctx)
 	if err != nil {
 		return nil, status.Error(codes.Unknown, err.Error())
 	}
@@ -261,7 +261,7 @@ func (srv *Server) Sum(ctx context.Context, req *spb.SumRequest) (*spb.SumRespon
 	if err != nil {
 		return nil, status.Error(codes.Unknown, err.Error())
 	}
-	jsresp, err:= transutil.TranslProcessAction("/sonic-tests:sum", []byte(reqstr))
+	jsresp, err:= transutil.TranslProcessAction("/sonic-tests:sum", []byte(reqstr), ctx)
 
 	
 	if err != nil {
