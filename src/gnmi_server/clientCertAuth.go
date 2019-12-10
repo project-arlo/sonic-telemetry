@@ -29,11 +29,11 @@ func ClientCertAuthenAndAuthor(ctx context.Context, admin_required bool) (contex
 	username = tlsAuth.State.VerifiedChains[0][0].Subject.CommonName
 
 	if len(username) == 0 {
-		return ctx, status.Error(codes.Unauthenticated, "invalid subject common name")
+		return ctx, status.Error(codes.Unauthenticated, "invalid username in certificate common name.")
 	}
 
 	if DoesUserExist(username) == false {
-		return ctx, status.Error(codes.Unauthenticated, "invalid subject common name")
+		return ctx, status.Error(codes.Unauthenticated, "invalid username in certificate common name.")
 	}
 	if err := PopulateAuthStruct(username, &rc.Auth); err != nil {
 		glog.Infof("[%s] Failed to retrieve authentication information; %v", rc.ID, err)
