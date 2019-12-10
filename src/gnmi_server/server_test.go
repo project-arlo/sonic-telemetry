@@ -26,13 +26,13 @@ import (
     "testing"
     "time"
     "fmt"
-    "strings"
     "github.com/xeipuuv/gojsonschema"
     // Register supported client types.
     spb "proto"
     sgpb "proto/gnoi"
     sdc "sonic_data_client"
     gclient "github.com/jipanyang/gnmi/client/gnmi"
+    "github.com/jipanyang/gnxi/utils/xpath"
     gnoi_system_pb "github.com/openconfig/gnoi/system"
 )
 
@@ -410,7 +410,7 @@ func unitTestFromFile(filename string) (UnitTest, error) {
 
     if val, ok := schemaJson["operations"]; ok {
         for _,opp := range val.([]interface{}) {
-            var path pb.Path
+            
             var new_op Operation
             op := opp.(map[string]interface{})
             switch op["operation"].(string) {
@@ -431,21 +431,11 @@ func unitTestFromFile(filename string) (UnitTest, error) {
             }
             new_op.wantRetCode = codes.Code(rt)
 
-            for _,pp := range strings.Split(op["xpath"].(string), "/") {
-                p_name := pp
-                key_start := strings.Index(pp, "[")
-                key_end := strings.Index(pp, "]")
-                if key_start > -1 && key_end > -1 {
-                    key_parts := strings.Split(pp[key_start+1:key_end], "=")
-                    key_name := key_parts[0]
-                    key_val := key_parts[1]
-                    p_name = pp[:key_start]
-                    path.Elem = append(path.Elem, &pb.PathElem{Name: p_name, Key:  map[string]string{key_name: key_val}})
-                } else {
-                    path.Elem = append(path.Elem, &pb.PathElem{Name: p_name})
-                }
+            path, err := xpath.ToGNMIPath(op["xpath"].(string))
+            if err != nil {
+                return st, fmt.Errorf("error in parsing xpath %q to gnmi path, %v", path, err)
             }
-            new_op.textPbPath = proto.MarshalTextString(&path)
+            new_op.textPbPath = proto.MarshalTextString(path)
             
             if val, ok := op["target"]; ok {
                 new_op.pathTarget = val.(string)
@@ -1506,7 +1496,7 @@ func TestGNOI(t *testing.T) {
     }
     defer conn.Close()
 
-    
+
     ctx, cancel := context.WithTimeout(context.Background(), 240*time.Second)
     defer cancel()
 
@@ -1539,7 +1529,41 @@ func TestGNOI(t *testing.T) {
         }
     })
 
+    type configData struct {
+	    source string
+	    destination string
+	    overwrite bool
+	    status int32
+    }
 
+    var cfg_data = []configData {
+	    configData{"running-configuration", "startup-configuration", false, 0},
+    	    configData{"running-configuration", "file://etc/sonic/config_db_test.json", false, 0},
+            configData{"file://etc/sonic/config_db_test.json", "running-configuration", false, 0},
+            configData{"startup-configuration", "running-configuration", false, 0},
+            configData{"file://etc/sonic/config_db_3.json", "running-configuration", false, 1}}
+    
+    for  _,v := range cfg_data {
+
+    t.Run("SonicCopyConfig", func(t *testing.T) {
+	    sc := sgpb.NewSonicServiceClient(conn)
+	    req := &sgpb.CopyConfigRequest {
+		Input: &sgpb.CopyConfigRequest_Input{
+		   Source: v.source,
+		   Destination: v.destination,
+		   Overwrite: v.overwrite,
+	},
+	}
+	t.Logf("source: %s dest: %s overwrite: %t", v.source, v.destination, v.overwrite)
+	resp, err := sc.CopyConfig(ctx, req)
+	if err != nil {
+		t.Fatal(err.Error())
+	}
+	if resp.Output.Status != v.status {
+		t.Fatalf("Copy Failed: status %d,  %s", resp.Output.Status, resp.Output.StatusDetail)
+	}
+    })
+    }
 }
 
 

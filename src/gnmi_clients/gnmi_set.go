@@ -62,7 +62,7 @@ func buildPbUpdateList(pathValuePairs []string) []*pb.Update {
 	var pbUpdateList []*pb.Update
 	for _, item := range pathValuePairs {
 		modName := strings.SplitN(item, "/", 3)
-
+		
 		pathValuePair := make([]string, 2)
 		lc := strings.LastIndex(modName[2],":")
 		

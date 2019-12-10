@@ -3,6 +3,10 @@ syntax = "proto3";
 package gnoi.sonic;
 
 //option (types.gnoi_version) = "0.1.0";
+import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+
+option (gogoproto.marshaler_all) = true;
+option (gogoproto.unmarshaler_all) = true;
 
 service SonicService {
   rpc ShowTechsupport (TechsupportRequest) returns (TechsupportResponse) {}
@@ -21,19 +25,19 @@ service SonicService {
 
 message SonicOutput {
     int32 status = 1;
-    string status_detail = 2;
+    string status_detail = 2 [(gogoproto.jsontag) = "status-detail", (gogoproto.moretags) = "xml:\",comment\""];
 }
 message TechsupportRequest {
     message Input {
         string date = 1;
     }
-    Input input = 1;
+    Input input = 1 [(gogoproto.jsontag) = "sonic-show-techsupport:input", (gogoproto.moretags) = "xml:\",comment\""];
 }
 message TechsupportResponse {
     message Output {
-        string output_filename = 1;
+        string output_filename = 1 [(gogoproto.jsontag) = "output-filename", (gogoproto.moretags) = "xml:\",comment\""];
     }
-    Output output = 1;
+    Output output = 1 [(gogoproto.jsontag) = "sonic-show-techsupport:output", (gogoproto.moretags) = "xml:\",comment\""];
 }
 
 
@@ -42,13 +46,13 @@ message SumRequest {
         int32 left = 1;
         int32 right = 2;
     }
-    Input input = 1;
+    Input input = 1 [(gogoproto.jsontag) = "sonic-tests:input", (gogoproto.moretags) = "xml:\",comment\""];
 }
 message SumResponse {
     message Output {
         int32 result = 1;
     }
-    Output output = 1;
+    Output output = 1 [(gogoproto.jsontag) = "sonic-tests:output", (gogoproto.moretags) = "xml:\",comment\""];
 }
 
 
@@ -58,10 +62,10 @@ message CopyConfigRequest {
         bool overwrite = 2;
         string destination = 3;
     }
-    Input input = 1;
+    Input input = 1 [(gogoproto.jsontag) = "sonic-config-mgmt:input", (gogoproto.moretags) = "xml:\",comment\""];
 }
 message CopyConfigResponse {
-    SonicOutput output = 1;
+    SonicOutput output = 1 [(gogoproto.jsontag) = "sonic-config-mgmt:output", (gogoproto.moretags) = "xml:\",comment\""];
 }
 
 
@@ -69,28 +73,28 @@ message ImageInstallRequest {
     message Input {
         string imagename = 2;
     }
-    Input input = 1;
+    Input input = 1 [(gogoproto.jsontag) = "sonic-image-management:input", (gogoproto.moretags) = "xml:\",comment\""];
 }
 message ImageInstallResponse {
-    SonicOutput output = 1;
+    SonicOutput output = 1 [(gogoproto.jsontag) = "sonic-image-management:output", (gogoproto.moretags) = "xml:\",comment\""];
 }
 message ImageRemoveRequest {
     message Input {
         string imagename = 1;
     }
-    Input input = 1;
+    Input input = 1 [(gogoproto.jsontag) = "sonic-image-management:input", (gogoproto.moretags) = "xml:\",comment\""];
 }
 message ImageRemoveResponse {
-    SonicOutput output = 1;
+    SonicOutput output = 1 [(gogoproto.jsontag) = "sonic-image-management:output", (gogoproto.moretags) = "xml:\",comment\""];
 }
 message ImageDefaultRequest {
     message Input {
         string imagename = 1;
     }
-    Input input = 1;
+    Input input = 1 [(gogoproto.jsontag) = "sonic-image-management:input", (gogoproto.moretags) = "xml:\",comment\""];
 }
 message ImageDefaultResponse {
-    SonicOutput output = 1;
+    SonicOutput output = 1 [(gogoproto.jsontag) = "sonic-image-management:output", (gogoproto.moretags) = "xml:\",comment\""];
 }
 
 

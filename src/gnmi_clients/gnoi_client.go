@@ -9,10 +9,9 @@ import (
 	"os/signal"
 	"fmt"
 	"flag"
-	"encoding/json"
-	"strings"
 	"google.golang.org/grpc/metadata"
 	"github.com/google/gnxi/utils/credentials"
+	"encoding/json"
 )
 
 var (
@@ -65,6 +64,12 @@ func main() {
 			copyConfig(sc, ctx)
 		case "authenticate":
 			authenticate(sc, ctx)
+		case "imageInstall":
+			imageInstall(sc, ctx)
+		case "imageDefault":
+			imageDefault(sc, ctx)
+		case "imageRemove":
+			imageRemove(sc, ctx)
 		case "refresh":
 			refresh(sc, ctx)
 		default:
@@ -83,24 +88,32 @@ func systemTime(sc gnoi_system_pb.SystemClient, ctx context.Context) {
 	if err != nil {
 		panic(err.Error())
 	}
-	fmt.Println(resp.Time)
+	respstr, err := json.Marshal(resp)
+	if err != nil {
+		panic(err.Error())
+	}
+	fmt.Println(string(respstr))
 }
 func sonicShowTechSupport(sc spb.SonicServiceClient, ctx context.Context) {
 	fmt.Println("Sonic ShowTechsupport")
 	ctx = setUserCreds(ctx)
 	req := &spb.TechsupportRequest {
 		Input: &spb.TechsupportRequest_Input{
-
+			
 		},
 	}
-	nargs := strings.Replace(string(*args), "sonic-show-techsupport:input", "input", 1)
-	json.Unmarshal([]byte(nargs), &req)
+
+	json.Unmarshal([]byte(*args), req)
+	
 	resp,err := sc.ShowTechsupport(ctx, req)
 	if err != nil {
 		panic(err.Error())
 	}
-
-	fmt.Println(resp)
+	respstr, err := json.Marshal(resp)
+	if err != nil {
+		panic(err.Error())
+	}
+	fmt.Println(string(respstr))
 }
 func sonicSum(sc spb.SonicServiceClient, ctx context.Context) {
 	fmt.Println("Sonic Sum")
@@ -108,15 +121,19 @@ func sonicSum(sc spb.SonicServiceClient, ctx context.Context) {
 	req := &spb.SumRequest{
 		Input: &spb.SumRequest_Input{},
 	}
-	nargs := strings.Replace(string(*args), "sonic-tests:input", "input", 1)
-	json.Unmarshal([]byte(nargs), &req)
+	
+	json.Unmarshal([]byte(*args), req)
 
 	resp,err := sc.Sum(ctx, req)
 
 	if err != nil {
 		panic(err.Error())
 	}
-	fmt.Println(resp.Output.Result)
+	respstr, err := json.Marshal(resp)
+	if err != nil {
+		panic(err.Error())
+	}
+	fmt.Println(string(respstr))
 }
 
 func copyConfig(sc spb.SonicServiceClient, ctx context.Context) {
@@ -125,15 +142,18 @@ func copyConfig(sc spb.SonicServiceClient, ctx context.Context) {
 	req := &spb.CopyConfigRequest{
 		Input: &spb.CopyConfigRequest_Input{},
 	}
-	nargs := strings.Replace(string(*args), "sonic-config-mgmt:input", "input", 1)
-	json.Unmarshal([]byte(nargs), &req)
+	json.Unmarshal([]byte(*args), req)
 
 	resp,err := sc.CopyConfig(ctx, req)
 
 	if err != nil {
 		panic(err.Error())
 	}
-	fmt.Println(resp)
+	respstr, err := json.Marshal(resp)
+	if err != nil {
+		panic(err.Error())
+	}
+	fmt.Println(string(respstr))
 }
 
 func imageInstall(sc spb.SonicServiceClient, ctx context.Context) {
@@ -142,15 +162,18 @@ func imageInstall(sc spb.SonicServiceClient, ctx context.Context) {
 	req := &spb.ImageInstallRequest{
 		Input: &spb.ImageInstallRequest_Input{},
 	}
-	nargs := strings.Replace(string(*args), "sonic-image-mgmt:input", "input", 1)
-	json.Unmarshal([]byte(nargs), &req)
+	json.Unmarshal([]byte(*args), req)
 
 	resp,err := sc.ImageInstall(ctx, req)
 
 	if err != nil {
 		panic(err.Error())
 	}
-	fmt.Println(resp)
+	respstr, err := json.Marshal(resp)
+	if err != nil {
+		panic(err.Error())
+	}
+	fmt.Println(string(respstr))
 }
 func imageRemove(sc spb.SonicServiceClient, ctx context.Context) {
 	fmt.Println("Sonic ImageRemove")
@@ -158,15 +181,18 @@ func imageRemove(sc spb.SonicServiceClient, ctx context.Context) {
 	req := &spb.ImageRemoveRequest{
 		Input: &spb.ImageRemoveRequest_Input{},
 	}
-	nargs := strings.Replace(string(*args), "sonic-image-mgmt:input", "input", 1)
-	json.Unmarshal([]byte(nargs), &req)
+	json.Unmarshal([]byte(*args), req)
 
 	resp,err := sc.ImageRemove(ctx, req)
 
 	if err != nil {
 		panic(err.Error())
 	}
-	fmt.Println(resp)
+	respstr, err := json.Marshal(resp)
+	if err != nil {
+		panic(err.Error())
+	}
+	fmt.Println(string(respstr))
 }
 
 func imageDefault(sc spb.SonicServiceClient, ctx context.Context) {
@@ -175,15 +201,18 @@ func imageDefault(sc spb.SonicServiceClient, ctx context.Context) {
 	req := &spb.ImageDefaultRequest{
 		Input: &spb.ImageDefaultRequest_Input{},
 	}
-	nargs := strings.Replace(string(*args), "sonic-image-mgmt:input", "input", 1)
-	json.Unmarshal([]byte(nargs), &req)
+	json.Unmarshal([]byte(*args), req)
 
 	resp,err := sc.ImageDefault(ctx, req)
 
 	if err != nil {
 		panic(err.Error())
 	}
-	fmt.Println(resp)
+	respstr, err := json.Marshal(resp)
+	if err != nil {
+		panic(err.Error())
+	}
+	fmt.Println(string(respstr))
 }
 
 func authenticate(sc spb.SonicServiceClient, ctx context.Context) {
@@ -191,13 +220,17 @@ func authenticate(sc spb.SonicServiceClient, ctx context.Context) {
 	ctx = setUserCreds(ctx)
 	req := &spb.AuthenticateRequest {}
 	
-	json.Unmarshal([]byte(*args), &req)
-	fmt.Println(req)
+	json.Unmarshal([]byte(*args), req)
+	
 	resp,err := sc.Authenticate(ctx, req)
 	if err != nil {
 		panic(err.Error())
 	}
-	fmt.Println(resp)
+	respstr, err := json.Marshal(resp)
+	if err != nil {
+		panic(err.Error())
+	}
+	fmt.Println(string(respstr))
 }
 
 func refresh(sc spb.SonicServiceClient, ctx context.Context) {
@@ -205,11 +238,15 @@ func refresh(sc spb.SonicServiceClient, ctx context.Context) {
 	ctx = setUserCreds(ctx)
 	req := &spb.RefreshRequest {}
 	
-	json.Unmarshal([]byte(*args), &req)
-	fmt.Println(req)
+	json.Unmarshal([]byte(*args), req)
+
 	resp,err := sc.Refresh(ctx, req)
 	if err != nil {
 		panic(err.Error())
 	}
-	fmt.Println(resp)
+	respstr, err := json.Marshal(resp)
+	if err != nil {
+		panic(err.Error())
+	}
+	fmt.Println(string(respstr))
 }
