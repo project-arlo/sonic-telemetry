@@ -71,10 +71,10 @@ git checkout f0a90cca6fd0041625bcce561b71f849c9b65a8d 2>/dev/null ; true; \
 git checkout cb4d464fa018c29eadab98281448000bee4dcc3d 2>/dev/null ; true; \
 
 	GOPATH=$(GO_DEP_PATH) $(GO) get -d github.com/antchfx/jsonquery; cd $(GO_DEP_PATH)/src/github.com/antchfx/jsonquery; \
-git checkout 3535127d6ca5885dbf650204eb08eabf8374a274 2>/dev/null ; true; \
+git checkout 3b69d31134d889b501e166a035a4d5ecb8c6c367 2>/dev/null ; true; \
 # GOPATH=$(GO_DEP_PATH) $(GO) install -v -gcflags "-N -l" $(GO_DEP_PATH)/src/github.com/antchfx/jsonquery
 	GOPATH=$(GO_DEP_PATH) $(GO) get -d github.com/antchfx/xmlquery; cd $(GO_DEP_PATH)/src/github.com/antchfx/xmlquery; \
-git checkout 16f1e6cdc5fe44a7f8e2a8c9faf659a1b3a8fd9b 2>/dev/null ; true; \
+git checkout fe009d4cc63c3011f05e1dfa75a27899acccdf11 2>/dev/null ; true; \
 	GOPATH=$(GO_DEP_PATH) $(GO) get -d golang.org/x/crypto; cd $(GO_DEP_PATH)/src/golang.org/x/crypto; \
 git checkout 86a70503ff7e82ffc18c7b0de83db35da4791e6a 2>/dev/null ; true; \
 	GOPATH=$(GO_DEP_PATH) $(GO) get -d github.com/xeipuuv/gojsonschema; cd $(GO_DEP_PATH)/src/github.com/xeipuuv/gojsonschema; \
@@ -101,12 +101,8 @@ $(BUILD_DIR)/.patched:
 	patch -p0 <patches/gnmi_cli.all.patch
 	patch -p1 -d build/src/github.com/openconfig <$(GO_MGMT_PATH)/ygot-modified-files/ygot.patch
 	patch -p1 -d build/src/github.com/openconfig/goyang <$(GO_MGMT_PATH)/goyang-modified-files/goyang.patch
-	@grep ParseJsonMap  $(GO_DEP_PATH)/src/github.com/antchfx/jsonquery/node.go || \
-	printf "\nfunc ParseJsonMap(jsonMap *map[string]interface{}) (*Node, error) {\n \
-		doc := &Node{Type: DocumentNode}\n \
-		parseValue(*jsonMap, doc, 1)\n \
-		return doc, nil\n \
-	}\n" >> $(GO_DEP_PATH)/src/github.com/antchfx/jsonquery/node.go
+	patch -p1 -d build/src/github.com/antchfx/jsonquery <$(GO_MGMT_PATH)/patches/jsonquery.patch
+	patch -p1 -d build/src/github.com/antchfx/xmlquery <$(GO_MGMT_PATH)/patches/xmlquery.patch
 	touch $@
 
 telemetry:$(BUILD_DIR)/telemetry $(BUILD_DIR)/dialout_client_cli $(BUILD_DIR)/gnmi_get $(BUILD_DIR)/gnmi_set $(BUILD_DIR)/gnmi_cli $(BUILD_DIR)/gnoi_client
