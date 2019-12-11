@@ -99,6 +99,8 @@ patch: $(BUILD_DIR)/.patched
 $(BUILD_DIR)/.patched:
 	touch $(BUILD_DIR)/.patched
 	patch -p0 <patches/gnmi_cli.all.patch
+	patch -p0 <patches/gnmi_set.patch
+	patch -p0 <patches/gnmi_get.patch
 	patch -p1 -d build/src/github.com/openconfig <$(GO_MGMT_PATH)/ygot-modified-files/ygot.patch
 	patch -p1 -d build/src/github.com/openconfig/goyang <$(GO_MGMT_PATH)/goyang-modified-files/goyang.patch
 	patch -p1 -d build/src/github.com/antchfx/jsonquery <$(GO_MGMT_PATH)/patches/jsonquery.patch
