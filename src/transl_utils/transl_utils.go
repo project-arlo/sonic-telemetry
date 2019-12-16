@@ -129,7 +129,7 @@ func TranslProcessReplace(uri string, t *gnmipb.TypedValue) error {
 	if err1 != nil{
 		//If Create fails, it may be due to object already existing/can not be created
 		// such as interface, in this case use Update.
-		resp, err1 = translib.Update(req)
+		resp, err1 = translib.Replace(req)
 	}
 	if err1 != nil{
 		log.V(2).Infof("REPLACE operation failed with error =%v", resp.ErrSrc)
