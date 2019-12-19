@@ -14,6 +14,7 @@ import (
 	"translib"
 	"bytes"
 	"encoding/json"
+	"context"
 )
 
 const (
@@ -32,13 +33,14 @@ type TranslClient struct {
 	synced sync.WaitGroup  // Control when to send gNMI sync_response
 	w      *sync.WaitGroup // wait for all sub go routines to finish
 	mu     sync.RWMutex    // Mutex for data protection among routines for transl_client
+	ctx context.Context //Contains Auth info and request info
 
 }
 
-func NewTranslClient(prefix *gnmipb.Path, getpaths []*gnmipb.Path) (Client, error) {
+func NewTranslClient(prefix *gnmipb.Path, getpaths []*gnmipb.Path, ctx context.Context) (Client, error) {
 	var client TranslClient
 	var err error
-
+	client.ctx = ctx
 	client.prefix = prefix
 	if getpaths != nil {
 		client.path2URI = make(map[*gnmipb.Path]string)
@@ -54,14 +56,13 @@ func NewTranslClient(prefix *gnmipb.Path, getpaths []*gnmipb.Path) (Client, erro
 }
 
 func (c *TranslClient) Get(w *sync.WaitGroup) ([]*spb.Value, error) {
-
 	var values []*spb.Value
 	ts := time.Now()
 
 	/* Iterate through all GNMI paths. */
 	for gnmiPath, URIPath := range c.path2URI {
 		/* Fill values for each GNMI path. */
-		val, err := transutil.TranslProcessGet(URIPath, nil)
+		val, err := transutil.TranslProcessGet(URIPath, nil, c.ctx)
 
 		if err != nil {
 			return nil, err
@@ -93,11 +94,11 @@ func (c *TranslClient) Set(path *gnmipb.Path, val *gnmipb.TypedValue, flagop int
 	transutil.ConvertToURI(c.prefix, path, &uri)
 
 	if flagop == DELETE {
-		err = transutil.TranslProcessDelete(uri)
+		err = transutil.TranslProcessDelete(uri, c.ctx)
 	} else if flagop == REPLACE {
-		err = transutil.TranslProcessReplace(uri, val)
+		err = transutil.TranslProcessReplace(uri, val, c.ctx)
 	} else if flagop == UPDATE {
-		err = transutil.TranslProcessUpdate(uri, val)
+		err = transutil.TranslProcessUpdate(uri, val, c.ctx)
 	}
 
 	return err
@@ -192,7 +193,7 @@ func (c *TranslClient) StreamRun(q *queue.PriorityQueue, stop chan struct{}, w *
 			
 			if !subscribe.UpdatesOnly {
 				//Send initial data now so we can send sync response, unless updates_only is set.
-				val, err := transutil.TranslProcessGet(c.path2URI[sub.Path], nil)
+				val, err := transutil.TranslProcessGet(c.path2URI[sub.Path], nil, c.ctx)
 				if err != nil {
 					return
 				}
@@ -256,7 +257,7 @@ func (c *TranslClient) StreamRun(q *queue.PriorityQueue, stop chan struct{}, w *
 
 		for _,tick := range ticker_map[cases_map[chosen]] {
 			fmt.Printf("tick, heartbeat: %t, path: %s", tick.heartbeat, c.path2URI[tick.sub.Path])
-			val, err := transutil.TranslProcessGet(c.path2URI[tick.sub.Path], nil)
+			val, err := transutil.TranslProcessGet(c.path2URI[tick.sub.Path], nil, c.ctx)
 			if err != nil {
 				return
 			}
@@ -383,7 +384,7 @@ func (c *TranslClient) PollRun(q *queue.PriorityQueue, poll chan struct{}, w *sy
 		for gnmiPath, URIPath := range c.path2URI {
 			if synced || !subscribe.UpdatesOnly {
 
-				val, err := transutil.TranslProcessGet(URIPath, nil)
+				val, err := transutil.TranslProcessGet(URIPath, nil, c.ctx)
 				if err != nil {
 					return
 				}
@@ -426,7 +427,7 @@ func (c *TranslClient) OnceRun(q *queue.PriorityQueue, once chan struct{}, w *sy
 	t1 := time.Now()
 	for gnmiPath, URIPath := range c.path2URI {
 		
-		val, err := transutil.TranslProcessGet(URIPath, nil)
+		val, err := transutil.TranslProcessGet(URIPath, nil, c.ctx)
 		if err != nil {
 			return
 		}
