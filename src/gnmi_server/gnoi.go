@@ -10,44 +10,73 @@ import (
 	"google.golang.org/grpc/status"
 	"google.golang.org/grpc/codes"
 	"encoding/json"
-	"strings"
-	"fmt"
+
+	jwt "github.com/dgrijalva/jwt-go"
 )
 
-func (srv *Server) Reboot(context.Context, *gnoi_system_pb.RebootRequest) (*gnoi_system_pb.RebootResponse, error) {
+func (srv *Server) Reboot(ctx context.Context, req *gnoi_system_pb.RebootRequest) (*gnoi_system_pb.RebootResponse, error) {
+	err := authenticate(srv.config.UserAuth, ctx, false)
+	if err != nil {
+		return nil, err
+	}
 	log.V(1).Info("gNOI: Reboot")
-	return nil, nil
+	return nil, status.Errorf(codes.Unimplemented, "")
 }
-func (srv *Server) RebootStatus(context.Context, *gnoi_system_pb.RebootStatusRequest) (*gnoi_system_pb.RebootStatusResponse, error) {
+func (srv *Server) RebootStatus(ctx context.Context, req *gnoi_system_pb.RebootStatusRequest) (*gnoi_system_pb.RebootStatusResponse, error) {
+	err := authenticate(srv.config.UserAuth, ctx, false)
+	if err != nil {
+		return nil, err
+	}
 	log.V(1).Info("gNOI: RebootStatus")
-	return nil, nil
+	return nil, status.Errorf(codes.Unimplemented, "")
 }
-func (srv *Server) CancelReboot(context.Context, *gnoi_system_pb.CancelRebootRequest) (*gnoi_system_pb.CancelRebootResponse, error) {
+func (srv *Server) CancelReboot(ctx context.Context, req *gnoi_system_pb.CancelRebootRequest) (*gnoi_system_pb.CancelRebootResponse, error) {
+	err := authenticate(srv.config.UserAuth, ctx, false)
+	if err != nil {
+		return nil, err
+	}
 	log.V(1).Info("gNOI: CancelReboot")
-	return nil, nil
+	return nil, status.Errorf(codes.Unimplemented, "")
 }
-func (srv *Server) Ping(*gnoi_system_pb.PingRequest, gnoi_system_pb.System_PingServer) error {
+func (srv *Server) Ping(req *gnoi_system_pb.PingRequest, rs gnoi_system_pb.System_PingServer) error {
+	ctx := rs.Context()
+	err := authenticate(srv.config.UserAuth, ctx, false)
+	if err != nil {
+		return err
+	}
 	log.V(1).Info("gNOI: Ping")
-	return nil
+	return status.Errorf(codes.Unimplemented, "")
 }
-func (srv *Server) Traceroute(*gnoi_system_pb.TracerouteRequest, gnoi_system_pb.System_TracerouteServer) error {
+func (srv *Server) Traceroute(req *gnoi_system_pb.TracerouteRequest, rs gnoi_system_pb.System_TracerouteServer) error {
+	ctx := rs.Context()
+	err := authenticate(srv.config.UserAuth, ctx, false)
+	if err != nil {
+		return err
+	}
 	log.V(1).Info("gNOI: Traceroute")
-	return nil
+	return status.Errorf(codes.Unimplemented, "")
 }
-func (srv *Server) SetPackage(gnoi_system_pb.System_SetPackageServer) error {
+func (srv *Server) SetPackage(rs gnoi_system_pb.System_SetPackageServer) error {
+	ctx := rs.Context()
+	err := authenticate(srv.config.UserAuth, ctx, false)
+	if err != nil {
+		return err
+	}
 	log.V(1).Info("gNOI: SetPackage")
-	return nil
+	return status.Errorf(codes.Unimplemented, "")
 }
-func (srv *Server) SwitchControlProcessor(context.Context, *gnoi_system_pb.SwitchControlProcessorRequest) (*gnoi_system_pb.SwitchControlProcessorResponse, error) {
+func (srv *Server) SwitchControlProcessor(ctx context.Context, req *gnoi_system_pb.SwitchControlProcessorRequest) (*gnoi_system_pb.SwitchControlProcessorResponse, error) {
+	err := authenticate(srv.config.UserAuth, ctx, false)
+	if err != nil {
+		return nil, err
+	}
 	log.V(1).Info("gNOI: SwitchControlProcessor")
-	return nil, nil
+	return nil, status.Errorf(codes.Unimplemented, "")
 }
 func (srv *Server) Time(ctx context.Context, req *gnoi_system_pb.TimeRequest) (*gnoi_system_pb.TimeResponse, error) {
-	if srv.config.UserAuth { 
-		err := PAMAuthenAndAuthor(ctx, false)
-		if err != nil {
-			return nil, err
-		}
+	err := authenticate(srv.config.UserAuth, ctx, false)
+	if err != nil {
+		return nil, err
 	}
 	log.V(1).Info("gNOI: Time")
 	var tm gnoi_system_pb.TimeResponse
@@ -55,105 +84,233 @@ func (srv *Server) Time(ctx context.Context, req *gnoi_system_pb.TimeRequest) (*
 	return &tm, nil
 }
 
+func (srv *Server) CopyConfig(ctx context.Context, req *spb.CopyConfigRequest) (*spb.CopyConfigResponse, error) {
+	err := authenticate(srv.config.UserAuth, ctx, false)
+	if err != nil {
+		return nil, err
+	}
+	log.V(1).Info("gNOI: Sonic CopyConfig")
+	
+	resp := &spb.CopyConfigResponse{
+		Output: &spb.SonicOutput {
+
+		},
+	}
+	
+	reqstr, err := json.Marshal(req)
+	if err != nil {
+		return nil, status.Error(codes.Unknown, err.Error())
+	}
+	jsresp, err:= transutil.TranslProcessAction("/sonic-config-mgmt:copy", []byte(reqstr))
+	if err != nil {
+		return nil, status.Error(codes.Unknown, err.Error())
+	}
+	
+	err = json.Unmarshal(jsresp, resp)
+	if err != nil {
+		return nil, status.Error(codes.Unknown, err.Error())
+	}
+	
+	return resp, nil
+}
 
 func (srv *Server) ShowTechsupport(ctx context.Context, req *spb.TechsupportRequest) (*spb.TechsupportResponse, error) {
+	err := authenticate(srv.config.UserAuth, ctx, false)
+	if err != nil {
+		return nil, err
+	}
 	log.V(1).Info("gNOI: Sonic ShowTechsupport")
-	var resp spb.TechsupportResponse
-	reqstr := fmt.Sprintf("{\"sonic-show-techsupport-info:input\": {\"date\": \"%s\"}", req.Input.Date)
+	
+	resp := &spb.TechsupportResponse{
+		Output: &spb.TechsupportResponse_Output {
+
+		},
+	}
+	
+	reqstr, err := json.Marshal(req)
+	if err != nil {
+		return nil, status.Error(codes.Unknown, err.Error())
+	}
 	jsresp, err:= transutil.TranslProcessAction("/sonic-show-techsupport:sonic-show-techsupport-info", []byte(reqstr))
 	if err != nil {
 		return nil, status.Error(codes.Unknown, err.Error())
 	}
-
-	jsresp = []byte(strings.Replace(string(jsresp), "sonic-show-techsupport-info:output", "output", 1))
-	err = json.Unmarshal(jsresp, &resp)
+	
+	err = json.Unmarshal(jsresp, resp)
 	if err != nil {
 		return nil, status.Error(codes.Unknown, err.Error())
 	}
-	return &resp, nil
+	
+	
+	return resp, nil
 }
 
-func (srv *Server) Sum(stc context.Context, req *spb.SumRequest) (*spb.SumResponse, error) {
+func (srv *Server) ImageInstall(ctx context.Context, req *spb.ImageInstallRequest) (*spb.ImageInstallResponse, error) {
+	err := authenticate(srv.config.UserAuth, ctx, false)
+	if err != nil {
+		return nil, err
+	}
+	log.V(1).Info("gNOI: Sonic ImageInstall")
+	
+	resp := &spb.ImageInstallResponse{
+		Output: &spb.SonicOutput {
+
+		},
+	}
+	reqstr, err := json.Marshal(req)
+	if err != nil {
+		return nil, status.Error(codes.Unknown, err.Error())
+	}
+	jsresp, err:= transutil.TranslProcessAction("/sonic-image-management:image-install", []byte(reqstr))
+	if err != nil {
+		return nil, status.Error(codes.Unknown, err.Error())
+	}
+	
+	err = json.Unmarshal(jsresp, resp)
+	if err != nil {
+		return nil, status.Error(codes.Unknown, err.Error())
+	}
+
+	
+	return resp, nil
+}
+
+func (srv *Server) ImageRemove(ctx context.Context, req *spb.ImageRemoveRequest) (*spb.ImageRemoveResponse, error) {
+	err := authenticate(srv.config.UserAuth, ctx, false)
+	if err != nil {
+		return nil, err
+	}
+	log.V(1).Info("gNOI: Sonic ImageRemove")
+	
+	resp := &spb.ImageRemoveResponse{
+		Output: &spb.SonicOutput {
+
+		},
+	}
+	reqstr, err := json.Marshal(req)
+	if err != nil {
+		return nil, status.Error(codes.Unknown, err.Error())
+	}
+	jsresp, err:= transutil.TranslProcessAction("/sonic-image-management:image-remove", []byte(reqstr))
+	if err != nil {
+		return nil, status.Error(codes.Unknown, err.Error())
+	}
+	
+	err = json.Unmarshal(jsresp, resp)
+	if err != nil {
+		return nil, status.Error(codes.Unknown, err.Error())
+	}
+
+	
+	return resp, nil
+}
+
+func (srv *Server) ImageDefault(ctx context.Context, req *spb.ImageDefaultRequest) (*spb.ImageDefaultResponse, error) {
+	err := authenticate(srv.config.UserAuth, ctx, false)
+	if err != nil {
+		return nil, err
+	}
+	log.V(1).Info("gNOI: Sonic ImageDefault")
+	
+	resp := &spb.ImageDefaultResponse{
+		Output: &spb.SonicOutput {
+
+		},
+	}
+	reqstr, err := json.Marshal(req)
+	if err != nil {
+		return nil, status.Error(codes.Unknown, err.Error())
+	}
+	jsresp, err:= transutil.TranslProcessAction("/sonic-image-management:image-default", []byte(reqstr))
+	if err != nil {
+		return nil, status.Error(codes.Unknown, err.Error())
+	}
+
+	err = json.Unmarshal(jsresp, resp)
+	if err != nil {
+		return nil, status.Error(codes.Unknown, err.Error())
+	}
+
+	
+	return resp, nil
+}
+
+
+
+func (srv *Server) Sum(ctx context.Context, req *spb.SumRequest) (*spb.SumResponse, error) {
+	err := authenticate(srv.config.UserAuth, ctx, false)
+	if err != nil {
+		return nil, err
+	}
 	log.V(1).Info("gNOI: Sonic Sum")
-	var resp spb.SumResponse
-	reqstr := fmt.Sprintf("{\"sonic-tests:input\": {\"left\": %d, \"right\": %d}}", req.Input.Left, req.Input.Right)
+	
+	resp := &spb.SumResponse{
+		Output: &spb.SumResponse_Output {
+
+		},
+	}
+	reqstr, err := json.Marshal(req)
+	if err != nil {
+		return nil, status.Error(codes.Unknown, err.Error())
+	}
 	jsresp, err:= transutil.TranslProcessAction("/sonic-tests:sum", []byte(reqstr))
 	
 	if err != nil {
 		return nil, status.Error(codes.Unknown, err.Error())
 	}
-	jsresp = []byte(strings.Replace(string(jsresp), "sonic-tests:output", "output", 1))
-	err = json.Unmarshal(jsresp, &resp)
+	
+	err = json.Unmarshal(jsresp, resp)
 	if err != nil {
 		return nil, status.Error(codes.Unknown, err.Error())
 	}
-	return &resp, nil
+	return resp, nil
 }
 
-func (srv *Server) SaveConfig(ctx context.Context, req *spb.SaveConfigRequest) (*spb.SaveConfigResponse, error) {
-	log.V(1).Info("gNOI: Sonic SaveConfig")
-	var resp spb.SaveConfigResponse
-	reqstr := fmt.Sprintf("{\"save_config:input\": {\"file_path\": \"%s\"}", req.Input.FilePath)
-	jsresp, err:= transutil.TranslProcessAction("/sonic-config-mgmt:save_config", []byte(reqstr))
-	if err != nil {
-		return nil, status.Error(codes.Unknown, err.Error())
-	}
 
-	jsresp = []byte(strings.Replace(string(jsresp), "save_config:output", "output", 1))
-	err = json.Unmarshal(jsresp, &resp)
-	if err != nil {
-		return nil, status.Error(codes.Unknown, err.Error())
+
+func (srv *Server) Authenticate(ctx context.Context, req *spb.AuthenticateRequest) (*spb.AuthenticateResponse, error) {
+	// Can't enforce normal authentication here.. maybe only enforce client cert auth if enabled?
+	// err := authenticate(srv.config.UserAuth, ctx, false)
+	// if err != nil {
+	// 	return nil, err
+	// }
+	log.V(1).Info("gNOI: Sonic Authenticate")
+
+
+	if !srv.config.UserAuth.Enabled("jwt") {
+		return nil, status.Errorf(codes.Unimplemented, "")
 	}
-	return &resp, nil
+	auth_success, _ := UserPwAuth(req.Username, req.Password)
+	if  auth_success {
+		return &spb.AuthenticateResponse{Token: tokenResp(req.Username)}, nil
+	}
+	return nil, status.Errorf(codes.PermissionDenied, "Invalid Username or Password")
+
 }
-
-func (srv *Server) ReloadConfig(ctx context.Context, req *spb.ReloadConfigRequest) (*spb.ReloadConfigResponse, error) {
-	log.V(1).Info("gNOI: Sonic ReloadConfig")
-	var resp spb.ReloadConfigResponse
-	reqstr := fmt.Sprintf("{\"reload_config:input\": {\"file_path\": \"%s\"}", req.Input.FilePath)
-	jsresp, err:= transutil.TranslProcessAction("/sonic-config-mgmt:reload_config", []byte(reqstr))
+func (srv *Server) Refresh(ctx context.Context, req *spb.RefreshRequest) (*spb.RefreshResponse, error) {
+	err := authenticate(srv.config.UserAuth, ctx, false)
 	if err != nil {
-		return nil, status.Error(codes.Unknown, err.Error())
+		return nil, err
+	}
+	log.V(1).Info("gNOI: Sonic Refresh")
+
+	if !srv.config.UserAuth.Enabled("jwt") {
+		return nil, status.Errorf(codes.Unimplemented, "")
 	}
 
-	jsresp = []byte(strings.Replace(string(jsresp), "reload_config:output", "output", 1))
-	err = json.Unmarshal(jsresp, &resp)
+	token, err := JwtAuthenAndAuthor(ctx, false)
 	if err != nil {
-		return nil, status.Error(codes.Unknown, err.Error())
-	}
-	return &resp, nil
-}
-
-func (srv *Server) LoadMgmtConfig(ctx context.Context, req *spb.LoadMgmtConfigRequest) (*spb.LoadMgmtConfigResponse, error) {
-	log.V(1).Info("gNOI: Sonic LoadMgmtConfig")
-	var resp spb.LoadMgmtConfigResponse
-	reqstr := fmt.Sprintf("{\"load_mgmt_config:input\": {\"file_path\": \"%s\"}", req.Input.FilePath)
-	jsresp, err:= transutil.TranslProcessAction("/sonic-config-mgmt:load_mgmt_config", []byte(reqstr))
-	if err != nil {
-		return nil, status.Error(codes.Unknown, err.Error())
+		return nil, err
 	}
 
-	jsresp = []byte(strings.Replace(string(jsresp), "load_mgmt_config:output", "output", 1))
-	err = json.Unmarshal(jsresp, &resp)
-	if err != nil {
-		return nil, status.Error(codes.Unknown, err.Error())
+	claims := &Claims{}
+	jwt.ParseWithClaims(token.AccessToken, claims, func(token *jwt.Token) (interface{}, error) {
+		return hmacSampleSecret, nil
+	})
+	if time.Unix(claims.ExpiresAt, 0).Sub(time.Now()) > JwtRefreshInt {
+		return nil, status.Errorf(codes.InvalidArgument, "Invalid JWT Token")
 	}
-	return &resp, nil
-}
+	
+	return &spb.RefreshResponse{Token: tokenResp(claims.Username)}, nil
 
-func (srv *Server) LoadMinigraph(ctx context.Context, req *spb.LoadMinigraphRequest) (*spb.LoadMinigraphResponse, error) {
-	log.V(1).Info("gNOI: Sonic LoadMinigraph")
-	var resp spb.LoadMinigraphResponse
-	reqstr := fmt.Sprintf("{\"load_minigraph:input\": {\"file_path\": \"%s\"}", req.Input.FilePath)
-	jsresp, err:= transutil.TranslProcessAction("/sonic-config-mgmt:load_minigraph", []byte(reqstr))
-	if err != nil {
-		return nil, status.Error(codes.Unknown, err.Error())
-	}
-
-	jsresp = []byte(strings.Replace(string(jsresp), "load_minigraph:output", "output", 1))
-	err = json.Unmarshal(jsresp, &resp)
-	if err != nil {
-		return nil, status.Error(codes.Unknown, err.Error())
-	}
-	return &resp, nil
 }
