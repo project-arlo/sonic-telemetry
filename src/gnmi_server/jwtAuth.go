@@ -10,6 +10,8 @@ import (
 	jwt "github.com/dgrijalva/jwt-go"
 	"crypto/rand"
 	spb "proto/gnoi"
+	"common_utils"
+	"github.com/golang/glog"
 )
 
 var (
@@ -57,18 +59,19 @@ func tokenResp(username string) *spb.JwtToken {
 	return &token
 }
 
-func JwtAuthenAndAuthor(ctx context.Context, admin_required bool) (*spb.JwtToken, error) {
+func JwtAuthenAndAuthor(ctx context.Context, admin_required bool) (*spb.JwtToken, context.Context, error) {
+	rc, ctx := common_utils.GetContext(ctx)
 	var token spb.JwtToken
 	md, ok := metadata.FromIncomingContext(ctx)
 	if !ok {
-		return nil, status.Errorf(codes.Unknown, "Invalid context")
+		return nil, ctx, status.Errorf(codes.Unknown, "Invalid context")
 	}
 
 
 	if token_str, ok := md["access_token"]; ok {
 		token.AccessToken = token_str[0]
 	}else {
-		return nil, status.Errorf(codes.Unauthenticated, "No JWT Token Provided")
+		return nil, ctx, status.Errorf(codes.Unauthenticated, "No JWT Token Provided")
 	}
 
 	claims := &Claims{}
@@ -76,11 +79,15 @@ func JwtAuthenAndAuthor(ctx context.Context, admin_required bool) (*spb.JwtToken
 		return hmacSampleSecret, nil
 	})
 	if err != nil {
-		return &token, status.Errorf(codes.Unauthenticated, err.Error())
+		return &token, ctx, status.Errorf(codes.Unauthenticated, err.Error())
 	}
 	if !tkn.Valid {
-		return &token, status.Errorf(codes.Unauthenticated, "Invalid JWT Token")
+		return &token, ctx, status.Errorf(codes.Unauthenticated, "Invalid JWT Token")
 	}
-	return &token, nil
+	if err := PopulateAuthStruct(claims.Username, &rc.Auth); err != nil {
+		glog.Infof("[%s] Failed to retrieve authentication information; %v", rc.ID, err)
+		return &token, ctx, status.Errorf(codes.Unauthenticated, "")	
+	}
+	return &token, ctx, nil
 }
 

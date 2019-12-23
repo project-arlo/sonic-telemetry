@@ -20,7 +20,6 @@ import (
 	gnmipb "github.com/openconfig/gnmi/proto/gnmi"
 	spb "proto/gnoi"
 	"bytes"
-	
 )
 
 var (
@@ -142,41 +141,41 @@ func (srv *Server) Port() int64 {
 	return srv.config.Port
 }
 
-func authenticate(UserAuth AuthTypes, ctx context.Context, admin_required bool) error {
+func authenticate(UserAuth AuthTypes, ctx context.Context, admin_required bool) (context.Context,error) {
 	var err error
 	success := false
 
 	if UserAuth.Enabled("password") {
-		err = BasicAuthenAndAuthor(ctx, admin_required)
+		ctx, err = BasicAuthenAndAuthor(ctx, admin_required)
 		if err == nil {
 			success = true
 		}
 	}
 	if !success && UserAuth.Enabled("jwt") {
-		_,err = JwtAuthenAndAuthor(ctx, admin_required)
+		_,ctx,err = JwtAuthenAndAuthor(ctx, admin_required)
 		if err == nil {
 			success = true
 		}
 	}
 	if !success && UserAuth.Enabled("cert") {
-		err = ClientCertAuthenAndAuthor(ctx, admin_required)
+		ctx,err = ClientCertAuthenAndAuthor(ctx, admin_required)
 		if err == nil {
 			success = true
 		}
 	}
 
 	if !success {
-		return err
+		return ctx,err
 	} 
 
-	return nil
+	return ctx,nil
 }
 
 // Subscribe implements the gNMI Subscribe RPC.
 func (srv *Server) Subscribe(stream gnmipb.GNMI_SubscribeServer) error {
 
 	ctx := stream.Context()
-	err := authenticate(srv.config.UserAuth, ctx, false)
+	ctx, err := authenticate(srv.config.UserAuth, ctx, false)
 	if err != nil {
 		return err
 	}
@@ -235,7 +234,7 @@ func (s *Server) checkEncodingAndModel(encoding gnmipb.Encoding, models []*gnmip
 
 // Get implements the Get RPC in gNMI spec.
 func (srv *Server) Get(ctx context.Context, req *gnmipb.GetRequest) (*gnmipb.GetResponse, error) {
-	err := authenticate(srv.config.UserAuth, ctx, false)
+	ctx, err := authenticate(srv.config.UserAuth, ctx, false)
 	if err != nil {
 		return nil, err
 	}
@@ -262,7 +261,7 @@ func (srv *Server) Get(ctx context.Context, req *gnmipb.GetRequest) (*gnmipb.Get
 		dc, err = sdc.NewDbClient(paths, prefix)
 	} else {
 		/* If no prefix target is specified create new Transl Data Client . */
-		dc, err = sdc.NewTranslClient(prefix, paths)
+		dc, err = sdc.NewTranslClient(prefix, paths, ctx)
 	}
 
 	if err != nil {
@@ -292,7 +291,7 @@ func (srv *Server) Get(ctx context.Context, req *gnmipb.GetRequest) (*gnmipb.Get
 
 // Set method is not implemented. Refer to gnxi for examples with openconfig integration
 func (srv *Server) Set(ctx context.Context,req *gnmipb.SetRequest) (*gnmipb.SetResponse, error) {
-	err := authenticate(srv.config.UserAuth, ctx, true)
+	ctx, err := authenticate(srv.config.UserAuth, ctx, true)
 	if err != nil {
 		return nil, err
 	}
@@ -303,7 +302,7 @@ func (srv *Server) Set(ctx context.Context,req *gnmipb.SetRequest) (*gnmipb.SetR
 	prefix := req.GetPrefix()
 
            /* Create Transl client. */
-	dc, _ := sdc.NewTranslClient(prefix, nil)
+	dc, _ := sdc.NewTranslClient(prefix, nil, ctx)
 
 	/* DELETE */
 	for _, path := range req.GetDelete() {
@@ -372,11 +371,11 @@ func (srv *Server) Set(ctx context.Context,req *gnmipb.SetRequest) (*gnmipb.SetR
 
 // Capabilities method is not implemented. Refer to gnxi for examples with openconfig integration
 func (srv *Server) Capabilities(ctx context.Context, req *gnmipb.CapabilityRequest) (*gnmipb.CapabilityResponse, error) {
-	err := authenticate(srv.config.UserAuth, ctx, false)
+	ctx, err := authenticate(srv.config.UserAuth, ctx, false)
 	if err != nil {
 		return nil, err
 	}
-	dc, _ := sdc.NewTranslClient(nil , nil)
+	dc, _ := sdc.NewTranslClient(nil , nil, ctx)
 
 		/* Fetch the client capabitlities. */
 		supportedModels := dc.Capabilities()

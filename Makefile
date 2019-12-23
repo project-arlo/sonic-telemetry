@@ -51,6 +51,9 @@ $(BUILD_DIR)/.deps: $(MAKEFILE_LIST)
 	GOPATH=$(GO_DEP_PATH) $(GO) get -u github.com/jipanyang/gnmi/client/gnmi
 	GOPATH=$(GO_DEP_PATH) $(GO) get -u github.com/xeipuuv/gojsonschema
 	GOPATH=$(GO_DEP_PATH) $(GO) get -u github.com/openconfig/gnoi/system
+	GOPATH=$(GO_DEP_PATH) $(GO) get -u github.com/msteinert/pam
+	GOPATH=$(GO_DEP_PATH) $(GO) get -u github.com/dgrijalva/jwt-go
+	GOPATH=$(GO_DEP_PATH) $(GO) get -u gopkg.in/godbus/dbus.v5
 	GOPATH=$(GO_DEP_PATH) $(GO) get -u github.com/gogo/protobuf/gogoproto
 	touch $@
 
