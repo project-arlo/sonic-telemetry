@@ -82,7 +82,7 @@ func loadDB(t *testing.T, rclient *redis.Client, mpi map[string]interface{}) {
     }
 }
 
-func createServer(t *testing.T) *Server {
+func createServer(t *testing.T, port int64) *Server {
     certificate, err := testcert.NewCert()
     if err != nil {
         t.Errorf("could not load server key pair: %s", err)
@@ -93,7 +93,7 @@ func createServer(t *testing.T) *Server {
     }
 
     opts := []grpc.ServerOption{grpc.Creds(credentials.NewTLS(tlsCfg))}
-    cfg := &Config{Port: 8081}
+    cfg := &Config{Port: port}
     s, err := NewServer(cfg, opts)
     if err != nil {
         t.Errorf("Failed to create gNMI server: %v", err)
@@ -457,7 +457,7 @@ func unitTestFromFile(filename string) (UnitTest, error) {
 
 func TestGnmiGetSet(t *testing.T) {
     //t.Log("Start sevrer")
-    s := createServer(t)
+    s := createServer(t, 8081)
     go runServer(t, s)
 
     //t.Log("Start gNMI client")
@@ -1446,8 +1446,9 @@ func runTestSubscribe(t *testing.T) {
 
 func TestCapabilities(t *testing.T) {
     //t.Log("Start server")
-    s := createServer(t)
+    s := createServer(t, 8082)
     go runServer(t, s)
+    defer s.s.Stop()
 
     // prepareDb(t)
 
@@ -1456,7 +1457,7 @@ func TestCapabilities(t *testing.T) {
     opts := []grpc.DialOption{grpc.WithTransportCredentials(credentials.NewTLS(tlsConfig))}
 
     //targetAddr := "30.57.185.38:8080"
-    targetAddr := "127.0.0.1:8081"
+    targetAddr := "127.0.0.1:8082"
     conn, err := grpc.Dial(targetAddr, opts...)
     if err != nil {
         t.Fatalf("Dialing to %q failed: %v", targetAddr, err)
@@ -1475,12 +1476,12 @@ func TestCapabilities(t *testing.T) {
     if len(resp.SupportedModels) == 0 {
         t.Fatalf("No Supported Models found!")
     }
-
 }
 
 func TestGNOI(t *testing.T) {
-    s := createServer(t)
+    s := createServer(t, 8083)
     go runServer(t, s)
+    defer s.s.Stop()
 
     // prepareDb(t)
 
@@ -1489,7 +1490,7 @@ func TestGNOI(t *testing.T) {
     opts := []grpc.DialOption{grpc.WithTransportCredentials(credentials.NewTLS(tlsConfig))}
 
     //targetAddr := "30.57.185.38:8080"
-    targetAddr := "127.0.0.1:8081"
+    targetAddr := "127.0.0.1:8083"
     conn, err := grpc.Dial(targetAddr, opts...)
     if err != nil {
         t.Fatalf("Dialing to %q failed: %v", targetAddr, err)
