@@ -1,0 +1,68 @@
+{
+  "title": "data vrf",
+  "operations": [
+      {
+        "operation": "replace",
+        "returnCode": 0,
+        "xpath": "openconfig-network-instance:network-instances/network-instance",
+        "target": "OC_YANG",
+        "attributeData": "{\"openconfig-network-instance:network-instance\": [{\"name\": \"Vrf_1\", \"config\": {\"name\": \"Vrf_1\", \"type\": \"L3VRF\", \"enabled\": true}}]}",
+        "title": "Set data VRF"
+      },
+      {
+        "operation": "get",
+        "returnCode": 0,
+        "xpath": "openconfig-network-instance:network-instances/network-instance[name=Vrf_1]/config",
+        "target": "OC_YANG",
+
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "$id": "http://example.com/root.json",
+        "type": "object",
+        "title": "Get data VRF after set",
+        "required": [
+          "openconfig-network-instance:config"
+        ],
+        "properties": {
+          "openconfig-network-instance:config": {
+            "$id": "#/properties/openconfig-network-instance:config",
+            "type": "object",
+            "title": "The Openconfig-network-instance:config Schema",
+            "required": [
+              "name"
+            ],
+            "properties": {
+              "name": {
+                "$id": "#/properties/openconfig-network-instance:config/properties/name",
+                "type": "string",
+                "title": "The Name Schema",
+                "default": "",
+                "examples": [
+                  "Vrf_1"
+                ],
+                "pattern": "^(.*)$"
+              }    
+            }
+          }
+       }
+    },
+    {
+      "operation": "delete",
+      "returnCode": 0,
+      "xpath": "openconfig-network-instance:network-instances/network-instance[name=Vrf_1]",
+      "target": "OC_YANG",
+      "title": "Delete data VRF"
+    },
+    {
+      "operation": "get",
+      "returnCode": 0,
+      "xpath": "openconfig-network-instance:network-instances/network-instance[name=Vrf_1]/config",
+      "target": "OC_YANG",
+
+
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "$id": "http://example.com/root.json",
+      "type": "object",
+      "title": "Get data VRF after delete"
+    }
+  ]
+}
