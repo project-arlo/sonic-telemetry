@@ -1,0 +1,68 @@
+{
+  "title": "mgmt vrf",
+  "operations": [
+      {
+        "operation": "replace",
+        "returnCode": 0,
+        "xpath": "openconfig-network-instance:network-instances/network-instance",
+        "target": "OC_YANG",
+        "attributeData": "{\"openconfig-network-instance:network-instance\": [{\"name\": \"mgmt\", \"config\": {\"name\": \"mgmt\", \"type\": \"L3VRF\", \"enabled\": true}}]}",
+        "title": "Set mgmt VRF"
+      },
+      {
+        "operation": "get",
+        "returnCode": 0,
+        "xpath": "openconfig-network-instance:network-instances/network-instance[name=mgmt]/config",
+        "target": "OC_YANG",
+
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "$id": "http://example.com/root.json",
+        "type": "object",
+        "title": "Get mgmt VRF after set",
+        "required": [
+          "openconfig-network-instance:config"
+        ],
+        "properties": {
+          "openconfig-network-instance:config": {
+            "$id": "#/properties/openconfig-network-instance:config",
+            "type": "object",
+            "title": "The Openconfig-network-instance:config Schema",
+            "required": [
+              "name"
+            ],
+            "properties": {
+              "name": {
+                "$id": "#/properties/openconfig-network-instance:config/properties/name",
+                "type": "string",
+                "title": "The Name Schema",
+                "default": "",
+                "examples": [
+                  "mgmt"
+                ],
+                "pattern": "^(.*)$"
+              }    
+            }
+          }
+       }
+    },
+    {
+      "operation": "delete",
+      "returnCode": 0,
+      "xpath": "openconfig-network-instance:network-instances/network-instance[name=mgmt]",
+      "target": "OC_YANG",
+      "title": "Delete mgmt VRF"
+    },
+    {
+      "operation": "get",
+      "returnCode": 0,
+      "xpath": "openconfig-network-instance:network-instances/network-instance[name=mgmt]/config",
+      "target": "OC_YANG",
+
+
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "$id": "http://example.com/root.json",
+      "type": "object",
+      "title": "Get mgmt VRF after delete"
+    }
+  ]
+}
