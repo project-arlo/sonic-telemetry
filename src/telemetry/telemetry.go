@@ -89,7 +89,7 @@ func main() {
 		}
 		tlsCfg.ClientCAs = certPool
 	} else {
-		if UserAuth.Enabled("cert") {
+		if userAuth.Enabled("cert") {
 			log.Exit("client_auth mode cert requires ca_crt option.")
 		}
 	}
