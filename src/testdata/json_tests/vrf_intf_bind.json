@@ -1,0 +1,310 @@
+{
+  "title": "Data Vrf interface",
+  "operations": [
+    {
+      "operation": "replace",
+      "returnCode": 0,
+      "xpath": "openconfig-network-instance:network-instances/network-instance[name=Vrf_1]",
+      "target": "OC_YANG",
+      "attributeData": "{  \"openconfig-network-instance:network-instance\": [    {      \"name\": \"Vrf_1\",      \"config\": {        \"name\": \"Vrf_1\",        \"type\": \"L3VRF\",        \"enabled\": true      },      \"interfaces\": {        \"interface\": [          {            \"id\": \"Ethernet16\",            \"config\": {              \"id\": \"Ethernet16\"            }          }        ]      }        }  ]}",
+      "title": "Set data VRF interface binding"
+    },
+    {
+      "operation": "get",
+      "returnCode": 0,
+      "xpath": "openconfig-network-instance:network-instances/network-instance[name=Vrf_1]/interfaces",
+      "target": "OC_YANG",
+
+
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "$id": "http://example.com/root.json",
+      "type": "object",
+      "title": "Get VRF data interface binding after set",
+      "required": [
+        "openconfig-network-instance:interfaces"
+      ],
+      "properties": {
+        "openconfig-network-instance:interfaces": {
+        "$id": "#/properties/openconfig-network-instance:interfaces",
+        "type": "object",
+        "title": "The Openconfig-network-instance:interfaces Schema",
+        "required": [
+          "interface"
+        ],
+        "properties": {
+          "interface": {
+            "$id": "#/properties/openconfig-network-instance:interfaces/properties/interface",
+            "type": "array",
+            "title": "The Interface Schema",
+            "items": {
+              "$id": "#/properties/openconfig-network-instance:interfaces/properties/interface/items",
+              "type": "object",
+              "title": "The Items Schema",
+              "required": [
+                "config",
+                "id",
+                "state"
+              ],
+              "properties": {
+                "config": {
+                  "$id": "#/properties/openconfig-network-instance:interfaces/properties/interface/items/properties/config",
+                  "type": "object",
+                  "title": "The Config Schema",
+                  "required": [
+                    "id"
+                  ],
+                  "properties": {
+                    "id": {
+                      "$id": "#/properties/openconfig-network-instance:interfaces/properties/interface/items/properties/config/properties/id",
+                      "type": "string",
+                      "title": "The Id Schema",
+                      "default": "",
+                      "examples": [
+                        "Ethernet16"
+                      ],
+                      "pattern": "^(.*)$"
+                    }
+                  }
+                },
+                "id": {
+                  "$id": "#/properties/openconfig-network-instance:interfaces/properties/interface/items/properties/id",
+                  "type": "string",
+                  "title": "The Id Schema",
+                  "default": "",
+                  "examples": [
+                    "Ethernet16"
+                  ],
+                  "pattern": "^(.*)$"
+                },
+                "state": {
+                  "$id": "#/properties/openconfig-network-instance:interfaces/properties/interface/items/properties/state",
+                  "type": "object",
+                  "title": "The State Schema",
+                  "required": [
+                    "id"
+                  ],
+                  "properties": {
+                    "id": {
+                      "$id": "#/properties/openconfig-network-instance:interfaces/properties/interface/items/properties/state/properties/id",
+                      "type": "string",
+                      "title": "The Id Schema",
+                      "default": "",
+                      "examples": [
+                        "Ethernet16"
+                      ],
+                      "pattern": "^(.*)$"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "operation": "delete",
+      "returnCode": 0,
+      "xpath": "openconfig-network-instance:network-instances/network-instance[name=Vrf_1]/interfaces/interface[id=Ethernet16]",
+      "target": "OC_YANG",
+      "title": "Delete data VRF interface binding for Ethernet16"
+    },
+    {
+      "operation": "replace",
+      "returnCode": 0,
+      "xpath": "openconfig-interfaces:interfaces/interface[name=Loopback10]/config",
+      "target": "OC_YANG",
+      "attributeData": "{\"openconfig-interfaces:config\": {\"name\": \"Loopback10\"}}",
+      "title": "add loopback interface lo10"
+    },
+    {
+      "operation": "replace",
+      "returnCode": 0,
+      "xpath": "openconfig-interfaces:interfaces/interface[name=Loopback10]/config",
+      "target": "OC_YANG",
+      "attributeData": "{\"openconfig-interfaces:config\": {\"name\": \"Loopback10\"}}",
+      "title": "add loopback interface lo10"
+    },
+    {
+      "operation": "replace",
+      "returnCode": 0,
+      "xpath": "openconfig-interfaces:interfaces/interface[name=PortChannel10]/config",
+      "target": "OC_YANG",
+      "attributeData": "{\"openconfig-interfaces:config\": {\"name\": \"PortChannel10\"}}",
+      "title": "add loopback interface PortChannel10"
+    },
+    {
+      "operation": "update",
+      "returnCode": 0,
+      "xpath": "openconfig-interfaces:interfaces/interface[name=Vlan100]/config",
+      "target": "OC_YANG",
+      "attributeData": "{\"openconfig-interfaces:config\": {\"name\": \"Vlan100\"}}",
+      "title": "add loopback interface Vlan100"
+    },
+    {
+      "operation": "replace",
+      "returnCode": 0,
+      "xpath": "openconfig-network-instance:network-instances/network-instance[name=Vrf_1]",
+      "target": "OC_YANG",
+      "attributeData": "{  \"openconfig-network-instance:network-instance\": [    {      \"name\": \"Vrf_1\",         \"config\": {        \"name\": \"Vrf_1\",        \"type\": \"L3VRF\",        \"enabled\": true      },      \"interfaces\": {        \"interface\": [          {            \"id\": \"PortChannel10\",            \"config\": {              \"id\": \"PortChannel\"            }          },          {            \"id\": \"Vlan100\",            \"config\": {              \"id\": \"Vlan100\"            }          },          {            \"id\": \"Loopback10\",            \"config\": {              \"id\": \"Loopback10\"            }          }        ]       }    }  ]}",
+      "title": "Set multiple data VRF interface binding"
+    },
+    {
+      "operation": "get",
+      "returnCode": 0,
+      "xpath": "openconfig-network-instance:network-instances/network-instance[name=Vrf_1]/interfaces",
+      "target": "OC_YANG",
+
+
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "$id": "http://example.com/root.json",
+      "type": "object",
+      "title": "Get multiple VRF interface bindings",
+      "required": [
+        "openconfig-network-instance:interfaces"
+      ],
+      "properties": {
+        "openconfig-network-instance:interfaces": {
+        "$id": "#/properties/openconfig-network-instance:interfaces",
+        "type": "object",
+        "title": "The Openconfig-network-instance:interfaces Schema",
+        "required": [
+          "interface"
+        ],
+        "properties": {
+          "interface": {
+            "$id": "#/properties/openconfig-network-instance:interfaces/properties/interface",
+            "type": "array",
+            "title": "The Interface Schema",
+            "items": {
+              "$id": "#/properties/openconfig-network-instance:interfaces/properties/interface/items",
+              "type": "object",
+              "title": "The Items Schema",
+              "required": [
+                "config",
+                "id",
+                "state"
+              ],
+              "properties": {
+                "config": {
+                  "$id": "#/properties/openconfig-network-instance:interfaces/properties/interface/items/properties/config",
+                  "type": "object",
+                  "title": "The Config Schema",
+                  "required": [
+                    "id"
+                  ],
+                  "properties": {
+                    "id": {
+                      "$id": "#/properties/openconfig-network-instance:interfaces/properties/interface/items/properties/config/properties/id",
+                      "type": "string",
+                      "title": "The Id Schema",
+                      "default": "",
+                      "examples": [
+                        "Loopback10"
+                      ],
+                      "pattern": "^(.*)$"
+                    }
+                  }
+                },
+                "id": {
+                  "$id": "#/properties/openconfig-network-instance:interfaces/properties/interface/items/properties/id",
+                  "type": "string",
+                  "title": "The Id Schema",
+                  "default": "",
+                  "examples": [
+                    "Loopback10"
+                  ],
+                  "pattern": "^(.*)$"
+                },
+                "state": {
+                  "$id": "#/properties/openconfig-network-instance:interfaces/properties/interface/items/properties/state",
+                  "type": "object",
+                  "title": "The State Schema",
+                  "required": [
+                    "id"
+                  ],
+                  "properties": {
+                    "id": {
+                      "$id": "#/properties/openconfig-network-instance:interfaces/properties/interface/items/properties/state/properties/id",
+                      "type": "string",
+                      "title": "The Id Schema",
+                      "default": "",
+                      "examples": [
+                        "Loopback10"
+                      ],
+                      "pattern": "^(.*)$"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "operation": "delete",
+      "returnCode": 0,
+      "xpath": "openconfig-network-instance:network-instances/network-instance[name=Vrf_1]/interfaces/interface[id=Loopback10]",
+      "target": "OC_YANG",
+      "title": "Delete data VRF interface binding for Loopback10"
+    },
+    {
+      "operation": "delete",
+      "returnCode": 0,
+      "xpath": "openconfig-network-instance:network-instances/network-instance[name=Vrf_1]/interfaces/interface[id=PortChannel10]",
+      "target": "OC_YANG",
+      "title": "Delete data VRF interface binding for PortChannel10"
+    },
+    {
+      "operation": "delete",
+      "returnCode": 0,
+      "xpath": "openconfig-network-instance:network-instances/network-instance[name=Vrf_1]/interfaces/interface[id=Vlan100]",
+      "target": "OC_YANG",
+      "title": "Delete data VRF interface binding for Vlan100"
+    },
+    {
+      "operation": "get",
+      "returnCode": 0,
+      "xpath": "openconfig-network-instance:network-instances/network-instance[name=Vrf_1]/interfaces",
+      "target": "OC_YANG",
+
+   
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "$id": "http://example.com/root.json",
+      "type": "object",
+      "title": "Get empty VRF interface binding"
+    },
+    {
+      "operation": "delete",
+      "returnCode": 0,
+      "xpath": "openconfig-network-instance:network-instances/network-instance[name=Vrf_1]",
+      "target": "OC_YANG",
+      "title": "Delete data VRF"
+    },
+    {
+      "operation": "delete",
+      "returnCode": 0,
+      "xpath": "openconfig-interfaces:interfaces/interface[name=Loopback10]",
+      "target": "OC_YANG",
+      "title": "Delete interface Loopback10"
+    },
+    {
+      "operation": "delete",
+      "returnCode": 0,
+      "xpath": "openconfig-interfaces:interfaces/interface[name=PortChannel10]",
+      "target": "OC_YANG",
+      "title": "Delete interface PortChannel10"
+    },
+    {
+      "operation": "delete",
+      "returnCode": 0,
+      "xpath": "openconfig-interfaces:interfaces/interface[name=Vlan100]",
+      "target": "OC_YANG",
+      "title": "Delete interface Vlan100"
+    }
+  ]
+}
+
