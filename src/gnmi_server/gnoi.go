@@ -330,3 +330,35 @@ func (srv *Server) Refresh(ctx context.Context, req *spb.RefreshRequest) (*spb.R
 	return &spb.RefreshResponse{Token: tokenResp(claims.Username, claims.Gid)}, nil
 
 }
+
+func (srv *Server) ClearNeighbors(ctx context.Context, req *spb.ClearNeighborsRequest) (*spb.ClearNeighborsResponse, error) {
+    ctx,err := authenticate(srv.config.UserAuth, ctx, false)
+    if err != nil {
+        return nil, err
+    }
+    log.V(1).Info("gNOI: Sonic ClearNeighbors")
+
+    resp := &spb.ClearNeighborsResponse{
+        Output: &spb.SonicOutput {
+
+        },
+    }
+
+    reqstr, err := json.Marshal(req)
+    if err != nil {
+        return nil, status.Error(codes.Unknown, err.Error())
+    }
+
+    jsresp, err:= transutil.TranslProcessAction("/sonic-neighbor:clear-neighbors", []byte(reqstr), ctx)
+
+    if err != nil {
+        return nil, status.Error(codes.Unknown, err.Error())
+    }
+
+    err = json.Unmarshal(jsresp, resp)
+    if err != nil {
+        return nil, status.Error(codes.Unknown, err.Error())
+    }
+
+    return resp, nil
+}

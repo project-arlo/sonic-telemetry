@@ -20,7 +20,7 @@ service SonicService {
 
   rpc Authenticate(AuthenticateRequest) returns (AuthenticateResponse) {}
   rpc Refresh(RefreshRequest) returns (RefreshResponse) {}
-
+  rpc ClearNeighbors(ClearNeighborsRequest) returns (ClearNeighborsResponse) {}
 }
 
 message SonicOutput {
@@ -40,6 +40,23 @@ message TechsupportResponse {
     Output output = 1 [(gogoproto.jsontag) = "sonic-show-techsupport:output", (gogoproto.moretags) = "xml:\",comment\""];
 }
 
+message ClearNeighborsRequest {
+    message Input {
+        required bool force = 0
+        required string family = 1
+        required bool all = 2
+        required string ip = 3
+        required string ifname = 4
+    }
+    Input input = 1 [(gogoproto.jsontag) = "sonic-neighbor:input", (gogoproto.moretags) = "xml:\",comment\""];
+}
+
+message ClearNeighborsResponse {
+    message Output {
+        required string response = 0
+    }
+    Output output = 1 [(gogoproto.jsontag) = "sonic-neighbor:output", (gogoproto.moretags) = "xml:\",comment\""];
+}
 
 message SumRequest {
     message Input {

@@ -72,6 +72,8 @@ func main() {
 			imageRemove(sc, ctx)
 		case "refresh":
 			refresh(sc, ctx)
+        case "clearNeighbors":
+            clearNeighbors(sc, ctx)
 		default:
 			panic("Invalid RPC Name")
 		}
@@ -249,4 +251,24 @@ func refresh(sc spb.SonicServiceClient, ctx context.Context) {
 		panic(err.Error())
 	}
 	fmt.Println(string(respstr))
+}
+
+func clearNeighbors(sc spb.SonicServiceClient, ctx context.Context) {
+    fmt.Println("Sonic ClearNeighbors")
+    ctx = setUserCreds(ctx)
+    req := &spb.ClearNeighborsRequest{
+        Input: &spb.ClearNeighborsRequest_Input{},
+    }
+    json.Unmarshal([]byte(*args), req)
+
+    resp,err := sc.ClearNeighbors(ctx, req)
+
+    if err != nil {
+        panic(err.Error())
+    }
+    respstr, err := json.Marshal(resp)
+    if err != nil {
+        panic(err.Error())
+    }
+    fmt.Println(string(respstr))
 }
