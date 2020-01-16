@@ -42,18 +42,18 @@ message TechsupportResponse {
 
 message ClearNeighborsRequest {
     message Input {
-        required bool force = 0
-        required string family = 1
-        required bool all = 2
-        required string ip = 3
-        required string ifname = 4
+        bool force = 1;
+        string family = 2;
+        bool all = 3;
+        string ip = 4;
+        string ifname = 5;
     }
     Input input = 1 [(gogoproto.jsontag) = "sonic-neighbor:input", (gogoproto.moretags) = "xml:\",comment\""];
 }
 
 message ClearNeighborsResponse {
     message Output {
-        required string response = 0
+        string response = 1;
     }
     Output output = 1 [(gogoproto.jsontag) = "sonic-neighbor:output", (gogoproto.moretags) = "xml:\",comment\""];
 }
