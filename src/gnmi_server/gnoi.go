@@ -293,9 +293,9 @@ func (srv *Server) Authenticate(ctx context.Context, req *spb.AuthenticateReques
 	if  auth_success {
 		usr, err := user.Lookup(req.Username)
 		if err == nil {
-			group, err := user.LookupGroupId(usr.Gid)
+			roles, err := GetUserRoles(usr)
 			if err == nil {
-				return &spb.AuthenticateResponse{Token: tokenResp(req.Username, group.Name)}, nil
+				return &spb.AuthenticateResponse{Token: tokenResp(req.Username, roles)}, nil
 			}
 		}
 		
@@ -327,6 +327,6 @@ func (srv *Server) Refresh(ctx context.Context, req *spb.RefreshRequest) (*spb.R
 		return nil, status.Errorf(codes.InvalidArgument, "Invalid JWT Token")
 	}
 	
-	return &spb.RefreshResponse{Token: tokenResp(claims.Username, claims.Gid)}, nil
+	return &spb.RefreshResponse{Token: tokenResp(claims.Username, claims.Roles)}, nil
 
 }
