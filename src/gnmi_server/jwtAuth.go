@@ -11,7 +11,6 @@ import (
 	"crypto/rand"
 	spb "proto/gnoi"
 	"common_utils"
-	"github.com/golang/glog"
 )
 
 var (
@@ -27,16 +26,18 @@ type Credentials struct {
 
 type Claims struct {
 	Username string `json:"username"`
+	Gid string `json:"gid"`
 	jwt.StandardClaims
 }
 
 
 
-func generateJWT(username string, expire_dt time.Time) string {
+func generateJWT(username string, gid string, expire_dt time.Time) string {
 	// Create a new token object, specifying signing method and the claims
 	// you would like it to contain.
 	claims := &Claims{
 		Username: username,
+		Gid: gid,
 		StandardClaims: jwt.StandardClaims{
 			// In JWT, the expiry time is expressed as unix milliseconds
 			ExpiresAt: expire_dt.Unix(),
@@ -53,9 +54,9 @@ func GenerateJwtSecretKey() {
 	rand.Read(hmacSampleSecret)
 }
 
-func tokenResp(username string) *spb.JwtToken {
+func tokenResp(username string, gid string) *spb.JwtToken {
 	exp_tm := time.Now().Add(JwtValidInt)
-	token := spb.JwtToken{AccessToken: generateJWT(username, exp_tm), Type: "Bearer", ExpiresIn: int64(JwtValidInt/time.Second)}
+	token := spb.JwtToken{AccessToken: generateJWT(username, gid, exp_tm), Type: "Bearer", ExpiresIn: int64(JwtValidInt/time.Second)}
 	return &token
 }
 
@@ -84,10 +85,12 @@ func JwtAuthenAndAuthor(ctx context.Context, admin_required bool) (*spb.JwtToken
 	if !tkn.Valid {
 		return &token, ctx, status.Errorf(codes.Unauthenticated, "Invalid JWT Token")
 	}
-	if err := PopulateAuthStruct(claims.Username, &rc.Auth); err != nil {
-		glog.Infof("[%s] Failed to retrieve authentication information; %v", rc.ID, err)
-		return &token, ctx, status.Errorf(codes.Unauthenticated, "")	
-	}
+	// if err := PopulateAuthStruct(claims.Username, &rc.Auth); err != nil {
+	// 	glog.Infof("[%s] Failed to retrieve authentication information; %v", rc.ID, err)
+	// 	return &token, ctx, status.Errorf(codes.Unauthenticated, "")	
+	// }
+	rc.Auth.User = claims.Username
+	rc.Auth.Group = claims.Gid
 	return &token, ctx, nil
 }
 

@@ -10,7 +10,7 @@ import (
 	"google.golang.org/grpc/status"
 	"google.golang.org/grpc/codes"
 	"encoding/json"
-
+	"os/user"
 	jwt "github.com/dgrijalva/jwt-go"
 )
 
@@ -291,7 +291,14 @@ func (srv *Server) Authenticate(ctx context.Context, req *spb.AuthenticateReques
 	}
 	auth_success, _ := UserPwAuth(req.Username, req.Password)
 	if  auth_success {
-		return &spb.AuthenticateResponse{Token: tokenResp(req.Username)}, nil
+		usr, err := user.Lookup(req.Username)
+		if err == nil {
+			group, err := user.LookupGroupId(usr.Gid)
+			if err == nil {
+				return &spb.AuthenticateResponse{Token: tokenResp(req.Username, group.Name)}, nil
+			}
+		}
+		
 	}
 	return nil, status.Errorf(codes.PermissionDenied, "Invalid Username or Password")
 
@@ -320,6 +327,6 @@ func (srv *Server) Refresh(ctx context.Context, req *spb.RefreshRequest) (*spb.R
 		return nil, status.Errorf(codes.InvalidArgument, "Invalid JWT Token")
 	}
 	
-	return &spb.RefreshResponse{Token: tokenResp(claims.Username)}, nil
+	return &spb.RefreshResponse{Token: tokenResp(claims.Username, claims.Gid)}, nil
 
 }
