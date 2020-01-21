@@ -26,18 +26,18 @@ type Credentials struct {
 
 type Claims struct {
 	Username string `json:"username"`
-	Gid string `json:"gid"`
+	Roles []string `json:"roles"`
 	jwt.StandardClaims
 }
 
 
 
-func generateJWT(username string, gid string, expire_dt time.Time) string {
+func generateJWT(username string, roles []string, expire_dt time.Time) string {
 	// Create a new token object, specifying signing method and the claims
 	// you would like it to contain.
 	claims := &Claims{
 		Username: username,
-		Gid: gid,
+		Roles: roles,
 		StandardClaims: jwt.StandardClaims{
 			// In JWT, the expiry time is expressed as unix milliseconds
 			ExpiresAt: expire_dt.Unix(),
@@ -54,9 +54,9 @@ func GenerateJwtSecretKey() {
 	rand.Read(hmacSampleSecret)
 }
 
-func tokenResp(username string, gid string) *spb.JwtToken {
+func tokenResp(username string, roles []string) *spb.JwtToken {
 	exp_tm := time.Now().Add(JwtValidInt)
-	token := spb.JwtToken{AccessToken: generateJWT(username, gid, exp_tm), Type: "Bearer", ExpiresIn: int64(JwtValidInt/time.Second)}
+	token := spb.JwtToken{AccessToken: generateJWT(username, roles, exp_tm), Type: "Bearer", ExpiresIn: int64(JwtValidInt/time.Second)}
 	return &token
 }
 
@@ -90,7 +90,7 @@ func JwtAuthenAndAuthor(ctx context.Context, admin_required bool) (*spb.JwtToken
 	// 	return &token, ctx, status.Errorf(codes.Unauthenticated, "")	
 	// }
 	rc.Auth.User = claims.Username
-	rc.Auth.Group = claims.Gid
+	rc.Auth.Roles = claims.Roles
 	return &token, ctx, nil
 }
 
