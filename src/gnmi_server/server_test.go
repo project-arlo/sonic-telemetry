@@ -34,6 +34,8 @@ import (
     gclient "github.com/jipanyang/gnmi/client/gnmi"
     "github.com/jipanyang/gnxi/utils/xpath"
     gnoi_system_pb "github.com/openconfig/gnoi/system"
+    gnoi_sonic_pb "proto/gnoi"
+    "google.golang.org/grpc/metadata"
 )
 
 var clientTypes = []string{gclient.Type}
@@ -82,7 +84,7 @@ func loadDB(t *testing.T, rclient *redis.Client, mpi map[string]interface{}) {
     }
 }
 
-func createServer(t *testing.T, port int64) *Server {
+func createServer(t *testing.T, port int64, auth *AuthTypes) *Server {
     certificate, err := testcert.NewCert()
     if err != nil {
         t.Errorf("could not load server key pair: %s", err)
@@ -93,7 +95,7 @@ func createServer(t *testing.T, port int64) *Server {
     }
 
     opts := []grpc.ServerOption{grpc.Creds(credentials.NewTLS(tlsCfg))}
-    cfg := &Config{Port: port}
+    cfg := &Config{Port: port, UserAuth: *auth}
     s, err := NewServer(cfg, opts)
     if err != nil {
         t.Errorf("Failed to create gNMI server: %v", err)
@@ -457,7 +459,7 @@ func unitTestFromFile(filename string) (UnitTest, error) {
 
 func TestGnmiGetSet(t *testing.T) {
     //t.Log("Start sevrer")
-    s := createServer(t, 8081)
+    s := createServer(t, 8081, nil)
     go runServer(t, s)
 
     //t.Log("Start gNMI client")
@@ -1446,7 +1448,7 @@ func runTestSubscribe(t *testing.T) {
 
 func TestCapabilities(t *testing.T) {
     //t.Log("Start server")
-    s := createServer(t, 8082)
+    s := createServer(t, 8082, nil)
     go runServer(t, s)
     defer s.s.Stop()
 
@@ -1479,7 +1481,7 @@ func TestCapabilities(t *testing.T) {
 }
 
 func TestGNOI(t *testing.T) {
-    s := createServer(t, 8083)
+    s := createServer(t, 8083, nil)
     go runServer(t, s)
     defer s.s.Stop()
 
@@ -1567,7 +1569,62 @@ func TestGNOI(t *testing.T) {
     }
 }
 
+func TestJWTAuth(t *testing.T) {
+    var auth = AuthTypes{"password": false, "cert": false, "jwt": true}
+    
 
+    s := createServer(t, 8083, &auth)
+    go runServer(t, s)
+    defer s.s.Stop()
+
+    // prepareDb(t)
+
+    //t.Log("Start gNMI client")
+    tlsConfig := &tls.Config{InsecureSkipVerify: true}
+    opts := []grpc.DialOption{grpc.WithTransportCredentials(credentials.NewTLS(tlsConfig))}
+
+    //targetAddr := "30.57.185.38:8080"
+    targetAddr := "127.0.0.1:8083"
+    conn, err := grpc.Dial(targetAddr, opts...)
+    if err != nil {
+        t.Fatalf("Dialing to %q failed: %v", targetAddr, err)
+    }
+    defer conn.Close()
+
+
+    ctx, cancel := context.WithTimeout(context.Background(), 240*time.Second)
+    defer cancel()
+
+    t.Run("SystemTime", func(t *testing.T) {
+        sncc := gnoi_sonic_pb.NewSonicServiceClient(conn)
+        var req = gnoi_sonic_pb.AuthenticateRequest{Username: "testuser", Password: "password"}
+        resp,err := sncc.Authenticate(ctx, &req)
+        if err != nil {
+            t.Fatal(err.Error())
+        }
+        sc := gnoi_system_pb.NewSystemClient(conn)
+        // Test with no JWT specified
+        _,err = sc.Time(ctx, new(gnoi_system_pb.TimeRequest))
+        if err == nil {
+            t.Fatal("No error on unauthenticated request, expected permission denied")
+        }
+        // Test with valid JWT
+        actx := metadata.AppendToOutgoingContext(ctx, "access_token", resp.Token.AccessToken)
+        _,err = sc.Time(actx, new(gnoi_system_pb.TimeRequest))
+        if err != nil {
+            t.Fatal(err.Error())
+        }
+        //Test with invalid JWT
+        resp.Token.AccessToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwiZXhwIjoxNTczNTAwNzQ4fQ.vLiPBWCxcot_n7B5d3eKEX5yVAjh7R5LCWF3G9h3804"
+        bctx := metadata.AppendToOutgoingContext(ctx, "access_token", resp.Token.AccessToken)
+        _,err = sc.Time(bctx, new(gnoi_system_pb.TimeRequest))
+        if err == nil {
+            t.Fatal("Invalid JWT specified, was expecting Unauthenticated.")
+        }
+        
+
+    })
+}
 func init() {
     // Inform gNMI server to use redis tcp localhost connection
     sdc.UseRedisLocalTcpPort = true
