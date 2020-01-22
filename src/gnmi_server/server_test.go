@@ -1621,8 +1621,57 @@ func TestJWTAuth(t *testing.T) {
         if err == nil {
             t.Fatal("Invalid JWT specified, was expecting Unauthenticated.")
         }
-        
+    })
+}
 
+func TestPasswordAuth(t *testing.T) {
+    var auth = AuthTypes{"password": true, "cert": false, "jwt": false}
+    
+
+    s := createServer(t, 8083, &auth)
+    go runServer(t, s)
+    defer s.s.Stop()
+
+    // prepareDb(t)
+
+    //t.Log("Start gNMI client")
+    tlsConfig := &tls.Config{InsecureSkipVerify: true}
+    opts := []grpc.DialOption{grpc.WithTransportCredentials(credentials.NewTLS(tlsConfig))}
+
+    //targetAddr := "30.57.185.38:8080"
+    targetAddr := "127.0.0.1:8083"
+    conn, err := grpc.Dial(targetAddr, opts...)
+    if err != nil {
+        t.Fatalf("Dialing to %q failed: %v", targetAddr, err)
+    }
+    defer conn.Close()
+
+
+    ctx, cancel := context.WithTimeout(context.Background(), 240*time.Second)
+    defer cancel()
+
+    t.Run("SystemTime", func(t *testing.T) {
+
+        sc := gnoi_system_pb.NewSystemClient(conn)
+        // Test with no user/pass specified
+        _,err = sc.Time(ctx, new(gnoi_system_pb.TimeRequest))
+        if err == nil {
+            t.Fatal("No error on unauthenticated request, expected permission denied")
+        }
+        // Test with valid user/pass
+        actx := metadata.AppendToOutgoingContext(ctx, "username", "testuser", "password", "password")
+
+        _,err = sc.Time(actx, new(gnoi_system_pb.TimeRequest))
+        if err != nil {
+            t.Fatal(err.Error())
+        }
+        //Test with invalid user/pass
+        
+        bctx := metadata.AppendToOutgoingContext(ctx, "username", "testuser", "password", "fakepass")
+        _,err = sc.Time(bctx, new(gnoi_system_pb.TimeRequest))
+        if err == nil {
+            t.Fatal("Invalid Password specified, was expecting Unauthenticated.")
+        }
     })
 }
 func init() {
