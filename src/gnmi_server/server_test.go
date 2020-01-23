@@ -5,6 +5,7 @@ package gnmi_server
 
 import (
     "crypto/tls"
+    "crypto/x509"
     "encoding/json"
     testcert "testdata/tls"
     "github.com/go-redis/redis"
@@ -92,6 +93,18 @@ func createServer(t *testing.T, port int64, auth *AuthTypes) *Server {
     tlsCfg := &tls.Config{
         ClientAuth:   tls.RequestClientCert,
         Certificates: []tls.Certificate{certificate},
+    }
+    if auth != nil && auth.Enabled("cert") {
+        tlsCfg.ClientAuth = tls.RequireAndVerifyClientCert
+        ca, err := ioutil.ReadFile("testdata/tls/ca.crt")
+        if err != nil {
+            t.Errorf("could not read CA certificate: %s", err)
+        }
+        certPool := x509.NewCertPool()
+        if ok := certPool.AppendCertsFromPEM(ca); !ok {
+            t.Errorf("failed to append CA certificate")
+        }
+        tlsCfg.ClientCAs = certPool
     }
 
     opts := []grpc.ServerOption{grpc.Creds(credentials.NewTLS(tlsCfg))}
@@ -1672,6 +1685,55 @@ func TestPasswordAuth(t *testing.T) {
         if err == nil {
             t.Fatal("Invalid Password specified, was expecting Unauthenticated.")
         }
+    })
+}
+
+func TestCertAuth(t *testing.T) {
+    var auth = AuthTypes{"password": false, "cert": true, "jwt": false}
+    
+
+    s := createServer(t, 8083, &auth)
+    go runServer(t, s)
+    defer s.s.Stop()
+
+
+    certificate, err := tls.LoadX509KeyPair("testdata/tls/testuser.crt", "testdata/tls/testuser.key")
+    if err != nil {
+            t.Fatalf("could not load client key pair: %s", err)
+    }
+    
+    client_cert := []tls.Certificate{certificate}
+
+
+
+
+    tlsConfig := &tls.Config{
+        InsecureSkipVerify: true,
+        Certificates: client_cert,
+    }
+    opts := []grpc.DialOption{grpc.WithTransportCredentials(credentials.NewTLS(tlsConfig))}
+
+    //targetAddr := "30.57.185.38:8080"
+    targetAddr := "127.0.0.1:8083"
+    conn, err := grpc.Dial(targetAddr, opts...)
+    if err != nil {
+        t.Fatalf("Dialing to %q failed: %v", targetAddr, err)
+    }
+    defer conn.Close()
+
+
+    ctx, cancel := context.WithTimeout(context.Background(), 240*time.Second)
+    defer cancel()
+
+    t.Run("SystemTime", func(t *testing.T) {
+
+        sc := gnoi_system_pb.NewSystemClient(conn)
+
+        _,err = sc.Time(ctx, new(gnoi_system_pb.TimeRequest))
+        if err != nil {
+            t.Fatal(err.Error())
+        }
+       
     })
 }
 func init() {
