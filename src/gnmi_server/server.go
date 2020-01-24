@@ -141,24 +141,28 @@ func (srv *Server) Port() int64 {
 	return srv.config.Port
 }
 
-func authenticate(UserAuth AuthTypes, ctx context.Context, admin_required bool) (context.Context,error) {
+func authenticate(UserAuth AuthTypes, ctx context.Context) (context.Context,error) {
 	var err error
 	success := false
 
+	if !UserAuth.Any() {
+		//No Auth enabled
+		return ctx, nil
+	}
 	if UserAuth.Enabled("password") {
-		ctx, err = BasicAuthenAndAuthor(ctx, admin_required)
+		ctx, err = BasicAuthenAndAuthor(ctx)
 		if err == nil {
 			success = true
 		}
 	}
 	if !success && UserAuth.Enabled("jwt") {
-		_,ctx,err = JwtAuthenAndAuthor(ctx, admin_required)
+		_,ctx,err = JwtAuthenAndAuthor(ctx)
 		if err == nil {
 			success = true
 		}
 	}
 	if !success && UserAuth.Enabled("cert") {
-		ctx,err = ClientCertAuthenAndAuthor(ctx, admin_required)
+		ctx,err = ClientCertAuthenAndAuthor(ctx)
 		if err == nil {
 			success = true
 		}
@@ -175,7 +179,7 @@ func authenticate(UserAuth AuthTypes, ctx context.Context, admin_required bool) 
 func (srv *Server) Subscribe(stream gnmipb.GNMI_SubscribeServer) error {
 
 	ctx := stream.Context()
-	ctx, err := authenticate(srv.config.UserAuth, ctx, false)
+	ctx, err := authenticate(srv.config.UserAuth, ctx)
 	if err != nil {
 		return err
 	}
@@ -234,7 +238,7 @@ func (s *Server) checkEncodingAndModel(encoding gnmipb.Encoding, models []*gnmip
 
 // Get implements the Get RPC in gNMI spec.
 func (srv *Server) Get(ctx context.Context, req *gnmipb.GetRequest) (*gnmipb.GetResponse, error) {
-	ctx, err := authenticate(srv.config.UserAuth, ctx, false)
+	ctx, err := authenticate(srv.config.UserAuth, ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -291,7 +295,7 @@ func (srv *Server) Get(ctx context.Context, req *gnmipb.GetRequest) (*gnmipb.Get
 
 // Set method is not implemented. Refer to gnxi for examples with openconfig integration
 func (srv *Server) Set(ctx context.Context,req *gnmipb.SetRequest) (*gnmipb.SetResponse, error) {
-	ctx, err := authenticate(srv.config.UserAuth, ctx, true)
+	ctx, err := authenticate(srv.config.UserAuth, ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -371,7 +375,7 @@ func (srv *Server) Set(ctx context.Context,req *gnmipb.SetRequest) (*gnmipb.SetR
 
 // Capabilities method is not implemented. Refer to gnxi for examples with openconfig integration
 func (srv *Server) Capabilities(ctx context.Context, req *gnmipb.CapabilityRequest) (*gnmipb.CapabilityResponse, error) {
-	ctx, err := authenticate(srv.config.UserAuth, ctx, false)
+	ctx, err := authenticate(srv.config.UserAuth, ctx)
 	if err != nil {
 		return nil, err
 	}
