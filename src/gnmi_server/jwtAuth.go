@@ -60,7 +60,7 @@ func tokenResp(username string, roles []string) *spb.JwtToken {
 	return &token
 }
 
-func JwtAuthenAndAuthor(ctx context.Context, admin_required bool) (*spb.JwtToken, context.Context, error) {
+func JwtAuthenAndAuthor(ctx context.Context) (*spb.JwtToken, context.Context, error) {
 	rc, ctx := common_utils.GetContext(ctx)
 	var token spb.JwtToken
 	md, ok := metadata.FromIncomingContext(ctx)
