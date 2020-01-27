@@ -11,7 +11,7 @@ import (
 type AuthInfo struct {
 	// Username
 	User string
-
+	AuthEnabled bool
 	// Roles
 	Roles []string
 }
