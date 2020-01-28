@@ -11,13 +11,7 @@ import (
 type AuthInfo struct {
 	// Username
 	User string
-
-	// Group name (primary group)
-	Group string
-
-	// Additional groups
-	Groups []string
-
+	AuthEnabled bool
 	// Roles
 	Roles []string
 }

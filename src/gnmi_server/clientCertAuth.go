@@ -10,7 +10,7 @@ import (
 	"common_utils"
 	"github.com/golang/glog"
 )
-func ClientCertAuthenAndAuthor(ctx context.Context, admin_required bool) (context.Context, error) {
+func ClientCertAuthenAndAuthor(ctx context.Context) (context.Context, error) {
 	rc, ctx := common_utils.GetContext(ctx)
 	p, ok := peer.FromContext(ctx)
 	if !ok {
@@ -32,9 +32,6 @@ func ClientCertAuthenAndAuthor(ctx context.Context, admin_required bool) (contex
 		return ctx, status.Error(codes.Unauthenticated, "invalid username in certificate common name.")
 	}
 
-	if DoesUserExist(username) == false {
-		return ctx, status.Error(codes.Unauthenticated, "invalid username in certificate common name.")
-	}
 	if err := PopulateAuthStruct(username, &rc.Auth); err != nil {
 		glog.Infof("[%s] Failed to retrieve authentication information; %v", rc.ID, err)
 		return ctx, status.Errorf(codes.Unauthenticated, "")	
