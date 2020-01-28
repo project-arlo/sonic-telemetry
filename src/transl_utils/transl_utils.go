@@ -82,9 +82,6 @@ func TranslProcessGet(uriPath string, op *string, ctx context.Context) (*gnmipb.
 	var data []byte
 	rc, ctx := common_utils.GetContext(ctx)
 	req := translib.GetRequest{Path:uriPath, User: translib.UserRoles{Name: rc.Auth.User, Roles: rc.Auth.Roles}}
-	if rc.Auth.AuthEnabled {
-		req.AuthEnabled = true
-	}
 	resp, err1 := translib.Get(req)
 
 	if isTranslibSuccess(err1) {
@@ -113,9 +110,6 @@ func TranslProcessDelete(uri string, ctx context.Context) error {
 	payload := []byte(str3)
 	rc, ctx := common_utils.GetContext(ctx)
 	req := translib.SetRequest{Path:uri, Payload:payload, User: translib.UserRoles{Name: rc.Auth.User, Roles: rc.Auth.Roles}}
-	if rc.Auth.AuthEnabled {
-		req.AuthEnabled = true
-	}
 	resp, err := translib.Delete(req)
 	if err != nil{
 		log.V(2).Infof("DELETE operation failed with error =%v", resp.ErrSrc)
@@ -135,9 +129,6 @@ func TranslProcessReplace(uri string, t *gnmipb.TypedValue, ctx context.Context)
 	payload := []byte(str3)
 	rc, ctx := common_utils.GetContext(ctx)
 	req := translib.SetRequest{Path:uri, Payload:payload, User: translib.UserRoles{Name: rc.Auth.User, Roles: rc.Auth.Roles}}
-	if rc.Auth.AuthEnabled {
-		req.AuthEnabled = true
-	}
 	resp, err1 := translib.Create(req)
 	if err1 != nil{
 		//If Create fails, it may be due to object already existing/can not be created
@@ -163,9 +154,6 @@ func TranslProcessUpdate(uri string, t *gnmipb.TypedValue, ctx context.Context) 
 	payload := []byte(str3)
 	rc, ctx := common_utils.GetContext(ctx)
 	req := translib.SetRequest{Path:uri, Payload:payload, User: translib.UserRoles{Name: rc.Auth.User, Roles: rc.Auth.Roles}}
-	if rc.Auth.AuthEnabled {
-		req.AuthEnabled = true
-	}
 	resp, err := translib.Create(req)
 	if err != nil{
 		//If Create fails, it may be due to object already existing/can not be created
@@ -183,9 +171,6 @@ func TranslProcessUpdate(uri string, t *gnmipb.TypedValue, ctx context.Context) 
 func TranslProcessAction(uri string, payload []byte, ctx context.Context) ([]byte, error) {
 	rc, ctx := common_utils.GetContext(ctx)
 	req := translib.ActionRequest{User: translib.UserRoles{Name: rc.Auth.User, Roles: rc.Auth.Roles}}
-	if rc.Auth.AuthEnabled {
-		req.AuthEnabled = true
-	}
 	req.Path = uri
 	req.Payload = payload
 

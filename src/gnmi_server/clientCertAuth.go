@@ -10,7 +10,7 @@ import (
 	"common_utils"
 	"github.com/golang/glog"
 )
-func ClientCertAuthenAndAuthor(ctx context.Context) (context.Context, error) {
+func ClientCertAuthenAndAuthor(ctx context.Context, admin_required bool) (context.Context, error) {
 	rc, ctx := common_utils.GetContext(ctx)
 	p, ok := peer.FromContext(ctx)
 	if !ok {

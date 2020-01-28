@@ -9,7 +9,7 @@ import (
 	"common_utils"
 )
 
-func BasicAuthenAndAuthor(ctx context.Context) (context.Context, error) {
+func BasicAuthenAndAuthor(ctx context.Context, admin_required bool) (context.Context, error) {
 	rc, ctx := common_utils.GetContext(ctx)
 	md, ok := metadata.FromIncomingContext(ctx)
 	if !ok {

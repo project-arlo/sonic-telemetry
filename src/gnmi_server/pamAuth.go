@@ -62,7 +62,6 @@ func GetUserRoles(usr *user.User) ([]string, error) {
 	return roles, nil
 }
 func PopulateAuthStruct(username string, auth *common_utils.AuthInfo) error {
-	auth.AuthEnabled = true
 	usr, err := user.Lookup(username)
 	if err != nil {
 		return err
