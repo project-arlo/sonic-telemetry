@@ -332,15 +332,14 @@ func (srv *Server) Refresh(ctx context.Context, req *spb.RefreshRequest) (*spb.R
 }
 
 func (srv *Server) ClearNeighbors(ctx context.Context, req *spb.ClearNeighborsRequest) (*spb.ClearNeighborsResponse, error) {
-    ctx,err := authenticate(srv.config.UserAuth, ctx, false)
+    ctx,err := authenticate(srv.config.UserAuth, ctx)
     if err != nil {
         return nil, err
     }
     log.V(1).Info("gNOI: Sonic ClearNeighbors")
 
     resp := &spb.ClearNeighborsResponse{
-        Output: &spb.SonicOutput {
-
+		Output: &spb.ClearNeighborsResponse_Output {
         },
     }
 

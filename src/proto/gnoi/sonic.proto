@@ -44,9 +44,8 @@ message ClearNeighborsRequest {
     message Input {
         bool force = 1;
         string family = 2;
-        bool all = 3;
-        string ip = 4;
-        string ifname = 5;
+        string ip = 3;
+        string ifname = 4;
     }
     Input input = 1 [(gogoproto.jsontag) = "sonic-neighbor:input", (gogoproto.moretags) = "xml:\",comment\""];
 }
