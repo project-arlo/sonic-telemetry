@@ -337,6 +337,7 @@ func (srv *Server) ClearNeighbors(ctx context.Context, req *spb.ClearNeighborsRe
         return nil, err
     }
     log.V(1).Info("gNOI: Sonic ClearNeighbors")
+    log.V(1).Info("Request: ", req)
 
     resp := &spb.ClearNeighborsResponse{
 		Output: &spb.ClearNeighborsResponse_Output {
