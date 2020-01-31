@@ -8,6 +8,9 @@ import (
 	"errors"
 	"github.com/golang/glog"
 )
+
+var RbacDisable bool
+
 type UserCredential struct {
 	Username string
 	Password string
@@ -61,20 +64,23 @@ func GetUserRoles(usr *user.User) ([]string, error) {
 	}
 	return roles, nil
 }
-func PopulateAuthStruct(username string, auth *common_utils.AuthInfo) error {
-	auth.AuthEnabled = true
-	usr, err := user.Lookup(username)
-	if err != nil {
-		return err
-	}
+func PopulateAuthStruct(username string, auth *common_utils.AuthInfo, r []string) error {
+	auth.AuthEnabled = !RbacDisable
+	if len(r) == 0 {
+		usr, err := user.Lookup(username)
+		if err != nil {
+			return err
+		}
 
+		roles, err := GetUserRoles(usr)
+		if err != nil {
+			return err
+		}
+		auth.Roles = roles
+	} else {
+		auth.Roles = r
+	}
 	auth.User = username
-
-	roles, err := GetUserRoles(usr)
-	if err != nil {
-		return err
-	}
-	auth.Roles = roles
 	
 	return nil
 }

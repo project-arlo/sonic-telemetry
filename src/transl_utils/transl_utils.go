@@ -91,7 +91,7 @@ func TranslProcessGet(uriPath string, op *string, ctx context.Context) (*gnmipb.
 		data = resp.Payload
 	} else {
 		log.V(2).Infof("GET operation failed with error =%v", resp.ErrSrc)
-		return nil, fmt.Errorf("GET failed for this message")
+		return nil, fmt.Errorf("GET failed for this message: %s", err1.Error())
 	}
 
 	dst := new(bytes.Buffer)
@@ -119,7 +119,7 @@ func TranslProcessDelete(uri string, ctx context.Context) error {
 	resp, err := translib.Delete(req)
 	if err != nil{
 		log.V(2).Infof("DELETE operation failed with error =%v", resp.ErrSrc)
-		return fmt.Errorf("DELETE failed for this message")
+		return fmt.Errorf("DELETE failed for this message: %s", err.Error())
 	}
 
 	return nil
@@ -146,7 +146,7 @@ func TranslProcessReplace(uri string, t *gnmipb.TypedValue, ctx context.Context)
 	}
 	if err1 != nil{
 		log.V(2).Infof("REPLACE operation failed with error =%v", resp.ErrSrc)
-		return fmt.Errorf("REPLACE failed for this message")
+		return fmt.Errorf("REPLACE failed for this message: %s", err1.Error())
 	}
 
 
@@ -174,7 +174,7 @@ func TranslProcessUpdate(uri string, t *gnmipb.TypedValue, ctx context.Context) 
 	}
 	if err != nil{
 		log.V(2).Infof("UPDATE operation failed with error =%v", resp.ErrSrc)
-		return fmt.Errorf("UPDATE failed for this message")
+		return fmt.Errorf("UPDATE failed for this message: %s", err.Error())
 	}
 	return nil
 }
@@ -193,7 +193,7 @@ func TranslProcessAction(uri string, payload []byte, ctx context.Context) ([]byt
 
 	if err != nil{
 		log.V(2).Infof("Action operation failed with error =%v", resp.ErrSrc)
-		return nil, fmt.Errorf("Action failed for this message")
+		return nil, fmt.Errorf("Action failed for this message: %s", err.Error())
 	}
 	return resp.Payload, nil
 }

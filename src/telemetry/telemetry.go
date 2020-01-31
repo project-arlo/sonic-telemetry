@@ -22,12 +22,11 @@ var (
 	serverCert        = flag.String("server_crt", "", "TLS server certificate")
 	serverKey         = flag.String("server_key", "", "TLS server private key")
 	insecure          = flag.Bool("insecure", false, "Skip providing TLS cert and key, for testing only!")
-	jwtRefInt         = flag.Uint64("jwt_refresh_int", 30, "Seconds before JWT expiry the token can be refreshed.")
-	jwtValInt         = flag.Uint64("jwt_valid_int", 3600, "Seconds that JWT token is valid for.")
 )
 
 func main() {
 	flag.Var(userAuth, "client_auth", "Client auth mode(s) - cert,password,jwt")
+	flag.BoolVar(&gnmi.RbacDisable, "rbac-disable", false, "Enabled/Disable RBAC")
 	flag.Parse()
 
 	switch {
@@ -37,8 +36,8 @@ func main() {
 	}
 	var certificate tls.Certificate
 	var err error
-	gnmi.JwtRefreshInt = time.Duration(*jwtRefInt*uint64(time.Second))
-	gnmi.JwtValidInt = time.Duration(*jwtValInt*uint64(time.Second))
+	gnmi.JwtRefreshInt = time.Duration(30*time.Second)
+	gnmi.JwtValidInt = time.Duration(3600*time.Second)
 	if *insecure {
 		certificate, err = testcert.NewCert()
 		if err != nil {

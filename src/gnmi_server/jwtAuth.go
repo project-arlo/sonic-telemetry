@@ -11,6 +11,7 @@ import (
 	"crypto/rand"
 	spb "proto/gnoi"
 	"common_utils"
+	"github.com/golang/glog"
 )
 
 var (
@@ -85,12 +86,11 @@ func JwtAuthenAndAuthor(ctx context.Context) (*spb.JwtToken, context.Context, er
 	if !tkn.Valid {
 		return &token, ctx, status.Errorf(codes.Unauthenticated, "Invalid JWT Token")
 	}
-	// if err := PopulateAuthStruct(claims.Username, &rc.Auth); err != nil {
-	// 	glog.Infof("[%s] Failed to retrieve authentication information; %v", rc.ID, err)
-	// 	return &token, ctx, status.Errorf(codes.Unauthenticated, "")	
-	// }
-	rc.Auth.User = claims.Username
-	rc.Auth.Roles = claims.Roles
+	if err := PopulateAuthStruct(claims.Username, &rc.Auth, claims.Roles); err != nil {
+		glog.Infof("[%s] Failed to retrieve authentication information; %v", rc.ID, err)
+		return &token, ctx, status.Errorf(codes.Unauthenticated, "")	
+	}
+	
 	return &token, ctx, nil
 }
 

@@ -32,7 +32,7 @@ func ClientCertAuthenAndAuthor(ctx context.Context) (context.Context, error) {
 		return ctx, status.Error(codes.Unauthenticated, "invalid username in certificate common name.")
 	}
 
-	if err := PopulateAuthStruct(username, &rc.Auth); err != nil {
+	if err := PopulateAuthStruct(username, &rc.Auth, nil); err != nil {
 		glog.Infof("[%s] Failed to retrieve authentication information; %v", rc.ID, err)
 		return ctx, status.Errorf(codes.Unauthenticated, "")	
 	}
