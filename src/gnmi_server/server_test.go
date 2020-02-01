@@ -5,6 +5,7 @@ package gnmi_server
 
 import (
     "crypto/tls"
+    "crypto/x509"
     "encoding/json"
     testcert "testdata/tls"
     "github.com/go-redis/redis"
@@ -34,6 +35,8 @@ import (
     gclient "github.com/jipanyang/gnmi/client/gnmi"
     "github.com/jipanyang/gnxi/utils/xpath"
     gnoi_system_pb "github.com/openconfig/gnoi/system"
+    gnoi_sonic_pb "proto/gnoi"
+    "google.golang.org/grpc/metadata"
 )
 
 var clientTypes = []string{gclient.Type}
@@ -82,21 +85,33 @@ func loadDB(t *testing.T, rclient *redis.Client, mpi map[string]interface{}) {
     }
 }
 
-func createServer(t *testing.T, port int64) *Server {
+func createServer(t *testing.T, port int64, auth AuthTypes) *Server {
     certificate, err := testcert.NewCert()
     if err != nil {
-        t.Errorf("could not load server key pair: %s", err)
+        t.Fatalf("could not load server key pair: %s", err)
     }
     tlsCfg := &tls.Config{
         ClientAuth:   tls.RequestClientCert,
         Certificates: []tls.Certificate{certificate},
     }
+    if auth != nil && auth.Enabled("cert") {
+        tlsCfg.ClientAuth = tls.RequireAndVerifyClientCert
+        ca, err := ioutil.ReadFile("testdata/tls/ca.crt")
+        if err != nil {
+            t.Fatalf("could not read CA certificate: %s", err)
+        }
+        certPool := x509.NewCertPool()
+        if ok := certPool.AppendCertsFromPEM(ca); !ok {
+            t.Fatalf("failed to append CA certificate")
+        }
+        tlsCfg.ClientCAs = certPool
+    }
 
     opts := []grpc.ServerOption{grpc.Creds(credentials.NewTLS(tlsCfg))}
-    cfg := &Config{Port: port}
+    cfg := &Config{Port: port, UserAuth: auth}
     s, err := NewServer(cfg, opts)
     if err != nil {
-        t.Errorf("Failed to create gNMI server: %v", err)
+        t.Fatalf("Failed to create gNMI server: %v", err)
     }
     return s
 }
@@ -457,7 +472,7 @@ func unitTestFromFile(filename string) (UnitTest, error) {
 
 func TestGnmiGetSet(t *testing.T) {
     //t.Log("Start sevrer")
-    s := createServer(t, 8081)
+    s := createServer(t, 8081, nil)
     go runServer(t, s)
 
     //t.Log("Start gNMI client")
@@ -1446,7 +1461,7 @@ func runTestSubscribe(t *testing.T) {
 
 func TestCapabilities(t *testing.T) {
     //t.Log("Start server")
-    s := createServer(t, 8082)
+    s := createServer(t, 8082, nil)
     go runServer(t, s)
     defer s.s.Stop()
 
@@ -1479,7 +1494,7 @@ func TestCapabilities(t *testing.T) {
 }
 
 func TestGNOI(t *testing.T) {
-    s := createServer(t, 8083)
+    s := createServer(t, 8083, nil)
     go runServer(t, s)
     defer s.s.Stop()
 
@@ -1565,6 +1580,310 @@ func TestGNOI(t *testing.T) {
 	}
     })
     }
+}
+
+func TestJWTAuth(t *testing.T) {
+    var auth = AuthTypes{"password": false, "cert": false, "jwt": true}
+    
+
+    s := createServer(t, 8083, auth)
+    go runServer(t, s)
+    defer s.s.Stop()
+
+    // prepareDb(t)
+
+    //t.Log("Start gNMI client")
+    tlsConfig := &tls.Config{InsecureSkipVerify: true}
+    opts := []grpc.DialOption{grpc.WithTransportCredentials(credentials.NewTLS(tlsConfig))}
+
+    //targetAddr := "30.57.185.38:8080"
+    targetAddr := "127.0.0.1:8083"
+    conn, err := grpc.Dial(targetAddr, opts...)
+    if err != nil {
+        t.Fatalf("Dialing to %q failed: %v", targetAddr, err)
+    }
+    defer conn.Close()
+
+
+    ctx, cancel := context.WithTimeout(context.Background(), 240*time.Second)
+    defer cancel()
+
+    t.Run("SystemTime", func(t *testing.T) {
+        sncc := gnoi_sonic_pb.NewSonicServiceClient(conn)
+        var req = gnoi_sonic_pb.AuthenticateRequest{Username: "testuser", Password: "password"}
+        resp,err := sncc.Authenticate(ctx, &req)
+        if err != nil {
+            t.Fatal(err.Error())
+        }
+        sc := gnoi_system_pb.NewSystemClient(conn)
+        // Test with no JWT specified
+        _,err = sc.Time(ctx, new(gnoi_system_pb.TimeRequest))
+        if err == nil {
+            t.Fatal("No error on unauthenticated request, expected permission denied")
+        }
+        // Test with valid JWT
+        actx := metadata.AppendToOutgoingContext(ctx, "access_token", resp.Token.AccessToken)
+        _,err = sc.Time(actx, new(gnoi_system_pb.TimeRequest))
+        if err != nil {
+            t.Fatal(err.Error())
+        }
+        //Test with invalid JWT
+        resp.Token.AccessToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwiZXhwIjoxNTczNTAwNzQ4fQ.vLiPBWCxcot_n7B5d3eKEX5yVAjh7R5LCWF3G9h3804"
+        bctx := metadata.AppendToOutgoingContext(ctx, "access_token", resp.Token.AccessToken)
+        _,err = sc.Time(bctx, new(gnoi_system_pb.TimeRequest))
+        if err == nil {
+            t.Fatal("Invalid JWT specified, was expecting Unauthenticated.")
+        }
+    })
+}
+
+func TestPasswordAuth(t *testing.T) {
+    var auth = AuthTypes{"password": true, "cert": false, "jwt": false}
+    
+
+    s := createServer(t, 8083, auth)
+    go runServer(t, s)
+    defer s.s.Stop()
+
+    // prepareDb(t)
+
+    //t.Log("Start gNMI client")
+    tlsConfig := &tls.Config{InsecureSkipVerify: true}
+    opts := []grpc.DialOption{grpc.WithTransportCredentials(credentials.NewTLS(tlsConfig))}
+
+    //targetAddr := "30.57.185.38:8080"
+    targetAddr := "127.0.0.1:8083"
+    conn, err := grpc.Dial(targetAddr, opts...)
+    if err != nil {
+        t.Fatalf("Dialing to %q failed: %v", targetAddr, err)
+    }
+    defer conn.Close()
+
+
+    ctx, cancel := context.WithTimeout(context.Background(), 240*time.Second)
+    defer cancel()
+
+    t.Run("SystemTime", func(t *testing.T) {
+
+        sc := gnoi_system_pb.NewSystemClient(conn)
+        // Test with no user/pass specified
+        _,err = sc.Time(ctx, new(gnoi_system_pb.TimeRequest))
+        if err == nil {
+            t.Fatal("No error on unauthenticated request, expected permission denied")
+        }
+        // Test with valid user/pass
+        actx := metadata.AppendToOutgoingContext(ctx, "username", "testuser", "password", "password")
+
+        _,err = sc.Time(actx, new(gnoi_system_pb.TimeRequest))
+        if err != nil {
+            t.Fatal(err.Error())
+        }
+        //Test with invalid user/pass
+        
+        bctx := metadata.AppendToOutgoingContext(ctx, "username", "testuser", "password", "fakepass")
+        _,err = sc.Time(bctx, new(gnoi_system_pb.TimeRequest))
+        if err == nil {
+            t.Fatal("Invalid Password specified, was expecting Unauthenticated.")
+        }
+    })
+    t.Run("LocalUserSetNoRBAC", func(t *testing.T) {
+        RbacDisable = true
+        prefix := pb.Path{Target: "OC_YANG"}
+        var pbPath pb.Path
+        path, err := xpath.ToGNMIPath("openconfig-interfaces:interfaces/interface[name=Ethernet8]/subinterfaces/subinterface[index=0]")
+        if err != nil {
+            t.Fatalf("error in parsing xpath %q to gnmi path, %v", path, err)
+        }
+        textPbPath := proto.MarshalTextString(path)
+        if err := proto.UnmarshalText(textPbPath, &pbPath); err != nil {
+            t.Fatalf("error in unmarshaling path: %v %v", textPbPath, err)
+        }
+        req = &pb.SetRequest{
+                            Delete: []*pb.Path{&pbPath},
+                            Prefix: &prefix,
+                }
+        _, err := gClient.Set(ctx, req)
+        
+        gotRetStatus, ok := status.FromError(err)
+        if !ok {
+            t.Fatal("got a non-grpc error from grpc call")
+        }
+        if gotRetStatus.Code() != codes.Ok {
+            t.Fatalf("Expect OK got: %v", gotRetStatus.String())
+        }
+    })
+    t.Run("LocalUserSetRBAC", func(t *testing.T) {
+        RbacDisable = false
+        prefix := pb.Path{Target: "OC_YANG"}
+        var pbPath pb.Path
+        path, err := xpath.ToGNMIPath("openconfig-interfaces:interfaces/interface[name=Ethernet8]/subinterfaces/subinterface[index=0]")
+        if err != nil {
+            t.Fatalf("error in parsing xpath %q to gnmi path, %v", path, err)
+        }
+        textPbPath := proto.MarshalTextString(path)
+        if err := proto.UnmarshalText(textPbPath, &pbPath); err != nil {
+            t.Fatalf("error in unmarshaling path: %v %v", textPbPath, err)
+        }
+        req = &pb.SetRequest{
+                            Delete: []*pb.Path{&pbPath},
+                            Prefix: &prefix,
+                }
+        _, err := gClient.Set(ctx, req)
+        
+        gotRetStatus, ok := status.FromError(err)
+        if !ok {
+            t.Fatal("got a non-grpc error from grpc call")
+        }
+        if gotRetStatus.Code() != codes.Unauthenticated {
+            t.Fatalf("Expect Unauthenticated got: %v", gotRetStatus.String())
+        }
+    })
+
+}
+
+func TestCertAuth(t *testing.T) {
+    var auth = AuthTypes{"password": false, "cert": true, "jwt": false}
+    
+
+    s := createServer(t, 8083, auth)
+    go runServer(t, s)
+    defer s.s.Stop()
+
+
+    certificate, err := tls.LoadX509KeyPair("testdata/tls/testuser.crt", "testdata/tls/testuser.key")
+    if err != nil {
+            t.Fatalf("could not load client key pair: %s", err)
+    }
+    
+    client_cert := []tls.Certificate{certificate}
+
+    tlsConfig := &tls.Config{
+        InsecureSkipVerify: true,
+        Certificates: client_cert,
+    }
+    opts := []grpc.DialOption{grpc.WithTransportCredentials(credentials.NewTLS(tlsConfig))}
+
+    //targetAddr := "30.57.185.38:8080"
+    targetAddr := "127.0.0.1:8083"
+    conn, err := grpc.Dial(targetAddr, opts...)
+    if err != nil {
+        t.Fatalf("Dialing to %q failed: %v", targetAddr, err)
+    }
+    defer conn.Close()
+
+
+    ctx, cancel := context.WithTimeout(context.Background(), 240*time.Second)
+    defer cancel()
+
+    t.Run("SystemTime", func(t *testing.T) {
+
+        sc := gnoi_system_pb.NewSystemClient(conn)
+
+        _,err = sc.Time(ctx, new(gnoi_system_pb.TimeRequest))
+        if err != nil {
+            t.Fatal(err.Error())
+        }
+       
+    })
+
+}
+func TestBadCertUserAuth(t *testing.T) {
+    var auth = AuthTypes{"password": false, "cert": true, "jwt": false}
+    
+    s := createServer(t, 8083, auth)
+    go runServer(t, s)
+    defer s.s.Stop()
+
+
+    certificate, err := tls.LoadX509KeyPair("testdata/tls/badmin.crt", "testdata/tls/badmin.key")
+    if err != nil {
+            t.Fatalf("could not load client key pair: %s", err)
+    }
+    
+    client_cert := []tls.Certificate{certificate}
+
+    tlsConfig := &tls.Config{
+        InsecureSkipVerify: true,
+        Certificates: client_cert,
+    }
+    opts := []grpc.DialOption{grpc.WithTransportCredentials(credentials.NewTLS(tlsConfig))}
+
+    //targetAddr := "30.57.185.38:8080"
+    targetAddr := "127.0.0.1:8083"
+    conn, err := grpc.Dial(targetAddr, opts...)
+    if err != nil {
+        t.Fatalf("Dialing to %q failed: %v", targetAddr, err)
+    }
+    defer conn.Close()
+
+
+    ctx, cancel := context.WithTimeout(context.Background(), 240*time.Second)
+    defer cancel()
+
+    t.Run("SystemTime", func(t *testing.T) {
+
+        sc := gnoi_system_pb.NewSystemClient(conn)
+
+        _,err = sc.Time(ctx, new(gnoi_system_pb.TimeRequest))
+        if err != nil {
+            gotRetStatus, _ := status.FromError(err)
+            if gotRetStatus.Code() != codes.Unauthenticated {
+                t.Fatalf("Expected unauthenticated, got %s", gotRetStatus.Code())
+            }
+        } else {
+            t.Fatal("Expected Unauthenticated, got no error!")
+        }
+       
+    })
+
+}
+func TestBadCertAuth(t *testing.T) {
+    var auth = AuthTypes{"password": false, "cert": true, "jwt": false}
+    
+    s := createServer(t, 8083, auth)
+    go runServer(t, s)
+    defer s.s.Stop()
+
+
+    certificate, err := tls.LoadX509KeyPair("testdata/tls/bad_cert.crt", "testdata/tls/bad_cert.key")
+    if err != nil {
+            t.Fatalf("could not load client key pair: %s", err)
+    }
+    
+    client_cert := []tls.Certificate{certificate}
+
+    tlsConfig := &tls.Config{
+        InsecureSkipVerify: true,
+        Certificates: client_cert,
+    }
+    opts := []grpc.DialOption{grpc.WithTransportCredentials(credentials.NewTLS(tlsConfig))}
+
+    //targetAddr := "30.57.185.38:8080"
+    targetAddr := "127.0.0.1:8083"
+    conn, err := grpc.Dial(targetAddr, opts...)
+    if err != nil {
+        t.Fatalf("Dialing to %q failed: %v", targetAddr, err)
+    }
+    defer conn.Close()
+
+    ctx, cancel := context.WithTimeout(context.Background(), 240*time.Second)
+    defer cancel()
+
+    t.Run("SystemTime", func(t *testing.T) {
+
+        sc := gnoi_system_pb.NewSystemClient(conn)
+
+        _,err = sc.Time(ctx, new(gnoi_system_pb.TimeRequest))
+        if err != nil {
+            gotRetStatus, _ := status.FromError(err)
+            if gotRetStatus.Code() != codes.Unavailable {
+                t.Fatalf("Expected Unavailable, got %s", gotRetStatus.Code())
+            }
+        } else {
+            t.Fatal("Expected Unavailable, got no error!")
+        }
+       
+    })
 }
 
 
