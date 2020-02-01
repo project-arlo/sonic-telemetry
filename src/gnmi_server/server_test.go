@@ -1658,7 +1658,7 @@ func TestPasswordAuth(t *testing.T) {
         t.Fatalf("Dialing to %q failed: %v", targetAddr, err)
     }
     defer conn.Close()
-
+    gClient := pb.NewGNMIClient(conn)
 
     ctx, cancel := context.WithTimeout(context.Background(), 240*time.Second)
     defer cancel()
@@ -1698,18 +1698,19 @@ func TestPasswordAuth(t *testing.T) {
         if err := proto.UnmarshalText(textPbPath, &pbPath); err != nil {
             t.Fatalf("error in unmarshaling path: %v %v", textPbPath, err)
         }
-        req = &pb.SetRequest{
+        req := &pb.SetRequest{
                             Delete: []*pb.Path{&pbPath},
                             Prefix: &prefix,
                 }
-        _, err := gClient.Set(ctx, req)
+        actx := metadata.AppendToOutgoingContext(ctx, "username", "testuser", "password", "password")
+        _, err = gClient.Set(actx, req)
         
         gotRetStatus, ok := status.FromError(err)
         if !ok {
             t.Fatal("got a non-grpc error from grpc call")
         }
-        if gotRetStatus.Code() != codes.Ok {
-            t.Fatalf("Expect OK got: %v", gotRetStatus.String())
+        if gotRetStatus.Code() != codes.OK {
+            t.Fatalf("Expect OK got: %v", gotRetStatus.Message())
         }
     })
     t.Run("LocalUserSetRBAC", func(t *testing.T) {
@@ -1724,18 +1725,19 @@ func TestPasswordAuth(t *testing.T) {
         if err := proto.UnmarshalText(textPbPath, &pbPath); err != nil {
             t.Fatalf("error in unmarshaling path: %v %v", textPbPath, err)
         }
-        req = &pb.SetRequest{
+        req := &pb.SetRequest{
                             Delete: []*pb.Path{&pbPath},
                             Prefix: &prefix,
                 }
-        _, err := gClient.Set(ctx, req)
+        actx := metadata.AppendToOutgoingContext(ctx, "username", "testuser", "password", "password")
+        _, err = gClient.Set(actx, req)
         
         gotRetStatus, ok := status.FromError(err)
         if !ok {
             t.Fatal("got a non-grpc error from grpc call")
         }
-        if gotRetStatus.Code() != codes.Unauthenticated {
-            t.Fatalf("Expect Unauthenticated got: %v", gotRetStatus.String())
+        if gotRetStatus.Code() == codes.OK {
+            t.Fatal("Expect Failure got OK")
         }
     })
 
