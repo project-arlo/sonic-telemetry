@@ -1686,6 +1686,59 @@ func TestPasswordAuth(t *testing.T) {
             t.Fatal("Invalid Password specified, was expecting Unauthenticated.")
         }
     })
+    t.Run("LocalUserSetNoRBAC", func(t *testing.T) {
+        RbacDisable = true
+        prefix := pb.Path{Target: "OC_YANG"}
+        var pbPath pb.Path
+        path, err := xpath.ToGNMIPath("openconfig-interfaces:interfaces/interface[name=Ethernet8]/subinterfaces/subinterface[index=0]")
+        if err != nil {
+            t.Fatalf("error in parsing xpath %q to gnmi path, %v", path, err)
+        }
+        textPbPath := proto.MarshalTextString(path)
+        if err := proto.UnmarshalText(textPbPath, &pbPath); err != nil {
+            t.Fatalf("error in unmarshaling path: %v %v", textPbPath, err)
+        }
+        req = &pb.SetRequest{
+                            Delete: []*pb.Path{&pbPath},
+                            Prefix: &prefix,
+                }
+        _, err := gClient.Set(ctx, req)
+        
+        gotRetStatus, ok := status.FromError(err)
+        if !ok {
+            t.Fatal("got a non-grpc error from grpc call")
+        }
+        if gotRetStatus.Code() != codes.Ok {
+            t.Fatalf("Expect OK got: %v", gotRetStatus.String())
+        }
+    })
+    t.Run("LocalUserSetRBAC", func(t *testing.T) {
+        RbacDisable = false
+        prefix := pb.Path{Target: "OC_YANG"}
+        var pbPath pb.Path
+        path, err := xpath.ToGNMIPath("openconfig-interfaces:interfaces/interface[name=Ethernet8]/subinterfaces/subinterface[index=0]")
+        if err != nil {
+            t.Fatalf("error in parsing xpath %q to gnmi path, %v", path, err)
+        }
+        textPbPath := proto.MarshalTextString(path)
+        if err := proto.UnmarshalText(textPbPath, &pbPath); err != nil {
+            t.Fatalf("error in unmarshaling path: %v %v", textPbPath, err)
+        }
+        req = &pb.SetRequest{
+                            Delete: []*pb.Path{&pbPath},
+                            Prefix: &prefix,
+                }
+        _, err := gClient.Set(ctx, req)
+        
+        gotRetStatus, ok := status.FromError(err)
+        if !ok {
+            t.Fatal("got a non-grpc error from grpc call")
+        }
+        if gotRetStatus.Code() != codes.Unauthenticated {
+            t.Fatalf("Expect Unauthenticated got: %v", gotRetStatus.String())
+        }
+    })
+
 }
 
 func TestCertAuth(t *testing.T) {
