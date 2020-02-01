@@ -85,7 +85,7 @@ func loadDB(t *testing.T, rclient *redis.Client, mpi map[string]interface{}) {
     }
 }
 
-func createServer(t *testing.T, port int64, auth *AuthTypes) *Server {
+func createServer(t *testing.T, port int64, auth AuthTypes) *Server {
     certificate, err := testcert.NewCert()
     if err != nil {
         t.Fatalf("could not load server key pair: %s", err)
@@ -108,7 +108,7 @@ func createServer(t *testing.T, port int64, auth *AuthTypes) *Server {
     }
 
     opts := []grpc.ServerOption{grpc.Creds(credentials.NewTLS(tlsCfg))}
-    cfg := &Config{Port: port, UserAuth: *auth}
+    cfg := &Config{Port: port, UserAuth: auth}
     s, err := NewServer(cfg, opts)
     if err != nil {
         t.Fatalf("Failed to create gNMI server: %v", err)
@@ -1586,7 +1586,7 @@ func TestJWTAuth(t *testing.T) {
     var auth = AuthTypes{"password": false, "cert": false, "jwt": true}
     
 
-    s := createServer(t, 8083, &auth)
+    s := createServer(t, 8083, auth)
     go runServer(t, s)
     defer s.s.Stop()
 
@@ -1641,7 +1641,7 @@ func TestPasswordAuth(t *testing.T) {
     var auth = AuthTypes{"password": true, "cert": false, "jwt": false}
     
 
-    s := createServer(t, 8083, &auth)
+    s := createServer(t, 8083, auth)
     go runServer(t, s)
     defer s.s.Stop()
 
@@ -1692,7 +1692,7 @@ func TestCertAuth(t *testing.T) {
     var auth = AuthTypes{"password": false, "cert": true, "jwt": false}
     
 
-    s := createServer(t, 8083, &auth)
+    s := createServer(t, 8083, auth)
     go runServer(t, s)
     defer s.s.Stop()
 
@@ -1737,7 +1737,7 @@ func TestCertAuth(t *testing.T) {
 func TestBadCertUserAuth(t *testing.T) {
     var auth = AuthTypes{"password": false, "cert": true, "jwt": false}
     
-    s := createServer(t, 8083, &auth)
+    s := createServer(t, 8083, auth)
     go runServer(t, s)
     defer s.s.Stop()
 
@@ -1787,7 +1787,7 @@ func TestBadCertUserAuth(t *testing.T) {
 func TestBadCertAuth(t *testing.T) {
     var auth = AuthTypes{"password": false, "cert": true, "jwt": false}
     
-    s := createServer(t, 8083, &auth)
+    s := createServer(t, 8083, auth)
     go runServer(t, s)
     defer s.s.Stop()
 
