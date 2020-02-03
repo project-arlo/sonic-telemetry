@@ -26,7 +26,7 @@ var (
 
 func main() {
 	flag.Var(userAuth, "client_auth", "Client auth mode(s) - cert,password,jwt")
-	flag.BoolVar(&gnmi.RbacDisable, "rbac-disable", false, "Enabled/Disable RBAC")
+	flag.BoolVar(&gnmi.RbacDisable, "rbac_disable", false, "Disable RBAC (Default Enabled)")
 	flag.Parse()
 
 	switch {
