@@ -189,7 +189,7 @@ func authenticate(UserAuth AuthTypes, ctx context.Context) (context.Context,erro
 	}
 
 	if !success {
-		return ctx,err
+		return ctx,status.Error(codes.Unauthenticated, "Unauthenticated")
 	} 
 
 	return ctx,nil
