@@ -33,7 +33,7 @@ import (
 	"github.com/google/gnxi/utils/credentials"
 	//"github.com/google/gnxi/utils/xpath"
 	"github.com/jipanyang/gnxi/utils/xpath"
-
+	"google.golang.org/grpc/metadata"
 	pb "github.com/openconfig/gnmi/proto/gnmi"
 )
 
@@ -56,6 +56,7 @@ var (
 	targetName = flag.String("target_name", "hostname.com", "The target name use to verify the hostname returned by TLS handshake")
 	timeOut    = flag.Duration("time_out", 10*time.Second, "Timeout for the Get request, 10 seconds by default")
 	pathTarget = flag.String("xpath_target", "", "name of the target for which the path is a member")
+	jwtToken   = flag.String("jwt_token", "", "JWT Token if required")
 )
 
 func buildPbUpdateList(pathValuePairs []string) []*pb.Update {
@@ -178,11 +179,17 @@ func main() {
 	utils.PrintProto(setRequest)
 
 	cli := pb.NewGNMIClient(conn)
-	setResponse, err := cli.Set(context.Background(), setRequest)
+	ctx, cancel := context.WithTimeout(context.Background(), *timeOut)
+	defer cancel()
+
+	if len(*jwtToken) > 0 {
+		ctx = metadata.AppendToOutgoingContext(ctx, "access_token", *jwtToken)
+	}
+	setResponse, err := cli.Set(ctx, setRequest)
 	if err != nil {
 		log.Exitf("Set failed: %v", err)
 	}
 
-	fmt.Println("== getResponse:")
+	fmt.Println("== setResponse:")
 	utils.PrintProto(setResponse)
 }
