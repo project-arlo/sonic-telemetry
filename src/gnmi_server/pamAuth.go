@@ -1,13 +1,14 @@
 package gnmi_server
 
 import (
-	"os/user"
 	"common_utils"
-	"github.com/msteinert/pam"
-	"golang.org/x/crypto/ssh"
 	"errors"
 	"github.com/golang/glog"
+	"github.com/msteinert/pam"
+	"golang.org/x/crypto/ssh"
+	"os/user"
 )
+
 type UserCredential struct {
 	Username string
 	Password string
@@ -61,21 +62,23 @@ func GetUserRoles(usr *user.User) ([]string, error) {
 	}
 	return roles, nil
 }
-func PopulateAuthStruct(username string, auth *common_utils.AuthInfo) error {
-	auth.AuthEnabled = true
-	usr, err := user.Lookup(username)
-	if err != nil {
-		return err
-	}
+func PopulateAuthStruct(username string, auth *common_utils.AuthInfo, r []string) error {
+	if len(r) == 0 {
+		usr, err := user.Lookup(username)
+		if err != nil {
+			return err
+		}
 
+		roles, err := GetUserRoles(usr)
+		if err != nil {
+			return err
+		}
+		auth.Roles = roles
+	} else {
+		auth.Roles = r
+	}
 	auth.User = username
 
-	roles, err := GetUserRoles(usr)
-	if err != nil {
-		return err
-	}
-	auth.Roles = roles
-	
 	return nil
 }
 
@@ -90,18 +93,17 @@ func UserPwAuth(username string, passwd string) (bool, error) {
 
 	//Use ssh for authentication.
 	config := &ssh.ClientConfig{
-	        User: username,
-	        Auth: []ssh.AuthMethod{
-	                ssh.Password(passwd),
-	        },
-	        HostKeyCallback: ssh.InsecureIgnoreHostKey(),
+		User: username,
+		Auth: []ssh.AuthMethod{
+			ssh.Password(passwd),
+		},
+		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
 	}
 	_, err := ssh.Dial("tcp", "127.0.0.1:22", config)
 	if err != nil {
 		glog.Infof("Authentication failed. user=%s, error:%s", username, err.Error())
-	    return false, err
+		return false, err
 	}
 
 	return true, nil
 }
-
