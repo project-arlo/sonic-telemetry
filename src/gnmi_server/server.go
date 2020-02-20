@@ -20,6 +20,7 @@ import (
 	gnmipb "github.com/openconfig/gnmi/proto/gnmi"
 	spb "proto/gnoi"
 	"bytes"
+	"os"
 )
 
 var (
@@ -43,6 +44,7 @@ type Config struct {
 	// for this Server.
 	Port int64
 	UserAuth AuthTypes
+	ReadOnly bool
 }
 
 func (i AuthTypes) String() string {
@@ -108,6 +110,12 @@ func (i AuthTypes) Unset(mode string) error {
 	}
 	return nil
 }
+func CheckReadOnlyFile() bool {
+	if _, err := os.Stat("/etc/sonic/telemetry_readonly"); err == nil {
+		return true
+	}
+	return false
+}
 // New returns an initialized Server.
 func NewServer(config *Config, opts []grpc.ServerOption) (*Server, error) {
 	if config == nil {
@@ -118,6 +126,9 @@ func NewServer(config *Config, opts []grpc.ServerOption) (*Server, error) {
 
 	reflection.Register(s)
 
+	if CheckReadOnlyFile() {
+		config.ReadOnly = true
+	}
 	srv := &Server{
 		s:       s,
 		config:  config,
@@ -132,8 +143,12 @@ func NewServer(config *Config, opts []grpc.ServerOption) (*Server, error) {
 		return nil, fmt.Errorf("failed to open listener port %d: %v", srv.config.Port, err)
 	}
 	gnmipb.RegisterGNMIServer(srv.s, srv)
-	gnoi_system_pb.RegisterSystemServer(srv.s, srv)
-	spb.RegisterSonicServiceServer(srv.s, srv)
+	if !srv.config.ReadOnly {
+		//gNOI Services
+		gnoi_system_pb.RegisterSystemServer(srv.s, srv)
+		spb.RegisterSonicServiceServer(srv.s, srv)
+	}
+
 	log.V(1).Infof("Created Server on %s", srv.Address())
 
 	return srv, nil
@@ -313,8 +328,10 @@ func (srv *Server) Get(ctx context.Context, req *gnmipb.GetRequest) (*gnmipb.Get
 	return &gnmipb.GetResponse{Notification: notifications}, nil
 }
 
-// Set method is not implemented. Refer to gnxi for examples with openconfig integration
 func (srv *Server) Set(ctx context.Context,req *gnmipb.SetRequest) (*gnmipb.SetResponse, error) {
+	if srv.config.ReadOnly {
+		return nil, grpc.Errorf(codes.Unimplemented, "Telemetry is in read-only mode")
+	}
 	ctx, err := authenticate(srv.config.UserAuth, ctx)
 	if err != nil {
 		return nil, err
