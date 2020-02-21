@@ -69,6 +69,7 @@ var (
 	timeOut          = flag.Duration("time_out", 10*time.Second, "Timeout for the Get request, 10 seconds by default")
 	encodingName     = flag.String("encoding", "JSON_IETF", "value encoding format to be used")
 	jwtToken         = flag.String("jwt_token", "", "JWT Token if required")
+	origin           = flag.String("origin", "", "A field which MAY be used to disambiguate the path if necessary.")
 )
 
 func main() {
@@ -111,6 +112,7 @@ func main() {
 		if err != nil {
 			log.Exitf("error in parsing xpath %q to gnmi path, %v", xPath, err)
 		}
+		pbPath.Origin = *origin
 		pbPathList = append(pbPathList, pbPath)
 	}
 	for _, textPbPath := range pbPathFlags {
@@ -118,6 +120,7 @@ func main() {
 		if err := proto.UnmarshalText(textPbPath, &pbPath); err != nil {
 			log.Exitf("error in unmarshaling %q to gnmi Path", textPbPath)
 		}
+		pbPath.Origin = *origin
 		pbPathList = append(pbPathList, &pbPath)
 	}
 	for _, textPbModelData := range pbModelDataFlags {
