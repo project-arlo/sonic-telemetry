@@ -4,5 +4,8 @@ debian/files
 debian/sonic-telemetry.debhelper.log
 debian/sonic-telemetry.substvars
 debian/sonic-telemetry/
-telemetry
+vendor
+src
+cvl
+translib
 *.swp
