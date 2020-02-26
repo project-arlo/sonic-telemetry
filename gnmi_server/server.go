@@ -6,7 +6,7 @@ import (
 	"net"
 	"strings"
 	"sync"
-	"common_utils"
+	"github.com/Azure/sonic-telemetry/common_utils"
 	log "github.com/golang/glog"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
@@ -14,7 +14,6 @@ import (
 	"google.golang.org/grpc/peer"
 	"google.golang.org/grpc/reflection"
 	"google.golang.org/grpc/status"
-	// "github.com/msteinert/pam"
 	gnoi_system_pb "github.com/openconfig/gnoi/system"
 	sdc "github.com/Azure/sonic-telemetry/sonic_data_client"
 	gnmipb "github.com/openconfig/gnmi/proto/gnmi"
@@ -115,7 +114,6 @@ func NewServer(config *Config, opts []grpc.ServerOption) (*Server, error) {
 	}
 
 	s := grpc.NewServer(opts...)
-
 	reflection.Register(s)
 
 	srv := &Server{
@@ -135,7 +133,6 @@ func NewServer(config *Config, opts []grpc.ServerOption) (*Server, error) {
 	gnoi_system_pb.RegisterSystemServer(srv.s, srv)
 	spb.RegisterSonicServiceServer(srv.s, srv)
 	log.V(1).Infof("Created Server on %s", srv.Address())
-
 	return srv, nil
 }
 
@@ -273,8 +270,17 @@ func (s *Server) Get(ctx context.Context, req *gnmipb.GetRequest) (*gnmipb.GetRe
 
 	var target string
 	prefix := req.GetPrefix()
+	if prefix == nil {
+		return nil, status.Error(codes.Unimplemented, "No target specified in prefix")
+	} else {
+		target = prefix.GetTarget()
+		if target == "" {
+			return nil, status.Error(codes.Unimplemented, "Empty target data not supported yet")
+		}
+	}
+	
 	paths := req.GetPath()
-        target = prefix.GetTarget()
+	target = prefix.GetTarget()
 	log.V(5).Infof("GetRequest paths: %v", paths)
 
 	var dc sdc.Client
