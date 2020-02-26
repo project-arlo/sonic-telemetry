@@ -7,8 +7,8 @@ import (
 	"fmt"
 	log "github.com/golang/glog"
 	gnmipb "github.com/openconfig/gnmi/proto/gnmi"
-	"translib"
-	"common_utils"
+	"github.com/Azure/sonic-telemetry/translib"
+	"github.com/Azure/sonic-telemetry/common_utils"
 	"context"
 )
 

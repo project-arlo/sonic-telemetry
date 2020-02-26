@@ -16,9 +16,9 @@ import (
 	"google.golang.org/grpc/status"
 	// "github.com/msteinert/pam"
 	gnoi_system_pb "github.com/openconfig/gnoi/system"
-	sdc "sonic_data_client"
+	sdc "github.com/Azure/sonic-telemetry/sonic_data_client"
 	gnmipb "github.com/openconfig/gnmi/proto/gnmi"
-	spb "proto/gnoi"
+	spb "github.com/Azure/sonic-telemetry/proto/gnoi"
 	"bytes"
 )
 
@@ -257,8 +257,8 @@ func (s *Server) checkEncodingAndModel(encoding gnmipb.Encoding, models []*gnmip
 }
 
 // Get implements the Get RPC in gNMI spec.
-func (srv *Server) Get(ctx context.Context, req *gnmipb.GetRequest) (*gnmipb.GetResponse, error) {
-	ctx, err := authenticate(srv.config.UserAuth, ctx)
+func (s *Server) Get(ctx context.Context, req *gnmipb.GetRequest) (*gnmipb.GetResponse, error) {
+	ctx, err := authenticate(s.config.UserAuth, ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -267,7 +267,7 @@ func (srv *Server) Get(ctx context.Context, req *gnmipb.GetRequest) (*gnmipb.Get
 		return nil, status.Errorf(codes.Unimplemented, "unsupported request type: %s", gnmipb.GetRequest_DataType_name[int32(req.GetType())])
 	}
 
-	if err = srv.checkEncodingAndModel(req.GetEncoding(), req.GetUseModels()); err != nil {
+	if err = s.checkEncodingAndModel(req.GetEncoding(), req.GetUseModels()); err != nil {
 		return nil, status.Error(codes.Unimplemented, err.Error())
 	}
 
@@ -314,8 +314,8 @@ func (srv *Server) Get(ctx context.Context, req *gnmipb.GetRequest) (*gnmipb.Get
 }
 
 // Set method is not implemented. Refer to gnxi for examples with openconfig integration
-func (srv *Server) Set(ctx context.Context,req *gnmipb.SetRequest) (*gnmipb.SetResponse, error) {
-	ctx, err := authenticate(srv.config.UserAuth, ctx)
+func (s *Server) Set(ctx context.Context,req *gnmipb.SetRequest) (*gnmipb.SetResponse, error) {
+	ctx, err := authenticate(s.config.UserAuth, ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -394,8 +394,8 @@ func (srv *Server) Set(ctx context.Context,req *gnmipb.SetRequest) (*gnmipb.SetR
 }
 
 // Capabilities method is not implemented. Refer to gnxi for examples with openconfig integration
-func (srv *Server) Capabilities(ctx context.Context, req *gnmipb.CapabilityRequest) (*gnmipb.CapabilityResponse, error) {
-	ctx, err := authenticate(srv.config.UserAuth, ctx)
+func (s *Server) Capabilities(ctx context.Context, req *gnmipb.CapabilityRequest) (*gnmipb.CapabilityResponse, error) {
+	ctx, err := authenticate(s.config.UserAuth, ctx)
 	if err != nil {
 		return nil, err
 	}

@@ -1,7 +1,7 @@
 package gnmi
 
 import (
-	"common_utils"
+	"github.com/Azure/sonic-telemetry/common_utils"
 	"errors"
 	"github.com/golang/glog"
 	"github.com/msteinert/pam"

@@ -14,7 +14,8 @@ import (
 
 	log "github.com/golang/glog"
 
-	spb "proto"
+	spb "github.com/Azure/sonic-telemetry/proto"
+	sdcfg "github.com/Azure/sonic-telemetry/sonic_db_config"
 	"github.com/go-redis/redis"
 	gnmipb "github.com/openconfig/gnmi/proto/gnmi"
 	"github.com/Workiva/go-datastructures/queue"
@@ -313,15 +314,7 @@ func GetTableKeySeparator(target string) (string, error) {
 		return "", fmt.Errorf("%v not a valid path target", target)
 	}
 
-	var separator string
-	switch target {
-	case "CONFIG_DB":
-		separator = "|"
-	case "STATE_DB":
-		separator = "|"
-	default:
-		separator = ":"
-	}
+	var separator string = sdcfg.GetDbSeparator(target)
 	return separator, nil
 }
 

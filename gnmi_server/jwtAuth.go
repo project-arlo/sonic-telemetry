@@ -1,7 +1,7 @@
 package gnmi
 
 import (
-	"common_utils"
+	"github.com/Azure/sonic-telemetry/common_utils"
 	"crypto/rand"
 	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/golang/glog"
@@ -9,7 +9,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
-	spb "proto/gnoi"
+	spb "github.com/Azure/sonic-telemetry/proto/gnoi"
 	"time"
 )
 
