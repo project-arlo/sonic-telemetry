@@ -39,8 +39,10 @@ mgmt-deps:
 	$(GO) get github.com/openconfig/goyang@064f9690516f4f72db189f4690b84622c13b7296
 	$(GO) get golang.org/x/crypto/ssh/terminal@e9b2fee46413
 	$(GO) get github.com/jipanyang/gnxi@f0a90cca6fd0041625bcce561b71f849c9b65a8d
-	$(GO) install github.com/openconfig/ygot/generator
-	$(GO) get -x github.com/golang/glog@23def4e6c14b4da8ac2ed8007337bc5eb5007998
+	$(GO) get github.com/godbus/dbus
+	$(GO) get github.com/golang/glog@23def4e6c14b4da8ac2ed8007337bc5eb5007998
+	$(GO) get github.com/antchfx/xpath@d9ad276609987dd73ce5cd7d6265fe82189b10b6
+	$(GO) get github.com/antchfx/xmlquery@fe009d4cc63c3011f05e1dfa75a27899acccdf11
 	rm -rf vendor
 	$(GO) mod vendor
 	ln -s vendor src
@@ -48,11 +50,17 @@ mgmt-deps:
 	cp -r $(GOPATH)/pkg/mod/github.com/openconfig/goyang@v0.0.0-20190924211109-064f9690516f/* vendor/github.com/openconfig/goyang/
 	cp -r $(GOPATH)/pkg/mod/github.com/openconfig/ygot@v0.6.1-0.20190723223108-724a6b18a922/* vendor/github.com/openconfig/ygot/
 	cp -r $(GOPATH)/pkg/mod/golang.org/x/crypto@v0.0.0-20191206172530-e9b2fee46413 vendor/golang.org/x/crypto
+	cp -r $(GOPATH)/pkg/mod/github.com/antchfx/xpath@v1.1.2/* vendor/github.com/antchfx/xpath/
+	cp -r $(GOPATH)/pkg/mod/github.com/antchfx/xmlquery@v1.1.1-0.20191015122529-fe009d4cc63c/* vendor/github.com/antchfx/xmlquery/
 	chmod -R u+w vendor
 	patch -d vendor -p0 <patches/gnmi_cli.all.patch
+
 	patch -d vendor/github.com/antchfx/jsonquery -p1 < ../sonic-mgmt-framework/patches/jsonquery.patch
 	patch -d vendor/github.com/openconfig/goyang -p1 < ../sonic-mgmt-framework/goyang-modified-files/goyang.patch
 	patch -d vendor/github.com/openconfig -p1 < ../sonic-mgmt-framework/ygot-modified-files/ygot.patch
+	patch -d vendor/github.com/antchfx/xpath -p1 < ../sonic-mgmt-framework/patches/xpath.patch
+	patch -d vendor/github.com/antchfx/xmlquery -p1 < ../sonic-mgmt-framework/patches/xmlquery.patch
+	$(GO) install -mod=vendor github.com/openconfig/ygot/generator
 	$(GO) generate github.com/Azure/sonic-telemetry/translib/ocbinds
 	make -C $(GO_MGMT_PATH)/src/cvl/schema
 	make -C $(GO_MGMT_PATH)/models

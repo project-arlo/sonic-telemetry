@@ -30,7 +30,7 @@ import (
     spb "github.com/Azure/sonic-telemetry/proto"
     sgpb "github.com/Azure/sonic-telemetry/proto/gnoi"
     sdc "github.com/Azure/sonic-telemetry/sonic_data_client"
-    sdcfg "github.com/Azure/sonic-telemetry/sonic_db_config"
+    // sdcfg "github.com/Azure/sonic-telemetry/sonic_db_config"
     gclient "github.com/jipanyang/gnmi/client/gnmi"
     "github.com/jipanyang/gnxi/utils/xpath"
     gnoi_system_pb "github.com/openconfig/gnoi/system"
