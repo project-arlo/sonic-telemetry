@@ -6,7 +6,7 @@ import (
 	"net"
 	"strings"
 	"sync"
-
+	"common_utils"
 	log "github.com/golang/glog"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
@@ -162,11 +162,13 @@ func (srv *Server) Port() int64 {
 func authenticate(UserAuth AuthTypes, ctx context.Context) (context.Context,error) {
 	var err error
 	success := false
-
+	rc, ctx := common_utils.GetContext(ctx)
 	if !UserAuth.Any() {
 		//No Auth enabled
+		rc.Auth.AuthEnabled = false
 		return ctx, nil
 	}
+	rc.Auth.AuthEnabled = true
 	if UserAuth.Enabled("password") {
 		ctx, err = BasicAuthenAndAuthor(ctx)
 		if err == nil {
@@ -187,7 +189,7 @@ func authenticate(UserAuth AuthTypes, ctx context.Context) (context.Context,erro
 	}
 
 	if !success {
-		return ctx,err
+		return ctx,status.Error(codes.Unauthenticated, "Unauthenticated")
 	} 
 
 	return ctx,nil
