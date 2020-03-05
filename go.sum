@@ -77,6 +77,7 @@ github.com/onsi/gomega v1.7.1 h1:K0jcRCwNQM3vFGh1ppMtDh/+7ApJrjldlX8fA0jDTLQ=
 github.com/onsi/gomega v1.7.1/go.mod h1:XdKZgCCFLUoM/7CFJVPcG8C1xQ1AJ0vpAezJrB7JYyY=
 github.com/openconfig/gnmi v0.0.0-20190823184014-89b2bf29312c h1:a380JP+B7xlMbEQOlha1buKhzBPXFqgFXplyWCEIGEY=
 github.com/openconfig/gnmi v0.0.0-20190823184014-89b2bf29312c/go.mod h1:t+O9It+LKzfOAhKTT5O0ehDix+MTqbtT0T9t+7zzOvc=
+github.com/openconfig/gnmi v0.0.0-20200305011855-a29e253c3557 h1:qxGfaZg8rm7grrsYUEIM1DoAi9lHPOR8zlU6UvzisMM=
 github.com/openconfig/gnoi v0.0.0-20191206155121-b4d663a26026 h1:LqWmMvsOBxqjWmW+EWSS3kxEGE3mh771zAx69549IoI=
 github.com/openconfig/gnoi v0.0.0-20191206155121-b4d663a26026/go.mod h1:i43VWfb9tMz9b6MzLxTztJeBP4U0AAqscMSX7o507jk=
 github.com/openconfig/goyang v0.0.0-20190924211109-064f9690516f h1:BaekRUaWpfaRBP3mShDZaNi4+EHbdli7D6YXc/TP3lo=

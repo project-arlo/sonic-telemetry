@@ -49,11 +49,14 @@ mgmt-deps:
 	cp -r $(GOPATH)/pkg/mod/github.com/openconfig/gnmi@v0.0.0-20190823184014-89b2bf29312c/* vendor/github.com/openconfig/gnmi/
 	cp -r $(GOPATH)/pkg/mod/github.com/openconfig/goyang@v0.0.0-20190924211109-064f9690516f/* vendor/github.com/openconfig/goyang/
 	cp -r $(GOPATH)/pkg/mod/github.com/openconfig/ygot@v0.6.1-0.20190723223108-724a6b18a922/* vendor/github.com/openconfig/ygot/
-	cp -r $(GOPATH)/pkg/mod/golang.org/x/crypto@v0.0.0-20191206172530-e9b2fee46413 vendor/golang.org/x/crypto
+	cp -r $(GOPATH)/pkg/mod/golang.org/x/crypto@v0.0.0-20191206172530-e9b2fee46413/* vendor/golang.org/x/crypto/
 	cp -r $(GOPATH)/pkg/mod/github.com/antchfx/xpath@v1.1.2/* vendor/github.com/antchfx/xpath/
 	cp -r $(GOPATH)/pkg/mod/github.com/antchfx/xmlquery@v1.1.1-0.20191015122529-fe009d4cc63c/* vendor/github.com/antchfx/xmlquery/
+	cp -r $(GOPATH)/pkg/mod/github.com/jipanyang/gnxi@v0.0.0-20181221084354-f0a90cca6fd0/* vendor/github.com/jipanyang/gnxi/
 	chmod -R u+w vendor
 	patch -d vendor -p0 <patches/gnmi_cli.all.patch
+	patch -d vendor -p0 <patches/gnmi_set.patch
+	patch -d vendor -p0 <patches/gnmi_get.patch
 
 	patch -d vendor/github.com/antchfx/jsonquery -p1 < ../sonic-mgmt-framework/patches/jsonquery.patch
 	patch -d vendor/github.com/openconfig/goyang -p1 < ../sonic-mgmt-framework/goyang-modified-files/goyang.patch
@@ -70,8 +73,9 @@ mgmt-deps:
 sonic-telemetry: go.mod mgmt-deps
 	$(GO) install -mod=vendor github.com/Azure/sonic-telemetry/telemetry
 	$(GO) install -mod=vendor github.com/Azure/sonic-telemetry/dialout/dialout_client_cli
-	$(GO) install github.com/jipanyang/gnxi/gnmi_get
-	$(GO) install github.com/jipanyang/gnxi/gnmi_set
+	$(GO) install -mod=vendor github.com/Azure/sonic-telemetry/gnoi_client
+	$(GO) install -mod=vendor github.com/jipanyang/gnxi/gnmi_get
+	$(GO) install -mod=vendor github.com/jipanyang/gnxi/gnmi_set
 	$(GO) install -mod=vendor github.com/openconfig/gnmi/cmd/gnmi_cli
 
 check:
@@ -101,6 +105,7 @@ install:
 	$(INSTALL) -D $(BUILD_DIR)/gnmi_get $(DESTDIR)/usr/sbin/gnmi_get
 	$(INSTALL) -D $(BUILD_DIR)/gnmi_set $(DESTDIR)/usr/sbin/gnmi_set
 	$(INSTALL) -D $(BUILD_DIR)/gnmi_cli $(DESTDIR)/usr/sbin/gnmi_cli
+	$(INSTALL) -D $(BUILD_DIR)/gnoi_client $(DESTDIR)/usr/sbin/gnoi_client
 
 	mkdir -p $(DESTDIR)/usr/bin/
 	cp -r $(GO_MGMT_PATH)/src/cvl/schema $(DESTDIR)/usr/sbin
