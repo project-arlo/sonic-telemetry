@@ -46,7 +46,10 @@ func ConvertToURI(prefix *gnmipb.Path, path *gnmipb.Path, req *string) error {
 
 	elems := fullPath.GetElem()
 	*req = "/"
-
+	if len(path.Origin) > 0 {
+		*req += path.Origin
+		*req += "/"
+	}
 	if elems != nil {
 		/* Iterate through elements. */
 		for i, elem := range elems {
