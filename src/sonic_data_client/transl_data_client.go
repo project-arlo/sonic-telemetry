@@ -6,6 +6,7 @@ import (
 	transutil "transl_utils"
 	log "github.com/golang/glog"
 	gnmipb "github.com/openconfig/gnmi/proto/gnmi"
+	gnmi_extpb "github.com/openconfig/gnmi/proto/gnmi_ext"
 	"github.com/Workiva/go-datastructures/queue"
 	"sync"
 	"time"
@@ -37,7 +38,7 @@ type TranslClient struct {
 
 }
 
-func NewTranslClient(prefix *gnmipb.Path, getpaths []*gnmipb.Path, ctx context.Context) (Client, error) {
+func NewTranslClient(prefix *gnmipb.Path, getpaths []*gnmipb.Path, ctx context.Context, extensions []*gnmi_extpb.Extension) (Client, error) {
 	var client TranslClient
 	var err error
 	client.ctx = ctx

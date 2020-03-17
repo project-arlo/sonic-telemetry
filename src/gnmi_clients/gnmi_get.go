@@ -32,6 +32,9 @@ import (
 	"github.com/jipanyang/gnxi/utils/xpath"
 	"google.golang.org/grpc/metadata"
 	pb "github.com/openconfig/gnmi/proto/gnmi"
+	ext_pb "github.com/openconfig/gnmi/proto/gnmi_ext"
+	
+	// spb "proto"
 )
 
 type arrayFlags []string
@@ -69,6 +72,7 @@ var (
 	timeOut          = flag.Duration("time_out", 10*time.Second, "Timeout for the Get request, 10 seconds by default")
 	encodingName     = flag.String("encoding", "JSON_IETF", "value encoding format to be used")
 	jwtToken         = flag.String("jwt_token", "", "JWT Token if required")
+	bundleVersion    = flag.String("bundle_ver", "", "Optional version specifier for model bundle version.")
 )
 
 func main() {
@@ -92,6 +96,8 @@ func main() {
 	if len(*jwtToken) > 0 {
 		ctx = metadata.AppendToOutgoingContext(ctx, "access_token", *jwtToken)
 	}
+
+
 
 	encoding, ok := pb.Encoding_value[*encodingName]
 	if !ok {
@@ -132,6 +138,13 @@ func main() {
 		Encoding:  pb.Encoding(encoding),
 		Path:      pbPathList,
 		UseModels: pbModelDataList,
+	}
+	if len(*bundleVersion) > 0 {
+		getRequest.Extension = append(getRequest.Extension, &ext_pb.Extension{
+			Ext: &ext_pb.Extension_RegisteredExt {
+				RegisteredExt: &ext_pb.RegisteredExtension {
+				Id: 999,
+				Msg: []byte{1, 2, 3, 4, 5}}}})
 	}
 
 	fmt.Println("== getRequest:")

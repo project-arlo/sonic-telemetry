@@ -277,7 +277,9 @@ func (srv *Server) Get(ctx context.Context, req *gnmipb.GetRequest) (*gnmipb.Get
 	var target string
 	prefix := req.GetPrefix()
 	paths := req.GetPath()
-        target = prefix.GetTarget()
+	extensions := req.GetExtension()
+	fmt.Println(extensions)
+	target = prefix.GetTarget()
 	log.V(5).Infof("GetRequest paths: %v", paths)
 
 	var dc sdc.Client
@@ -288,7 +290,7 @@ func (srv *Server) Get(ctx context.Context, req *gnmipb.GetRequest) (*gnmipb.Get
 		dc, err = sdc.NewDbClient(paths, prefix)
 	} else {
 		/* If no prefix target is specified create new Transl Data Client . */
-		dc, err = sdc.NewTranslClient(prefix, paths, ctx)
+		dc, err = sdc.NewTranslClient(prefix, paths, ctx, extensions)
 	}
 
 	if err != nil {
@@ -329,7 +331,7 @@ func (srv *Server) Set(ctx context.Context,req *gnmipb.SetRequest) (*gnmipb.SetR
 	prefix := req.GetPrefix()
 
            /* Create Transl client. */
-	dc, _ := sdc.NewTranslClient(prefix, nil, ctx)
+	dc, _ := sdc.NewTranslClient(prefix, nil, ctx, nil)
 
 	/* DELETE */
 	for _, path := range req.GetDelete() {
@@ -402,7 +404,7 @@ func (srv *Server) Capabilities(ctx context.Context, req *gnmipb.CapabilityReque
 	if err != nil {
 		return nil, err
 	}
-	dc, _ := sdc.NewTranslClient(nil , nil, ctx)
+	dc, _ := sdc.NewTranslClient(nil , nil, ctx, nil)
 
 		/* Fetch the client capabitlities. */
 		supportedModels := dc.Capabilities()
@@ -432,7 +434,7 @@ func (srv *Server) Capabilities(ctx context.Context, req *gnmipb.CapabilityReque
 					  Extension: exts}, nil
 }
 
-func  isTargetDb ( target string) (bool) {
+func isTargetDb ( target string) (bool) {
 	isDbClient := false 
 	dbTargetSupported := []string { "APPL_DB", "ASIC_DB" , "COUNTERS_DB", "LOGLEVEL_DB", "CONFIG_DB", "PFC_WD_DB", "FLEX_COUNTER_DB", "STATE_DB"}
 
