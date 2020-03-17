@@ -20,3 +20,11 @@ enum Target {
   // For none-DB data
   OTHERS          = 100;
 }
+
+message SupportedBundleVersions {
+  string latest_version = 1;
+  repeated string supported_versions = 2;
+}
+message BundleVersion {
+  string version = 1;
+}

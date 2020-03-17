@@ -18,7 +18,10 @@ import (
 	gnoi_system_pb "github.com/openconfig/gnoi/system"
 	sdc "sonic_data_client"
 	gnmipb "github.com/openconfig/gnmi/proto/gnmi"
-	spb "proto/gnoi"
+	gnmi_extpb "github.com/openconfig/gnmi/proto/gnmi_ext"
+	spb_gnoi "proto/gnoi"
+	spb "proto"
+
 	"bytes"
 )
 
@@ -133,7 +136,7 @@ func NewServer(config *Config, opts []grpc.ServerOption) (*Server, error) {
 	}
 	gnmipb.RegisterGNMIServer(srv.s, srv)
 	gnoi_system_pb.RegisterSystemServer(srv.s, srv)
-	spb.RegisterSonicServiceServer(srv.s, srv)
+	spb_gnoi.RegisterSonicServiceServer(srv.s, srv)
 	log.V(1).Infof("Created Server on %s", srv.Address())
 
 	return srv, nil
@@ -412,10 +415,21 @@ func (srv *Server) Capabilities(ctx context.Context, req *gnmipb.CapabilityReque
 								Version: model.Version,
 			}
 		}
+	sbvs := spb.SupportedBundleVersions {
+		LatestVersion: "test",
+	}
+	fmt.Println(sbvs)
+	ext := gnmi_extpb.Extension{}
+	ext.Ext = &gnmi_extpb.Extension_RegisteredExt {
+		RegisteredExt: &gnmi_extpb.RegisteredExtension {
+			Id: 999,
+			Msg: []byte{1, 2, 3}}}
+	exts := []*gnmi_extpb.Extension{&ext}
 
 	return &gnmipb.CapabilityResponse{SupportedModels: suppModels, 
 				 	  SupportedEncodings: supportedEncodings,
-					  GNMIVersion: "0.7.0"}, nil
+					  GNMIVersion: "0.7.0",
+					  Extension: exts}, nil
 }
 
 func  isTargetDb ( target string) (bool) {
