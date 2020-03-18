@@ -48,6 +48,8 @@ import (
 	gclient "github.com/openconfig/gnmi/client/gnmi"
 
 	gpb "github.com/openconfig/gnmi/proto/gnmi"
+	ext_pb "github.com/openconfig/gnmi/proto/gnmi_ext"
+	spb "proto"
 )
 
 var (
@@ -81,6 +83,7 @@ var (
 	streaming_sample_int = flag.Uint("streaming_sample_interval", 0, "Streaming sample inteval seconds, 0 means lowest supported.")
 	heartbeat_int = flag.Uint("heartbeat_interval", 0, "Heartbeat inteval seconds.")
 	suppress_redundant = flag.Bool("suppress_redundant", false, "Suppress Redundant Subscription Updates")
+	bundleVersion = flag.String("bundle_ver", "", "Optional version specifier for model bundle version.")
 )
 
 func init() {
@@ -227,6 +230,21 @@ func executeGet(ctx context.Context) error {
 	if err != nil {
 		return fmt.Errorf("could not create a gNMI client: %v", err)
 	}
+	if len(*bundleVersion) > 0 {
+		bv, err := proto.Marshal(&spb.BundleVersion{
+			Version: *bundleVersion,
+		})
+		if err != nil {
+			log.Exitf("%v", err)
+		}
+
+		r.Extension = append(r.Extension, &ext_pb.Extension{
+			Ext: &ext_pb.Extension_RegisteredExt {
+				RegisteredExt: &ext_pb.RegisteredExtension {
+				Id: 999,
+				Msg: bv,
+			}}})
+	}
 	response, err := c.(*gclient.Client).Get(ctx, r)
 	if err != nil {
 		return fmt.Errorf("target returned RPC error for Get(%q): %v", r.String(), err)
@@ -253,6 +271,21 @@ func executeSet(ctx context.Context) error {
 	if err != nil {
 		return fmt.Errorf("could not create a gNMI client: %v", err)
 	}
+	if len(*bundleVersion) > 0 {
+		bv, err := proto.Marshal(&spb.BundleVersion{
+			Version: *bundleVersion,
+		})
+		if err != nil {
+			log.Exitf("%v", err)
+		}
+
+		r.Extension = append(r.Extension, &ext_pb.Extension{
+			Ext: &ext_pb.Extension_RegisteredExt {
+				RegisteredExt: &ext_pb.RegisteredExtension {
+				Id: 999,
+				Msg: bv,
+			}}})
+	}
 	response, err := c.(*gclient.Client).Set(ctx, r)
 	if err != nil {
 		return fmt.Errorf("target returned RPC error for Set(%q) : %v", r, err)
@@ -273,9 +306,26 @@ func executeSubscribe(ctx context.Context) error {
 		tq.Credentials = q.Credentials
 		tq.Timeout = q.Timeout
 		tq.TLS = q.TLS
+		// if len(*bundleVersion) > 0 {
+		// 	bv, err := proto.Marshal(&spb.BundleVersion{
+		// 		Version: *bundleVersion,
+		// 	})
+		// 	if err != nil {
+		// 		log.Exitf("%v", err)
+		// 	}
+
+		// 	tq.SubReq.Extension = []*ext_pb.Extension{&ext_pb.Extension{
+		// 		Ext: &ext_pb.Extension_RegisteredExt {
+		// 			RegisteredExt: &ext_pb.RegisteredExtension {
+		// 			Id: 999,
+		// 			Msg: bv,
+		// 		}}}}
+		// }
 		return cli.QueryDisplay(ctx, tq, &cfg)
 	}
-
+	if len(*bundleVersion) > 0 {
+		q.BundleVersion = bundleVersion
+	}
 	if q.Type = cli.QueryType(*queryType); q.Type == client.Unknown {
 		return errors.New("--query_type must be one of: (o, once, p, polling, s, streaming)")
 	}
@@ -306,6 +356,8 @@ func executeSubscribe(ctx context.Context) error {
 		}
 		q.Queries = append(q.Queries, query)
 	}
+	
+
 	return cli.QueryDisplay(ctx, q, &cfg)
 }
 

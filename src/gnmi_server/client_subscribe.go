@@ -157,7 +157,6 @@ func (c *Client) Run(stream gnmipb.GNMI_SubscribeServer) (err error) {
 	default:
 		return grpc.Errorf(codes.InvalidArgument, "Unkown subscription mode: %q", query)
 	}
-
 	log.V(1).Infof("Client %s running", c)
 	go c.recv(stream)
 	err = c.send(stream)

@@ -215,6 +215,7 @@ func (c *TranslClient) StreamRun(q *queue.PriorityQueue, stop chan struct{}, w *
 				//Send initial data now so we can send sync response, unless updates_only is set.
 				val, err := transutil.TranslProcessGet(c.path2URI[sub.Path], nil, c.ctx)
 				if err != nil {
+					enqueFatalMsgTranslib(c, fmt.Sprintf("Subscribe operation failed with error =%v", err.Error()))
 					return
 				}
 				spbv := &spb.Value{
@@ -336,6 +337,7 @@ func TranslSubscribe(gnmiPaths []*gnmipb.Path, stringPaths []string, pathMap map
 		nver, err := translib.NewVersion(*rc.BundleVersion)
 		if err != nil {
 			log.V(2).Infof("Subscribe operation failed with error =%v", err.Error())
+			enqueFatalMsgTranslib(c, fmt.Sprintf("Subscribe operation failed with error =%v", err.Error()))
 			return
 		}
 		req.ClientVersion = nver
@@ -345,6 +347,7 @@ func TranslSubscribe(gnmiPaths []*gnmipb.Path, stringPaths []string, pathMap map
 		items, err := q.Get(1)
 		if err != nil {
 			log.V(1).Infof("%v", err)
+			enqueFatalMsgTranslib(c, fmt.Sprintf("Subscribe operation failed with error =%v", err.Error()))
 			return
 		}
 		switch v := items[0].(type) {
@@ -414,6 +417,7 @@ func (c *TranslClient) PollRun(q *queue.PriorityQueue, poll chan struct{}, w *sy
 		_, more := <-c.channel
 		if !more {
 			log.V(1).Infof("%v poll channel closed, exiting pollDb routine", c)
+			enqueFatalMsgTranslib(c, "")
 			return
 		}
 		t1 := time.Now()
@@ -422,6 +426,7 @@ func (c *TranslClient) PollRun(q *queue.PriorityQueue, poll chan struct{}, w *sy
 
 				val, err := transutil.TranslProcessGet(URIPath, nil, c.ctx)
 				if err != nil {
+					enqueFatalMsgTranslib(c, fmt.Sprintf("Subscribe operation failed with error =%v", err.Error()))
 					return
 				}
 
@@ -463,6 +468,7 @@ func (c *TranslClient) OnceRun(q *queue.PriorityQueue, once chan struct{}, w *sy
 	_, more := <-c.channel
 	if !more {
 		log.V(1).Infof("%v once channel closed, exiting onceDb routine", c)
+		enqueFatalMsgTranslib(c, "")
 		return
 	}
 	t1 := time.Now()
@@ -470,6 +476,7 @@ func (c *TranslClient) OnceRun(q *queue.PriorityQueue, once chan struct{}, w *sy
 		
 		val, err := transutil.TranslProcessGet(URIPath, nil, c.ctx)
 		if err != nil {
+			enqueFatalMsgTranslib(c, fmt.Sprintf("Subscribe operation failed with error =%v", err.Error()))
 			return
 		}
 		if !subscribe.UpdatesOnly {
