@@ -33,8 +33,7 @@ import (
 	"google.golang.org/grpc/metadata"
 	pb "github.com/openconfig/gnmi/proto/gnmi"
 	ext_pb "github.com/openconfig/gnmi/proto/gnmi_ext"
-	
-	// spb "proto"
+	spb "proto"
 )
 
 type arrayFlags []string
@@ -140,11 +139,21 @@ func main() {
 		UseModels: pbModelDataList,
 	}
 	if len(*bundleVersion) > 0 {
+		bv, err := proto.Marshal(&spb.BundleVersion{
+			Version: *bundleVersion,
+		})
+		if err != nil {
+			log.Exitf("%v", err)
+		}
+
 		getRequest.Extension = append(getRequest.Extension, &ext_pb.Extension{
 			Ext: &ext_pb.Extension_RegisteredExt {
 				RegisteredExt: &ext_pb.RegisteredExtension {
 				Id: 999,
-				Msg: []byte{1, 2, 3, 4, 5}}}})
+				Msg: bv,
+			},
+		},
+	})
 	}
 
 	fmt.Println("== getRequest:")

@@ -5,6 +5,7 @@ import (
 	spb "proto"
 	transutil "transl_utils"
 	log "github.com/golang/glog"
+	"github.com/golang/protobuf/proto"
 	gnmipb "github.com/openconfig/gnmi/proto/gnmi"
 	gnmi_extpb "github.com/openconfig/gnmi/proto/gnmi_ext"
 	"github.com/Workiva/go-datastructures/queue"
@@ -35,7 +36,7 @@ type TranslClient struct {
 	w      *sync.WaitGroup // wait for all sub go routines to finish
 	mu     sync.RWMutex    // Mutex for data protection among routines for transl_client
 	ctx context.Context //Contains Auth info and request info
-
+	extensions []*gnmi_extpb.Extension
 }
 
 func NewTranslClient(prefix *gnmipb.Path, getpaths []*gnmipb.Path, ctx context.Context, extensions []*gnmi_extpb.Extension) (Client, error) {
@@ -43,6 +44,7 @@ func NewTranslClient(prefix *gnmipb.Path, getpaths []*gnmipb.Path, ctx context.C
 	var err error
 	client.ctx = ctx
 	client.prefix = prefix
+	client.extensions = extensions
 	if getpaths != nil {
 		client.path2URI = make(map[*gnmipb.Path]string)
 		/* Populate GNMI path to REST URL map. */
@@ -60,10 +62,11 @@ func (c *TranslClient) Get(w *sync.WaitGroup) ([]*spb.Value, error) {
 	var values []*spb.Value
 	ts := time.Now()
 
+	version := getBundleVersion(c.extensions)
 	/* Iterate through all GNMI paths. */
 	for gnmiPath, URIPath := range c.path2URI {
 		/* Fill values for each GNMI path. */
-		val, err := transutil.TranslProcessGet(URIPath, nil, c.ctx)
+		val, err := transutil.TranslProcessGet(URIPath, nil, c.ctx, version)
 
 		if err != nil {
 			return nil, err
@@ -194,7 +197,7 @@ func (c *TranslClient) StreamRun(q *queue.PriorityQueue, stop chan struct{}, w *
 			
 			if !subscribe.UpdatesOnly {
 				//Send initial data now so we can send sync response, unless updates_only is set.
-				val, err := transutil.TranslProcessGet(c.path2URI[sub.Path], nil, c.ctx)
+				val, err := transutil.TranslProcessGet(c.path2URI[sub.Path], nil, c.ctx, nil)
 				if err != nil {
 					return
 				}
@@ -258,7 +261,7 @@ func (c *TranslClient) StreamRun(q *queue.PriorityQueue, stop chan struct{}, w *
 
 		for _,tick := range ticker_map[cases_map[chosen]] {
 			fmt.Printf("tick, heartbeat: %t, path: %s", tick.heartbeat, c.path2URI[tick.sub.Path])
-			val, err := transutil.TranslProcessGet(c.path2URI[tick.sub.Path], nil, c.ctx)
+			val, err := transutil.TranslProcessGet(c.path2URI[tick.sub.Path], nil, c.ctx, nil)
 			if err != nil {
 				return
 			}
@@ -385,7 +388,7 @@ func (c *TranslClient) PollRun(q *queue.PriorityQueue, poll chan struct{}, w *sy
 		for gnmiPath, URIPath := range c.path2URI {
 			if synced || !subscribe.UpdatesOnly {
 
-				val, err := transutil.TranslProcessGet(URIPath, nil, c.ctx)
+				val, err := transutil.TranslProcessGet(URIPath, nil, c.ctx, nil)
 				if err != nil {
 					return
 				}
@@ -428,7 +431,7 @@ func (c *TranslClient) OnceRun(q *queue.PriorityQueue, once chan struct{}, w *sy
 	t1 := time.Now()
 	for gnmiPath, URIPath := range c.path2URI {
 		
-		val, err := transutil.TranslProcessGet(URIPath, nil, c.ctx)
+		val, err := transutil.TranslProcessGet(URIPath, nil, c.ctx, nil)
 		if err != nil {
 			return
 		}
@@ -464,5 +467,20 @@ func (c *TranslClient) Capabilities() []gnmipb.ModelData {
 }
 
 func (c *TranslClient) Close() error {
+	return nil
+}
+
+func getBundleVersion(extensions []*gnmi_extpb.Extension) *string {
+	for _,e := range extensions {
+		switch v := e.Ext.(type) {
+			case *gnmi_extpb.Extension_RegisteredExt:
+				if v.RegisteredExt.Id == 999 {
+					var bv spb.BundleVersion
+					proto.Unmarshal(v.RegisteredExt.Msg, &bv)
+					return &bv.Version
+				}
+			
+		}
+	}
 	return nil
 }

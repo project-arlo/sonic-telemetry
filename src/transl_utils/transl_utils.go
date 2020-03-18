@@ -77,11 +77,18 @@ func ConvertToURI(prefix *gnmipb.Path, path *gnmipb.Path, req *string) error {
 }
 
 /* Fill the values from TransLib. */
-func TranslProcessGet(uriPath string, op *string, ctx context.Context) (*gnmipb.TypedValue, error) {
+func TranslProcessGet(uriPath string, op *string, ctx context.Context, version *string) (*gnmipb.TypedValue, error) {
 	var jv []byte
 	var data []byte
 	rc, ctx := common_utils.GetContext(ctx)
-	req := translib.GetRequest{Path:uriPath, User: translib.UserRoles{Name: rc.Auth.User, Roles: rc.Auth.Roles}}
+	fmt.Println(*version)
+	nver, err := translib.NewVersion(*version)
+
+	if err != nil {
+		log.V(2).Infof("GET operation failed with error =%v", err.Error())
+		return nil, err
+	}
+	req := translib.GetRequest{Path:uriPath, ClientVersion: nver, User: translib.UserRoles{Name: rc.Auth.User, Roles: rc.Auth.Roles}}
 	if rc.Auth.AuthEnabled {
 		req.AuthEnabled = true
 	}
