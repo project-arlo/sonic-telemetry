@@ -34,7 +34,10 @@ import (
 	//"github.com/google/gnxi/utils/xpath"
 	"github.com/jipanyang/gnxi/utils/xpath"
 	"google.golang.org/grpc/metadata"
+	"github.com/golang/protobuf/proto"
 	pb "github.com/openconfig/gnmi/proto/gnmi"
+	ext_pb "github.com/openconfig/gnmi/proto/gnmi_ext"
+	spb "proto"
 )
 
 type arrayFlags []string
@@ -57,6 +60,7 @@ var (
 	timeOut    = flag.Duration("time_out", 10*time.Second, "Timeout for the Get request, 10 seconds by default")
 	pathTarget = flag.String("xpath_target", "", "name of the target for which the path is a member")
 	jwtToken   = flag.String("jwt_token", "", "JWT Token if required")
+	bundleVersion    = flag.String("bundle_ver", "", "Optional version specifier for model bundle version.")
 )
 
 func buildPbUpdateList(pathValuePairs []string) []*pb.Update {
@@ -174,7 +178,21 @@ func main() {
 		Replace: replaceList,
 		Update:  updateList,
 	}
+	if len(*bundleVersion) > 0 {
+		bv, err := proto.Marshal(&spb.BundleVersion{
+			Version: *bundleVersion,
+		})
+		if err != nil {
+			log.Exitf("%v", err)
+		}
 
+		setRequest.Extension = append(setRequest.Extension, &ext_pb.Extension{
+			Ext: &ext_pb.Extension_RegisteredExt {
+				RegisteredExt: &ext_pb.RegisteredExtension {
+				Id: 999,
+				Msg: bv,
+			}}})
+	}
 	fmt.Println("== setRequest:")
 	utils.PrintProto(setRequest)
 

@@ -52,7 +52,7 @@ func (c *Client) populateDbPathSubscrition(sublist *gnmipb.SubscriptionList) ([]
 	var paths []*gnmipb.Path
 
 	prefix := sublist.GetPrefix()
-	log.V(6).Infof("prefix : %#v SubscribRequest : %#v", prefix, sublist)
+	log.V(6).Infof("prefix : %#v SubscribeRequest : %#v", prefix, sublist)
 
 	subscriptions := sublist.GetSubscription()
 	if subscriptions == nil {
@@ -75,6 +75,9 @@ func (c *Client) populateDbPathSubscrition(sublist *gnmipb.SubscriptionList) ([]
 func (c *Client) Run(stream gnmipb.GNMI_SubscribeServer) (err error) {
 	defer log.V(1).Infof("Client %s shutdown", c)
 	ctx := stream.Context()
+	
+
+
 	if stream == nil {
 		return grpc.Errorf(codes.FailedPrecondition, "cannot start client: stream is nil")
 	}
@@ -86,6 +89,7 @@ func (c *Client) Run(stream gnmipb.GNMI_SubscribeServer) (err error) {
 	}()
 
 	query, err := stream.Recv()
+
 	c.recvMsg++
 	if err != nil {
 		if err == io.EOF {
@@ -97,6 +101,8 @@ func (c *Client) Run(stream gnmipb.GNMI_SubscribeServer) (err error) {
 	log.V(2).Infof("Client %s recieved initial query %v", c, query)
 
 	c.subscribe = query.GetSubscribe()
+	extensions := query.GetExtension()
+
 	if c.subscribe == nil {
 		return grpc.Errorf(codes.InvalidArgument, "first message must be SubscriptionList: %q", query)
 	}
@@ -118,14 +124,14 @@ func (c *Client) Run(stream gnmipb.GNMI_SubscribeServer) (err error) {
 		return grpc.Errorf(codes.NotFound, "Invalid subscription path: %v %q", err, query)
 	}
 	var dc sdc.Client
-
+	
     if target == "OTHERS" {
             dc, err = sdc.NewNonDbClient(paths, prefix)
     } else if target == "APP_DB" || target == "CONFIG_DB" || target == "COUNTERS_DB" {
             dc, err = sdc.NewDbClient(paths, prefix)
     } else {
             /* For any other target or no target create new Transl Client. */
-            dc, err = sdc.NewTranslClient(prefix, paths, ctx, nil)
+            dc, err = sdc.NewTranslClient(prefix, paths, ctx, extensions)
     }
 
     if err != nil {

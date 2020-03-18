@@ -151,9 +151,7 @@ func main() {
 				RegisteredExt: &ext_pb.RegisteredExtension {
 				Id: 999,
 				Msg: bv,
-			},
-		},
-	})
+			}}})
 	}
 
 	fmt.Println("== getRequest:")

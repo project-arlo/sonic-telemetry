@@ -24,6 +24,9 @@ type RequestContext struct {
 
 	// Auth contains the authorized user information
 	Auth AuthInfo
+
+	//Bundle Version is the release yang models version.
+	BundleVersion *string
 }
 
 type contextkey int

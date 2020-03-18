@@ -15,13 +15,14 @@ import (
 	"google.golang.org/grpc/reflection"
 	"google.golang.org/grpc/status"
 	// "github.com/msteinert/pam"
+	"github.com/golang/protobuf/proto"
 	gnoi_system_pb "github.com/openconfig/gnoi/system"
 	sdc "sonic_data_client"
 	gnmipb "github.com/openconfig/gnmi/proto/gnmi"
 	gnmi_extpb "github.com/openconfig/gnmi/proto/gnmi_ext"
 	spb_gnoi "proto/gnoi"
 	spb "proto"
-
+	"translib"
 	"bytes"
 )
 
@@ -329,9 +330,9 @@ func (srv *Server) Set(ctx context.Context,req *gnmipb.SetRequest) (*gnmipb.SetR
 
 	/* Fetch the prefix. */
 	prefix := req.GetPrefix()
-
+	extensions := req.GetExtension()
            /* Create Transl client. */
-	dc, _ := sdc.NewTranslClient(prefix, nil, ctx, nil)
+	dc, _ := sdc.NewTranslClient(prefix, nil, ctx, extensions)
 
 	/* DELETE */
 	for _, path := range req.GetDelete() {
@@ -404,7 +405,8 @@ func (srv *Server) Capabilities(ctx context.Context, req *gnmipb.CapabilityReque
 	if err != nil {
 		return nil, err
 	}
-	dc, _ := sdc.NewTranslClient(nil , nil, ctx, nil)
+	extensions := req.GetExtension()
+	dc, _ := sdc.NewTranslClient(nil , nil, ctx, extensions)
 
 		/* Fetch the client capabitlities. */
 		supportedModels := dc.Capabilities()
@@ -421,11 +423,16 @@ func (srv *Server) Capabilities(ctx context.Context, req *gnmipb.CapabilityReque
 		LatestVersion: "test",
 	}
 	fmt.Println(sbvs)
+	ver := translib.GetYangBundleVersion().String()
+	sup_bver := spb.SupportedBundleVersions{
+		LatestVersion: ver,
+	}
+	sup_msg, _ := proto.Marshal(&sup_bver)
 	ext := gnmi_extpb.Extension{}
 	ext.Ext = &gnmi_extpb.Extension_RegisteredExt {
 		RegisteredExt: &gnmi_extpb.RegisteredExtension {
 			Id: 999,
-			Msg: []byte{1, 2, 3}}}
+			Msg: sup_msg}}
 	exts := []*gnmi_extpb.Extension{&ext}
 
 	return &gnmipb.CapabilityResponse{SupportedModels: suppModels, 

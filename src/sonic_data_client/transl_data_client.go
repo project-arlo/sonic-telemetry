@@ -17,6 +17,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"context"
+	"common_utils"
 )
 
 const (
@@ -59,14 +60,19 @@ func NewTranslClient(prefix *gnmipb.Path, getpaths []*gnmipb.Path, ctx context.C
 }
 
 func (c *TranslClient) Get(w *sync.WaitGroup) ([]*spb.Value, error) {
+	rc, ctx := common_utils.GetContext(c.ctx)
+	c.ctx = ctx
 	var values []*spb.Value
 	ts := time.Now()
 
 	version := getBundleVersion(c.extensions)
+	if version != nil {
+		rc.BundleVersion = version
+	}
 	/* Iterate through all GNMI paths. */
 	for gnmiPath, URIPath := range c.path2URI {
 		/* Fill values for each GNMI path. */
-		val, err := transutil.TranslProcessGet(URIPath, nil, c.ctx, version)
+		val, err := transutil.TranslProcessGet(URIPath, nil, c.ctx)
 
 		if err != nil {
 			return nil, err
@@ -91,9 +97,14 @@ func (c *TranslClient) Get(w *sync.WaitGroup) ([]*spb.Value, error) {
 }
 
 func (c *TranslClient) Set(path *gnmipb.Path, val *gnmipb.TypedValue, flagop int) error {
+	rc, ctx := common_utils.GetContext(c.ctx)
+	c.ctx = ctx
 	var uri string
 	var err error
-
+	version := getBundleVersion(c.extensions)
+	if version != nil {
+		rc.BundleVersion = version
+	}
 	/* Convert the GNMI Path to URI. */
 	transutil.ConvertToURI(c.prefix, path, &uri)
 
@@ -122,11 +133,16 @@ type ticker_info struct{
 }
 
 func (c *TranslClient) StreamRun(q *queue.PriorityQueue, stop chan struct{}, w *sync.WaitGroup, subscribe *gnmipb.SubscriptionList) {
+	rc, ctx := common_utils.GetContext(c.ctx)
+	c.ctx = ctx
 	c.w = w
 	defer c.w.Done()
 	c.q = q
 	c.channel = stop
-
+	version := getBundleVersion(c.extensions)
+	if version != nil {
+		rc.BundleVersion = version
+	}
 
 	ticker_map := make(map[int][]*ticker_info)
 	var cases []reflect.SelectCase
@@ -197,7 +213,7 @@ func (c *TranslClient) StreamRun(q *queue.PriorityQueue, stop chan struct{}, w *
 			
 			if !subscribe.UpdatesOnly {
 				//Send initial data now so we can send sync response, unless updates_only is set.
-				val, err := transutil.TranslProcessGet(c.path2URI[sub.Path], nil, c.ctx, nil)
+				val, err := transutil.TranslProcessGet(c.path2URI[sub.Path], nil, c.ctx)
 				if err != nil {
 					return
 				}
@@ -261,7 +277,7 @@ func (c *TranslClient) StreamRun(q *queue.PriorityQueue, stop chan struct{}, w *
 
 		for _,tick := range ticker_map[cases_map[chosen]] {
 			fmt.Printf("tick, heartbeat: %t, path: %s", tick.heartbeat, c.path2URI[tick.sub.Path])
-			val, err := transutil.TranslProcessGet(c.path2URI[tick.sub.Path], nil, c.ctx, nil)
+			val, err := transutil.TranslProcessGet(c.path2URI[tick.sub.Path], nil, c.ctx)
 			if err != nil {
 				return
 			}
@@ -373,10 +389,16 @@ func TranslSubscribe(gnmiPaths []*gnmipb.Path, stringPaths []string, pathMap map
 
 
 func (c *TranslClient) PollRun(q *queue.PriorityQueue, poll chan struct{}, w *sync.WaitGroup, subscribe *gnmipb.SubscriptionList) {
+	rc, ctx := common_utils.GetContext(c.ctx)
+	c.ctx = ctx
 	c.w = w
 	defer c.w.Done()
 	c.q = q
 	c.channel = poll
+	version := getBundleVersion(c.extensions)
+	if version != nil {
+		rc.BundleVersion = version
+	}
 	synced := false
 	for {
 		_, more := <-c.channel
@@ -388,7 +410,7 @@ func (c *TranslClient) PollRun(q *queue.PriorityQueue, poll chan struct{}, w *sy
 		for gnmiPath, URIPath := range c.path2URI {
 			if synced || !subscribe.UpdatesOnly {
 
-				val, err := transutil.TranslProcessGet(URIPath, nil, c.ctx, nil)
+				val, err := transutil.TranslProcessGet(URIPath, nil, c.ctx)
 				if err != nil {
 					return
 				}
@@ -417,11 +439,16 @@ func (c *TranslClient) PollRun(q *queue.PriorityQueue, poll chan struct{}, w *sy
 	}
 }
 func (c *TranslClient) OnceRun(q *queue.PriorityQueue, once chan struct{}, w *sync.WaitGroup, subscribe *gnmipb.SubscriptionList) {
+	rc, ctx := common_utils.GetContext(c.ctx)
+	c.ctx = ctx
 	c.w = w
 	defer c.w.Done()
 	c.q = q
 	c.channel = once
-
+	version := getBundleVersion(c.extensions)
+	if version != nil {
+		rc.BundleVersion = version
+	}
 	
 	_, more := <-c.channel
 	if !more {
@@ -431,7 +458,7 @@ func (c *TranslClient) OnceRun(q *queue.PriorityQueue, once chan struct{}, w *sy
 	t1 := time.Now()
 	for gnmiPath, URIPath := range c.path2URI {
 		
-		val, err := transutil.TranslProcessGet(URIPath, nil, c.ctx, nil)
+		val, err := transutil.TranslProcessGet(URIPath, nil, c.ctx)
 		if err != nil {
 			return
 		}
@@ -460,7 +487,12 @@ func (c *TranslClient) OnceRun(q *queue.PriorityQueue, once chan struct{}, w *sy
 }
 
 func (c *TranslClient) Capabilities() []gnmipb.ModelData {
-
+	rc, ctx := common_utils.GetContext(c.ctx)
+	c.ctx = ctx
+	version := getBundleVersion(c.extensions)
+	if version != nil {
+		rc.BundleVersion = version
+	}
 	/* Fetch the supported models. */
 	supportedModels := transutil.GetModels()
 	return supportedModels

@@ -77,18 +77,20 @@ func ConvertToURI(prefix *gnmipb.Path, path *gnmipb.Path, req *string) error {
 }
 
 /* Fill the values from TransLib. */
-func TranslProcessGet(uriPath string, op *string, ctx context.Context, version *string) (*gnmipb.TypedValue, error) {
+func TranslProcessGet(uriPath string, op *string, ctx context.Context) (*gnmipb.TypedValue, error) {
 	var jv []byte
 	var data []byte
 	rc, ctx := common_utils.GetContext(ctx)
-	fmt.Println(*version)
-	nver, err := translib.NewVersion(*version)
 
-	if err != nil {
-		log.V(2).Infof("GET operation failed with error =%v", err.Error())
-		return nil, err
+	req := translib.GetRequest{Path:uriPath, User: translib.UserRoles{Name: rc.Auth.User, Roles: rc.Auth.Roles}}
+	if rc.BundleVersion != nil {
+		nver, err := translib.NewVersion(*rc.BundleVersion)
+		if err != nil {
+			log.V(2).Infof("GET operation failed with error =%v", err.Error())
+			return nil, err
+		}
+		req.ClientVersion = nver
 	}
-	req := translib.GetRequest{Path:uriPath, ClientVersion: nver, User: translib.UserRoles{Name: rc.Auth.User, Roles: rc.Auth.Roles}}
 	if rc.Auth.AuthEnabled {
 		req.AuthEnabled = true
 	}
@@ -120,6 +122,14 @@ func TranslProcessDelete(uri string, ctx context.Context) error {
 	payload := []byte(str3)
 	rc, ctx := common_utils.GetContext(ctx)
 	req := translib.SetRequest{Path:uri, Payload:payload, User: translib.UserRoles{Name: rc.Auth.User, Roles: rc.Auth.Roles}}
+	if rc.BundleVersion != nil {
+		nver, err := translib.NewVersion(*rc.BundleVersion)
+		if err != nil {
+			log.V(2).Infof("DELETE operation failed with error =%v", err.Error())
+			return err
+		}
+		req.ClientVersion = nver
+	}
 	if rc.Auth.AuthEnabled {
 		req.AuthEnabled = true
 	}
@@ -142,6 +152,14 @@ func TranslProcessReplace(uri string, t *gnmipb.TypedValue, ctx context.Context)
 	payload := []byte(str3)
 	rc, ctx := common_utils.GetContext(ctx)
 	req := translib.SetRequest{Path:uri, Payload:payload, User: translib.UserRoles{Name: rc.Auth.User, Roles: rc.Auth.Roles}}
+	if rc.BundleVersion != nil {
+		nver, err := translib.NewVersion(*rc.BundleVersion)
+		if err != nil {
+			log.V(2).Infof("REPLACE operation failed with error =%v", err.Error())
+			return err
+		}
+		req.ClientVersion = nver
+	}
 	if rc.Auth.AuthEnabled {
 		req.AuthEnabled = true
 	}
@@ -170,6 +188,14 @@ func TranslProcessUpdate(uri string, t *gnmipb.TypedValue, ctx context.Context) 
 	payload := []byte(str3)
 	rc, ctx := common_utils.GetContext(ctx)
 	req := translib.SetRequest{Path:uri, Payload:payload, User: translib.UserRoles{Name: rc.Auth.User, Roles: rc.Auth.Roles}}
+	if rc.BundleVersion != nil {
+		nver, err := translib.NewVersion(*rc.BundleVersion)
+		if err != nil {
+			log.V(2).Infof("UPDATE operation failed with error =%v", err.Error())
+			return err
+		}
+		req.ClientVersion = nver
+	}
 	if rc.Auth.AuthEnabled {
 		req.AuthEnabled = true
 	}
@@ -190,6 +216,14 @@ func TranslProcessUpdate(uri string, t *gnmipb.TypedValue, ctx context.Context) 
 func TranslProcessAction(uri string, payload []byte, ctx context.Context) ([]byte, error) {
 	rc, ctx := common_utils.GetContext(ctx)
 	req := translib.ActionRequest{User: translib.UserRoles{Name: rc.Auth.User, Roles: rc.Auth.Roles}}
+	if rc.BundleVersion != nil {
+		nver, err := translib.NewVersion(*rc.BundleVersion)
+		if err != nil {
+			log.V(2).Infof("Action operation failed with error =%v", err.Error())
+			return nil, err
+		}
+		req.ClientVersion = nver
+	}
 	if rc.Auth.AuthEnabled {
 		req.AuthEnabled = true
 	}
