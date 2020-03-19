@@ -408,21 +408,17 @@ func (srv *Server) Capabilities(ctx context.Context, req *gnmipb.CapabilityReque
 	extensions := req.GetExtension()
 	dc, _ := sdc.NewTranslClient(nil , nil, ctx, extensions)
 
-		/* Fetch the client capabitlities. */
-		supportedModels := dc.Capabilities()
-		suppModels := make([]*gnmipb.ModelData, len(supportedModels))
+	/* Fetch the client capabitlities. */
+	supportedModels := dc.Capabilities()
+	suppModels := make([]*gnmipb.ModelData, len(supportedModels))
 
-		for index, model := range supportedModels {
-			suppModels[index] = &gnmipb.ModelData{
-						    	     	Name: model.Name, 
-								Organization: model.Organization, 
-								Version: model.Version,
-			}
+	for index, model := range supportedModels {
+		suppModels[index] = &gnmipb.ModelData{
+					    	     	Name: model.Name, 
+							Organization: model.Organization, 
+							Version: model.Version,
 		}
-	sbvs := spb.SupportedBundleVersions {
-		LatestVersion: "test",
 	}
-	fmt.Println(sbvs)
 	ver := translib.GetYangBundleVersion().String()
 	sup_bver := spb.SupportedBundleVersions{
 		LatestVersion: ver,
