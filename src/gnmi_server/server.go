@@ -431,7 +431,7 @@ func (srv *Server) Capabilities(ctx context.Context, req *gnmipb.CapabilityReque
 	ext := gnmi_extpb.Extension{}
 	ext.Ext = &gnmi_extpb.Extension_RegisteredExt {
 		RegisteredExt: &gnmi_extpb.RegisteredExtension {
-			Id: 999,
+			Id: spb.SUPPORTED_VERSIONS_EXT,
 			Msg: sup_msg}}
 	exts := []*gnmi_extpb.Extension{&ext}
 

@@ -133,7 +133,7 @@ func (c *Client) Subscribe(ctx context.Context, q client.Query) error {
 		sr.Extension = append(sr.Extension, &ext_pb.Extension{
 			Ext: &ext_pb.Extension_RegisteredExt {
 				RegisteredExt: &ext_pb.RegisteredExtension {
-				Id: 999,
+				Id: spb.BUNDLE_VERSION_EXT,
 				Msg: bv,
 			}}})
 	}

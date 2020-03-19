@@ -241,7 +241,7 @@ func executeGet(ctx context.Context) error {
 		r.Extension = append(r.Extension, &ext_pb.Extension{
 			Ext: &ext_pb.Extension_RegisteredExt {
 				RegisteredExt: &ext_pb.RegisteredExtension {
-				Id: 999,
+				Id: spb.BUNDLE_VERSION_EXT,
 				Msg: bv,
 			}}})
 	}
@@ -282,7 +282,7 @@ func executeSet(ctx context.Context) error {
 		r.Extension = append(r.Extension, &ext_pb.Extension{
 			Ext: &ext_pb.Extension_RegisteredExt {
 				RegisteredExt: &ext_pb.RegisteredExtension {
-				Id: 999,
+				Id: spb.BUNDLE_VERSION_EXT,
 				Msg: bv,
 			}}})
 	}
@@ -306,21 +306,7 @@ func executeSubscribe(ctx context.Context) error {
 		tq.Credentials = q.Credentials
 		tq.Timeout = q.Timeout
 		tq.TLS = q.TLS
-		// if len(*bundleVersion) > 0 {
-		// 	bv, err := proto.Marshal(&spb.BundleVersion{
-		// 		Version: *bundleVersion,
-		// 	})
-		// 	if err != nil {
-		// 		log.Exitf("%v", err)
-		// 	}
-
-		// 	tq.SubReq.Extension = []*ext_pb.Extension{&ext_pb.Extension{
-		// 		Ext: &ext_pb.Extension_RegisteredExt {
-		// 			RegisteredExt: &ext_pb.RegisteredExtension {
-		// 			Id: 999,
-		// 			Msg: bv,
-		// 		}}}}
-		// }
+		
 		return cli.QueryDisplay(ctx, tq, &cfg)
 	}
 	if len(*bundleVersion) > 0 {

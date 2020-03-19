@@ -189,7 +189,7 @@ func main() {
 		setRequest.Extension = append(setRequest.Extension, &ext_pb.Extension{
 			Ext: &ext_pb.Extension_RegisteredExt {
 				RegisteredExt: &ext_pb.RegisteredExtension {
-				Id: 999,
+				Id: spb.BUNDLE_VERSION_EXT,
 				Msg: bv,
 			}}})
 	}

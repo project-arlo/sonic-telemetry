@@ -523,7 +523,7 @@ func getBundleVersion(extensions []*gnmi_extpb.Extension) *string {
 	for _,e := range extensions {
 		switch v := e.Ext.(type) {
 			case *gnmi_extpb.Extension_RegisteredExt:
-				if v.RegisteredExt.Id == 999 {
+				if v.RegisteredExt.Id == spb.BUNDLE_VERSION_EXT {
 					var bv spb.BundleVersion
 					proto.Unmarshal(v.RegisteredExt.Msg, &bv)
 					return &bv.Version
