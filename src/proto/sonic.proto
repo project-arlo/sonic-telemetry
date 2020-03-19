@@ -22,8 +22,8 @@ enum Target {
 }
 
 message SupportedBundleVersions {
-  string latest_version = 1;
-  repeated string supported_versions = 2;
+  string bundle_version = 1;
+  string base_version = 2;
 }
 message BundleVersion {
   string version = 1;

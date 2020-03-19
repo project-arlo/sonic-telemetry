@@ -419,9 +419,10 @@ func (srv *Server) Capabilities(ctx context.Context, req *gnmipb.CapabilityReque
 							Version: model.Version,
 		}
 	}
-	ver := translib.GetYangBundleVersion().String()
+
 	sup_bver := spb.SupportedBundleVersions{
-		LatestVersion: ver,
+		BundleVersion: translib.GetYangBundleVersion().String(),
+		BaseVersion: translib.GetYangBaseVersion().String(),
 	}
 	sup_msg, _ := proto.Marshal(&sup_bver)
 	ext := gnmi_extpb.Extension{}
