@@ -13,6 +13,7 @@ import (
     "github.com/kylelemons/godebug/pretty"
     "github.com/openconfig/gnmi/client"
     pb "github.com/openconfig/gnmi/proto/gnmi"
+    ext_pb "github.com/openconfig/gnmi/proto/gnmi_ext"
     "github.com/openconfig/gnmi/value"
     "golang.org/x/net/context"
     "google.golang.org/grpc"
@@ -1567,6 +1568,67 @@ func TestGNOI(t *testing.T) {
     }
 }
 
+func TestBundleVersion(t *testing.T) {
+    s := createServer(t, 8084)
+    go runServer(t, s)
+    defer s.s.Stop()
+
+    // prepareDb(t)
+
+    //t.Log("Start gNMI client")
+    tlsConfig := &tls.Config{InsecureSkipVerify: true}
+    opts := []grpc.DialOption{grpc.WithTransportCredentials(credentials.NewTLS(tlsConfig))}
+
+    //targetAddr := "30.57.185.38:8080"
+    targetAddr := "127.0.0.1:8084"
+    conn, err := grpc.Dial(targetAddr, opts...)
+    if err != nil {
+        t.Fatalf("Dialing to %q failed: %v", targetAddr, err)
+    }
+    defer conn.Close()
+
+    gClient := pb.NewGNMIClient(conn)
+    ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+    defer cancel()
+    t.Run("Invalid Bundle Version Format", func(t *testing.T) {
+        var pbPath *pb.Path
+        pbPath, err := xpath.ToGNMIPath("openconfig-interfaces:interfaces/interface[name=Ethernet0]/config")
+        if err != nil {
+            t.Fatalf("error in unmarshaling path: %v", err)
+        }
+        bundleVersion := "50.0.0"
+        bv, err := proto.Marshal(&spb.BundleVersion{
+            Version: bundleVersion,
+        })
+        if err != nil {
+            t.Fatalf("%v", err)
+        }
+        req := &pb.GetRequest{
+            Path:     []*pb.Path{pbPath},
+            Encoding: pb.Encoding_JSON_IETF,
+        }
+        req.Extension = append(req.Extension, &ext_pb.Extension{
+                    Ext: &ext_pb.Extension_RegisteredExt {
+                        RegisteredExt: &ext_pb.RegisteredExtension {
+                        Id: spb.BUNDLE_VERSION_EXT,
+                        Msg: bv,
+                    }}})
+
+       
+
+        _, err = gClient.Get(ctx, req)
+        gotRetStatus, ok := status.FromError(err)
+        if !ok {
+            t.Fatal("got a non-grpc error from grpc call")
+        }
+        if gotRetStatus.Code() != codes.NotFound {
+            t.Log("err: ", err)
+            t.Fatalf("got return code %v, want %v", gotRetStatus.Code(), codes.OK)
+        }
+    })
+
+
+}
 
 func init() {
     // Inform gNMI server to use redis tcp localhost connection
