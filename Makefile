@@ -38,12 +38,15 @@ $(BUILD_DIR)/.deps: $(MAKEFILE_LIST)
 	GOPATH=$(GO_DEP_PATH) $(GO) get -u github.com/go-redis/redis
 	GOPATH=$(GO_DEP_PATH) $(GO) get -u  github.com/c9s/goprocinfo/linux
 	GOPATH=$(GO_DEP_PATH) $(GO) get -u  github.com/golang/protobuf/proto
-	GOPATH=$(GO_DEP_PATH) $(GO) get -u  github.com/openconfig/gnmi/proto/gnmi
+	GOPATH=$(GO_DEP_PATH) $(GO) get -d  github.com/openconfig/gnmi/proto/gnmi
 	GOPATH=$(GO_DEP_PATH) $(GO) get -u  golang.org/x/net/context
 	GOPATH=$(GO_DEP_PATH) $(GO) get -u  google.golang.org/grpc
 	GOPATH=$(GO_DEP_PATH) $(GO) get -u google.golang.org/grpc/credentials
 	GOPATH=$(GO_DEP_PATH) $(GO) get -u github.com/google/gnxi/utils
-	GOPATH=$(GO_DEP_PATH) $(GO) get -u github.com/jipanyang/gnxi/utils/xpath
+	GOPATH=$(GO_DEP_PATH) $(GO) get -d github.com/jipanyang/gnxi/utils/xpath
+	cd $(GO_DEP_PATH)/src/github.com/openconfig/gnmi/proto/gnmi; git reset --hard HEAD;git clean -f -d;git checkout e7106f7f5493a9fa152d28ab314f2cc734244ed8 2>/dev/null ; true; \
+  GOPATH=$(GO_DEP_PATH) $(GO) install -v -gcflags "-N -l" $(GO_DEP_PATH)/src/github.com/openconfig/gnmi/proto/gnmi
+	GOPATH=$(GO_DEP_PATH) $(GO) install -v -gcflags "-N -l" $(GO_DEP_PATH)/src/github.com/jipanyang/gnxi/utils/xpath
 	GOPATH=$(GO_DEP_PATH) $(GO) get -d github.com/jipanyang/gnmi/client/gnmi
 	GOPATH=$(GO_DEP_PATH) $(GO) get -u github.com/xeipuuv/gojsonschema
 	GOPATH=$(GO_DEP_PATH) $(GO) get -u github.com/openconfig/gnoi/system
