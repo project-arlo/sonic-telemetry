@@ -40,6 +40,8 @@ import (
 	"github.com/openconfig/gnmi/value"
 
 	gpb "github.com/openconfig/gnmi/proto/gnmi"
+	ext_pb "github.com/openconfig/gnmi/proto/gnmi_ext"
+	spb "proto"
 )
 
 // Type defines the name resolution for this client type.
@@ -119,6 +121,21 @@ func (c *Client) Subscribe(ctx context.Context, q client.Query) error {
 		if err != nil {
 			return fmt.Errorf("generating SubscribeRequest proto: %v", err)
 		}
+	}
+	if q.BundleVersion != nil {
+		bv, err := proto.Marshal(&spb.BundleVersion{
+			Version: *q.BundleVersion,
+		})
+		if err != nil {
+			log.Exitf("%v", err)
+		}
+
+		sr.Extension = append(sr.Extension, &ext_pb.Extension{
+			Ext: &ext_pb.Extension_RegisteredExt {
+				RegisteredExt: &ext_pb.RegisteredExtension {
+				Id: spb.BUNDLE_VERSION_EXT,
+				Msg: bv,
+			}}})
 	}
 
 	if err := sub.Send(sr); err != nil {

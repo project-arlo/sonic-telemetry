@@ -15,10 +15,14 @@ import (
 	"google.golang.org/grpc/reflection"
 	"google.golang.org/grpc/status"
 	// "github.com/msteinert/pam"
+	"github.com/golang/protobuf/proto"
 	gnoi_system_pb "github.com/openconfig/gnoi/system"
 	sdc "sonic_data_client"
 	gnmipb "github.com/openconfig/gnmi/proto/gnmi"
-	spb "proto/gnoi"
+	gnmi_extpb "github.com/openconfig/gnmi/proto/gnmi_ext"
+	spb_gnoi "proto/gnoi"
+	spb "proto"
+	"translib"
 	"bytes"
 )
 
@@ -133,7 +137,7 @@ func NewServer(config *Config, opts []grpc.ServerOption) (*Server, error) {
 	}
 	gnmipb.RegisterGNMIServer(srv.s, srv)
 	gnoi_system_pb.RegisterSystemServer(srv.s, srv)
-	spb.RegisterSonicServiceServer(srv.s, srv)
+	spb_gnoi.RegisterSonicServiceServer(srv.s, srv)
 	log.V(1).Infof("Created Server on %s", srv.Address())
 
 	return srv, nil
@@ -274,7 +278,9 @@ func (srv *Server) Get(ctx context.Context, req *gnmipb.GetRequest) (*gnmipb.Get
 	var target string
 	prefix := req.GetPrefix()
 	paths := req.GetPath()
-        target = prefix.GetTarget()
+	extensions := req.GetExtension()
+	
+	target = prefix.GetTarget()
 	log.V(5).Infof("GetRequest paths: %v", paths)
 
 	var dc sdc.Client
@@ -285,7 +291,7 @@ func (srv *Server) Get(ctx context.Context, req *gnmipb.GetRequest) (*gnmipb.Get
 		dc, err = sdc.NewDbClient(paths, prefix)
 	} else {
 		/* If no prefix target is specified create new Transl Data Client . */
-		dc, err = sdc.NewTranslClient(prefix, paths, ctx)
+		dc, err = sdc.NewTranslClient(prefix, paths, ctx, extensions)
 	}
 
 	if err != nil {
@@ -324,9 +330,9 @@ func (srv *Server) Set(ctx context.Context,req *gnmipb.SetRequest) (*gnmipb.SetR
 
 	/* Fetch the prefix. */
 	prefix := req.GetPrefix()
-
+	extensions := req.GetExtension()
            /* Create Transl client. */
-	dc, _ := sdc.NewTranslClient(prefix, nil, ctx)
+	dc, _ := sdc.NewTranslClient(prefix, nil, ctx, extensions)
 
 	/* DELETE */
 	for _, path := range req.GetDelete() {
@@ -399,26 +405,40 @@ func (srv *Server) Capabilities(ctx context.Context, req *gnmipb.CapabilityReque
 	if err != nil {
 		return nil, err
 	}
-	dc, _ := sdc.NewTranslClient(nil , nil, ctx)
+	extensions := req.GetExtension()
+	dc, _ := sdc.NewTranslClient(nil , nil, ctx, extensions)
 
-		/* Fetch the client capabitlities. */
-		supportedModels := dc.Capabilities()
-		suppModels := make([]*gnmipb.ModelData, len(supportedModels))
+	/* Fetch the client capabitlities. */
+	supportedModels := dc.Capabilities()
+	suppModels := make([]*gnmipb.ModelData, len(supportedModels))
 
-		for index, model := range supportedModels {
-			suppModels[index] = &gnmipb.ModelData{
-						    	     	Name: model.Name, 
-								Organization: model.Organization, 
-								Version: model.Version,
-			}
+	for index, model := range supportedModels {
+		suppModels[index] = &gnmipb.ModelData{
+					    	     	Name: model.Name, 
+							Organization: model.Organization, 
+							Version: model.Version,
 		}
+	}
+
+	sup_bver := spb.SupportedBundleVersions{
+		BundleVersion: translib.GetYangBundleVersion().String(),
+		BaseVersion: translib.GetYangBaseVersion().String(),
+	}
+	sup_msg, _ := proto.Marshal(&sup_bver)
+	ext := gnmi_extpb.Extension{}
+	ext.Ext = &gnmi_extpb.Extension_RegisteredExt {
+		RegisteredExt: &gnmi_extpb.RegisteredExtension {
+			Id: spb.SUPPORTED_VERSIONS_EXT,
+			Msg: sup_msg}}
+	exts := []*gnmi_extpb.Extension{&ext}
 
 	return &gnmipb.CapabilityResponse{SupportedModels: suppModels, 
 				 	  SupportedEncodings: supportedEncodings,
-					  GNMIVersion: "0.7.0"}, nil
+					  GNMIVersion: "0.7.0",
+					  Extension: exts}, nil
 }
 
-func  isTargetDb ( target string) (bool) {
+func isTargetDb ( target string) (bool) {
 	isDbClient := false 
 	dbTargetSupported := []string { "APPL_DB", "ASIC_DB" , "COUNTERS_DB", "LOGLEVEL_DB", "CONFIG_DB", "PFC_WD_DB", "FLEX_COUNTER_DB", "STATE_DB"}
 

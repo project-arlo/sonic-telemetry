@@ -54,9 +54,12 @@ $(BUILD_DIR)/.deps: $(MAKEFILE_LIST)
 	GOPATH=$(GO_DEP_PATH) $(GO) get -u github.com/dgrijalva/jwt-go
 	GOPATH=$(GO_DEP_PATH) $(GO) get -u gopkg.in/godbus/dbus.v5
 	GOPATH=$(GO_DEP_PATH) $(GO) get -u github.com/gogo/protobuf/gogoproto
-	
+
+	cd $(GO_DEP_PATH)/src/github.com/openconfig/gnmi/proto/gnmi/; git reset --hard HEAD;git clean -f -d;git checkout e7106f7f5493a9fa152d28ab314f2cc734244ed8 2>/dev/null; true; \
+	GOPATH=$(GO_DEP_PATH) $(GO) install -v -gcflags "-N -l" $(GO_DEP_PATH)/src/github.com/openconfig/gnmi/proto/gnmi
 	cd $(GO_DEP_PATH)/src/github.com/openconfig/ygot/; git reset --hard HEAD;git clean -f -d;git checkout 724a6b18a9224343ef04fe49199dfb6020ce132a 2>/dev/null ; true; \
 GOPATH=$(GO_DEP_PATH) $(GO) install -v -gcflags "-N -l" $(GO_DEP_PATH)/src/github.com/openconfig/ygot/ygot
+	GOPATH=$(GO_DEP_PATH) $(GO) install -v -gcflags "-N -l" $(GO_DEP_PATH)/src/github.com/jipanyang/gnxi/utils/xpath
 	cd $(GO_DEP_PATH)/src/github.com/jipanyang/gnmi/client/gnmi; git reset --hard HEAD;git clean -f -d;git checkout cb4d464fa018c29eadab98281448000bee4dcc3d 2>/dev/null ; true; \
 GOPATH=$(GO_DEP_PATH) $(GO) install -v -gcflags "-N -l" $(GO_DEP_PATH)/src/github.com/jipanyang/gnmi/client/gnmi
 	
