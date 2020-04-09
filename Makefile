@@ -16,61 +16,22 @@ TEST_FILES=$(wildcard *_test.go)
 TELEMETRY_TEST_DIR = $(GO_MGMT_PATH)/build/tests/gnmi_server
 TELEMETRY_TEST_BIN = $(TELEMETRY_TEST_DIR)/server.test
 
-.phony: mgmt-deps
-
 all: sonic-telemetry $(TELEMETRY_TEST_BIN)
 
 go.mod:
 	/usr/local/go/bin/go mod init github.com/Azure/sonic-telemetry
-mgmt-deps:
-	rm -rf cvl
-	rm -rf translib
-	cp -r ../sonic-mgmt-framework/src/cvl ./
-	cp -r ../sonic-mgmt-framework/src/translib ./
-	find cvl -name \*\.go -exec sed -i -e 's/\"translib/\"github.com\/Azure\/sonic-telemetry\/translib/g' {} \;
-	find translib -name \*\.go -exec sed -i -e 's/\"translib/\"github.com\/Azure\/sonic-telemetry\/translib/g' {} \;
-	find cvl -name \*\.go -exec sed -i -e 's/\"cvl/\"github.com\/Azure\/sonic-telemetry\/cvl/g' {} \;
-	find translib -name \*\.go -exec sed -i -e 's/\"cvl/\"github.com\/Azure\/sonic-telemetry\/cvl/g' {} \;
-	sed -i -e 's/\.\.\/\.\.\/\.\.\/models\/yang/\.\.\/\.\.\/\.\.\/sonic-mgmt-framework\/models\/yang/' translib/ocbinds/oc.go
-	sed -i -e 's/\$$GO run \$$BUILD_GOPATH\/src\/github.com\/openconfig\/ygot\/generator\/generator.go/generator/' translib/ocbinds/oc.go
-	$(GO) get github.com/openconfig/gnmi@89b2bf29312cda887da916d0f3a32c1624b7935f
-	$(GO) get github.com/openconfig/ygot@724a6b18a9224343ef04fe49199dfb6020ce132a
-	$(GO) get github.com/openconfig/goyang@064f9690516f4f72db189f4690b84622c13b7296
-	$(GO) get github.com/openconfig/goyang@064f9690516f4f72db189f4690b84622c13b7296
-	$(GO) get golang.org/x/crypto/ssh/terminal@e9b2fee46413
-	$(GO) get github.com/jipanyang/gnxi@f0a90cca6fd0041625bcce561b71f849c9b65a8d
-	$(GO) get github.com/godbus/dbus
-	$(GO) get github.com/golang/glog@23def4e6c14b4da8ac2ed8007337bc5eb5007998
-	$(GO) get github.com/antchfx/xpath@d9ad276609987dd73ce5cd7d6265fe82189b10b6
-	$(GO) get github.com/antchfx/xmlquery@fe009d4cc63c3011f05e1dfa75a27899acccdf11
-	rm -rf vendor
+
+sonic-telemetry: go.mod
 	$(GO) mod vendor
-	ln -s vendor src
-	cp -r $(GOPATH)/pkg/mod/github.com/openconfig/gnmi@v0.0.0-20190823184014-89b2bf29312c/* vendor/github.com/openconfig/gnmi/
-	cp -r $(GOPATH)/pkg/mod/github.com/openconfig/goyang@v0.0.0-20190924211109-064f9690516f/* vendor/github.com/openconfig/goyang/
-	cp -r $(GOPATH)/pkg/mod/github.com/openconfig/ygot@v0.6.1-0.20190723223108-724a6b18a922/* vendor/github.com/openconfig/ygot/
-	cp -r $(GOPATH)/pkg/mod/golang.org/x/crypto@v0.0.0-20191206172530-e9b2fee46413/* vendor/golang.org/x/crypto/
-	cp -r $(GOPATH)/pkg/mod/github.com/antchfx/xpath@v1.1.2/* vendor/github.com/antchfx/xpath/
-	cp -r $(GOPATH)/pkg/mod/github.com/antchfx/xmlquery@v1.1.1-0.20191015122529-fe009d4cc63c/* vendor/github.com/antchfx/xmlquery/
+	cp -r $(GO_MGMT_PATH)/vendor/github.com/antchfx ./vendor/github.com/
+	cp -r $(GO_MGMT_PATH)/vendor/github.com/openconfig ./vendor/github.com/
 	cp -r $(GOPATH)/pkg/mod/github.com/jipanyang/gnxi@v0.0.0-20181221084354-f0a90cca6fd0/* vendor/github.com/jipanyang/gnxi/
+	cp -r $(GOPATH)/pkg/mod/golang.org/x/crypto@v0.0.0-20200302210943-78000ba7a073/* vendor/golang.org/x/crypto/
 	chmod -R u+w vendor
 	patch -d vendor -p0 <patches/gnmi_cli.all.patch
 	patch -d vendor -p0 <patches/gnmi_set.patch
 	patch -d vendor -p0 <patches/gnmi_get.patch
 
-	patch -d vendor/github.com/antchfx/jsonquery -p1 < ../sonic-mgmt-framework/patches/jsonquery.patch
-	patch -d vendor/github.com/openconfig/goyang -p1 < ../sonic-mgmt-framework/goyang-modified-files/goyang.patch
-	patch -d vendor/github.com/openconfig -p1 < ../sonic-mgmt-framework/ygot-modified-files/ygot.patch
-	patch -d vendor/github.com/antchfx/xpath -p1 < ../sonic-mgmt-framework/patches/xpath.patch
-	patch -d vendor/github.com/antchfx/xmlquery -p1 < ../sonic-mgmt-framework/patches/xmlquery.patch
-	$(GO) install -mod=vendor github.com/openconfig/ygot/generator
-	$(GO) generate github.com/Azure/sonic-telemetry/translib/ocbinds
-	make -C $(GO_MGMT_PATH)/src/cvl/schema
-	make -C $(GO_MGMT_PATH)/models
-	make -C $(GO_MGMT_PATH)/models/yang
-	make -C $(GO_MGMT_PATH)/models/yang/sonic
-
-sonic-telemetry: go.mod mgmt-deps
 	$(GO) install -mod=vendor github.com/Azure/sonic-telemetry/telemetry
 	$(GO) install -mod=vendor github.com/Azure/sonic-telemetry/dialout/dialout_client_cli
 	$(GO) install -mod=vendor github.com/Azure/sonic-telemetry/gnoi_client
@@ -87,9 +48,7 @@ check:
 	-$(GO) test -mod=vendor -v github.com/Azure/sonic-telemetry/dialout/dialout_client
 
 clean:
-	rm -rf cvl
-	rm -rf translib
-	rm -rf vendor
+# 	rm -rf vendor
 	chmod -f -R u+w $(GOPATH)/pkg || true
 	rm -rf $(GOPATH)
 	rm -f src
@@ -97,7 +56,7 @@ clean:
 $(TELEMETRY_TEST_BIN): $(TEST_FILES) $(SRC_FILES)
 	$(GO) test -mod=vendor -c -cover github.com/Azure/sonic-telemetry/gnmi_server -o $@
 	cp -r testdata $(TELEMETRY_TEST_DIR)
-	cp -r $(GO_MGMT_PATH)/src/cvl/schema $(TELEMETRY_TEST_DIR)
+	cp -r $(GO_MGMT_PATH)/build/cvl/schema $(TELEMETRY_TEST_DIR)
 
 install:
 	$(INSTALL) -D $(BUILD_DIR)/telemetry $(DESTDIR)/usr/sbin/telemetry
@@ -108,7 +67,7 @@ install:
 	$(INSTALL) -D $(BUILD_DIR)/gnoi_client $(DESTDIR)/usr/sbin/gnoi_client
 
 	mkdir -p $(DESTDIR)/usr/bin/
-	cp -r $(GO_MGMT_PATH)/src/cvl/schema $(DESTDIR)/usr/sbin
+	cp -r $(GO_MGMT_PATH)/build/cvl/schema $(DESTDIR)/usr/sbin
 	mkdir -p $(DESTDIR)/usr/models/yang
 	find $(GO_MGMT_PATH)/models -name '*.yang' -exec cp {} $(DESTDIR)/usr/models/yang/ \;
 
