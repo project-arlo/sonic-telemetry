@@ -1,95 +1,62 @@
-all: precheck deps telemetry
-GO=/usr/local/go/bin/go
+ifeq ($(GOPATH),)
+export GOPATH=/tmp/go
+endif
+export PATH := $(PATH):$(GOPATH)/bin
 
-TOP_DIR := $(abspath ..)
-TELEM_DIR := $(abspath .)
-GOFLAGS:=
-BUILD_DIR=build
-GO_DEP_PATH=$(abspath .)/$(BUILD_DIR)
-GO_MGMT_PATH=$(TOP_DIR)/sonic-mgmt-framework
-GO_SONIC_TELEMETRY_PATH=$(TOP_DIR)
-CVL_GOPATH=$(GO_MGMT_PATH)/build/gopkgs:$(GO_MGMT_PATH):$(GO_MGMT_PATH)/src/cvl/build
-GOPATH = $(CVL_GOPATH):$(GO_DEP_PATH):$(GO_MGMT_PATH):/tmp/go:$(GO_SONIC_TELEMETRY_PATH):$(TELEM_DIR)
 INSTALL := /usr/bin/install
+DBDIR := /var/run/redis/sonic-db/
+GO := /usr/local/go/bin/go
+TOP_DIR := $(abspath ..)
+GO_MGMT_PATH=$(TOP_DIR)/sonic-mgmt-framework
+BUILD_DIR := $(GOPATH)/bin
+export CVL_SCHEMA_PATH := $(GO_MGMT_PATH)/src/cvl/schema
 
 SRC_FILES=$(shell find . -name '*.go' | grep -v '_test.go' | grep -v '/tests/')
 TEST_FILES=$(wildcard *_test.go)
 TELEMETRY_TEST_DIR = $(GO_MGMT_PATH)/build/tests/gnmi_server
 TELEMETRY_TEST_BIN = $(TELEMETRY_TEST_DIR)/server.test
 
-.PHONY : all precheck deps telemetry clean cleanall check install deinstall
+all: sonic-telemetry $(TELEMETRY_TEST_BIN)
 
-ifdef DEBUG
-	GOFLAGS += -gcflags="all=-N -l"
-endif
+go.mod:
+	/usr/local/go/bin/go mod init github.com/Azure/sonic-telemetry
 
-all: deps telemetry $(TELEMETRY_TEST_BIN)
+sonic-telemetry: go.mod
+	$(GO) mod vendor
+	cp -r $(GO_MGMT_PATH)/vendor/github.com/antchfx ./vendor/github.com/
+	cp -r $(GO_MGMT_PATH)/vendor/github.com/openconfig ./vendor/github.com/
+	cp -r $(GOPATH)/pkg/mod/github.com/jipanyang/gnxi@v0.0.0-20181221084354-f0a90cca6fd0/* vendor/github.com/jipanyang/gnxi/
+	cp -r $(GOPATH)/pkg/mod/golang.org/x/crypto@v0.0.0-20200302210943-78000ba7a073/* vendor/golang.org/x/crypto/
+	chmod -R u+w vendor
+	patch -d vendor -p0 <patches/gnmi_cli.all.patch
+	patch -d vendor -p0 <patches/gnmi_set.patch
+	patch -d vendor -p0 <patches/gnmi_get.patch
 
-precheck:
-	$(shell mkdir -p $(BUILD_DIR))
-
-deps: $(BUILD_DIR)/.deps
-
-$(BUILD_DIR)/.deps: $(MAKEFILE_LIST)
-	GOPATH=$(GO_DEP_PATH) $(GO) get -u  github.com/Workiva/go-datastructures/queue
-	GOPATH=$(GO_DEP_PATH) $(GO) get -u github.com/openconfig/goyang
-	GOPATH=$(GO_DEP_PATH) $(GO) get -u github.com/openconfig/ygot/ygot
-	GOPATH=$(GO_DEP_PATH) $(GO) get -u github.com/golang/glog
-	GOPATH=$(GO_DEP_PATH) $(GO) get -u github.com/go-redis/redis
-	GOPATH=$(GO_DEP_PATH) $(GO) get -u  github.com/c9s/goprocinfo/linux
-	GOPATH=$(GO_DEP_PATH) $(GO) get -u  github.com/golang/protobuf/proto
-	GOPATH=$(GO_DEP_PATH) $(GO) get -u  github.com/openconfig/gnmi/proto/gnmi
-	GOPATH=$(GO_DEP_PATH) $(GO) get -u  golang.org/x/net/context
-	GOPATH=$(GO_DEP_PATH) $(GO) get -u  google.golang.org/grpc
-	GOPATH=$(GO_DEP_PATH) $(GO) get -u google.golang.org/grpc/credentials
-	GOPATH=$(GO_DEP_PATH) $(GO) get -u gopkg.in/go-playground/validator.v9
-	GOPATH=$(GO_DEP_PATH) $(GO) get -u github.com/gorilla/mux
-	GOPATH=$(GO_DEP_PATH) $(GO) get -u github.com/openconfig/goyang
-	GOPATH=$(GO_DEP_PATH) $(GO) get -u github.com/openconfig/ygot/ygot
-	GOPATH=$(GO_DEP_PATH) $(GO) get -u github.com/google/gnxi/utils
-	GOPATH=$(GO_DEP_PATH) $(GO) get -u github.com/jipanyang/gnxi/utils/xpath
-	GOPATH=$(GO_DEP_PATH) $(GO) get -u github.com/jipanyang/gnmi/client/gnmi
-	GOPATH=$(GO_DEP_PATH) $(GO) get -u github.com/xeipuuv/gojsonschema
-	GOPATH=$(GO_DEP_PATH) $(GO) get -u github.com/openconfig/gnoi/system
-	GOPATH=$(GO_DEP_PATH) $(GO) get -u github.com/msteinert/pam
-	GOPATH=$(GO_DEP_PATH) $(GO) get -u github.com/dgrijalva/jwt-go
-	GOPATH=$(GO_DEP_PATH) $(GO) get -u gopkg.in/godbus/dbus.v5
-	GOPATH=$(GO_DEP_PATH) $(GO) get -u github.com/gogo/protobuf/gogoproto
-	touch $@
-
-telemetry:$(BUILD_DIR)/telemetry $(BUILD_DIR)/dialout_client_cli $(BUILD_DIR)/gnmi_get $(BUILD_DIR)/gnmi_set $(BUILD_DIR)/gnmi_cli $(BUILD_DIR)/gnoi_client
-
-$(BUILD_DIR)/telemetry:src/telemetry/telemetry.go
-	@echo "Building $@"
-	GOPATH=$(GOPATH) $(GO) build $(GOFLAGS) -o $@ $^
-$(BUILD_DIR)/dialout_client_cli:src/dialout/dialout_client_cli/dialout_client_cli.go
-	GOPATH=$(GOPATH) $(GO) build $(GOFLAGS) -o $@ $^
-$(BUILD_DIR)/gnmi_get:src/gnmi_clients/gnmi_get.go
-	GOPATH=$(GOPATH) $(GO) build $(GOFLAGS) -o $@ $^
-$(BUILD_DIR)/gnmi_set:src/gnmi_clients/gnmi_set.go
-	GOPATH=$(GOPATH) $(GO) build $(GOFLAGS) -o $@ $^
-$(BUILD_DIR)/gnmi_cli:src/gnmi_clients/src/github.com/openconfig/gnmi
-	GOPATH=$(PWD)/src/gnmi_clients:$(GOPATH) $(GO) build $(GOFLAGS) -o $@ github.com/openconfig/gnmi/cmd/gnmi_cli
-$(BUILD_DIR)/gnoi_client:src/gnmi_clients/gnoi_client.go
-	GOPATH=$(PWD)/src/gnmi_clients:$(GOPATH) $(GO) build $(GOFLAGS) -o $@ $^
-
-clean:
-	rm -rf $(BUILD_DIR)/telemetry
-	rm -rf $(TELEMETRY_TEST_DIR)
-
-cleanall:
-	rm -rf $(BUILD_DIR)
-	rm -rf $(TELEMETRY_TEST_DIR)
+	$(GO) install -mod=vendor github.com/Azure/sonic-telemetry/telemetry
+	$(GO) install -mod=vendor github.com/Azure/sonic-telemetry/dialout/dialout_client_cli
+	$(GO) install -mod=vendor github.com/Azure/sonic-telemetry/gnoi_client
+	$(GO) install -mod=vendor github.com/jipanyang/gnxi/gnmi_get
+	$(GO) install -mod=vendor github.com/jipanyang/gnxi/gnmi_set
+	$(GO) install -mod=vendor github.com/openconfig/gnmi/cmd/gnmi_cli
 
 check:
-	-$(GO) test -v ${GOPATH}/src/gnmi_server
+	sudo mkdir -p ${DBDIR}
+	sudo cp ./testdata/database_config.json ${DBDIR}
+	sudo mkdir -p /usr/models/yang || true
+	sudo find $(GO_MGMT_PATH)/models -name '*.yang' -exec cp {} /usr/models/yang/ \;
+	-$(GO) test -mod=vendor -v github.com/Azure/sonic-telemetry/gnmi_server
+	-$(GO) test -mod=vendor -v github.com/Azure/sonic-telemetry/dialout/dialout_client
+
+clean:
+	rm -rf vendor
+	chmod -f -R u+w $(GOPATH)/pkg || true
+	rm -rf $(GOPATH)
+	rm -f src
 
 $(TELEMETRY_TEST_BIN): $(TEST_FILES) $(SRC_FILES)
-	GOPATH=$(GOPATH) $(GO) test -c -cover gnmi_server -o $@
-	cp -r src/testdata $(TELEMETRY_TEST_DIR)
-	cp test/01_create_MyACL1_MyACL2.json $(TELEMETRY_TEST_DIR)
-	cp -r $(GO_MGMT_PATH)/debian/sonic-mgmt-framework/usr/sbin/schema $(TELEMETRY_TEST_DIR)
-
+	$(GO) test -mod=vendor -c -cover github.com/Azure/sonic-telemetry/gnmi_server -o $@
+	cp -r testdata $(TELEMETRY_TEST_DIR)
+	cp -r $(GO_MGMT_PATH)/build/cvl/schema $(TELEMETRY_TEST_DIR)
 
 install:
 	$(INSTALL) -D $(BUILD_DIR)/telemetry $(DESTDIR)/usr/sbin/telemetry
@@ -100,9 +67,9 @@ install:
 	$(INSTALL) -D $(BUILD_DIR)/gnoi_client $(DESTDIR)/usr/sbin/gnoi_client
 
 	mkdir -p $(DESTDIR)/usr/bin/
-	cp -r $(GO_MGMT_PATH)/debian/sonic-mgmt-framework/usr/sbin/schema $(DESTDIR)/usr/sbin
-	cp -r $(GO_MGMT_PATH)/debian/sonic-mgmt-framework/usr/sbin/schema $(DESTDIR)/usr/bin
-	cp -r $(GO_MGMT_PATH)/debian/sonic-mgmt-framework/usr/models $(DESTDIR)/usr/
+	cp -r $(GO_MGMT_PATH)/build/cvl/schema $(DESTDIR)/usr/sbin
+	mkdir -p $(DESTDIR)/usr/models/yang
+	find $(GO_MGMT_PATH)/models -name '*.yang' -exec cp {} $(DESTDIR)/usr/models/yang/ \;
 
 deinstall:
 	rm $(DESTDIR)/usr/sbin/telemetry
@@ -110,3 +77,5 @@ deinstall:
 	rm $(DESTDIR)/usr/sbin/gnmi_get
 	rm $(DESTDIR)/usr/sbin/gnmi_set
 	rm $(DESTDIR)/usr/sbin/gnoi_client
+
+
