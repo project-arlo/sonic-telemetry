@@ -48,7 +48,7 @@ check:
 	-$(GO) test -mod=vendor -v github.com/Azure/sonic-telemetry/dialout/dialout_client
 
 clean:
-# 	rm -rf vendor
+	rm -rf vendor
 	chmod -f -R u+w $(GOPATH)/pkg || true
 	rm -rf $(GOPATH)
 	rm -f src
@@ -76,5 +76,6 @@ deinstall:
 	rm $(DESTDIR)/usr/sbin/dialout_client_cli
 	rm $(DESTDIR)/usr/sbin/gnmi_get
 	rm $(DESTDIR)/usr/sbin/gnmi_set
+	rm $(DESTDIR)/usr/sbin/gnoi_client
 
 
