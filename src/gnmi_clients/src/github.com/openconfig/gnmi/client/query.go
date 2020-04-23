@@ -176,6 +176,7 @@ type Query struct {
 	Streaming_sample_int uint64
 	Heartbeat_int uint64
 	Suppress_redundant bool
+	BundleVersion *string
 }
 
 // Destination extracts a Destination instance out of Query fields.
