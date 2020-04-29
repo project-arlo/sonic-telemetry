@@ -29,7 +29,7 @@ The binaries will be installed under $GOPATH/bin/, they may be copied to any SON
 
 You can also build a debian package and install it:
 
-    git clone https://github.com/project-arlo/sonic-telemetry.git
+    git clone https://github.com/Azure/sonic-telemetry.git
     pushd sonic-telemetry
     dpkg-buildpackage -rfakeroot -b -us -uc
     popd
