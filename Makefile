@@ -67,6 +67,11 @@ install:
 	$(INSTALL) -D $(BUILD_DIR)/gnmi_set $(DESTDIR)/usr/sbin/gnmi_set
 	$(INSTALL) -D $(BUILD_DIR)/gnmi_cli $(DESTDIR)/usr/sbin/gnmi_cli
 	$(INSTALL) -D $(BUILD_DIR)/gnoi_client $(DESTDIR)/usr/sbin/gnoi_client
+	mkdir -p $(DESTDIR)/usr/bin/
+	cp -r $(MGMT_COMMON_DIR)/build/cvl/schema $(DESTDIR)/usr/sbin
+	mkdir -p $(DESTDIR)/usr/models/yang
+	find $(MGMT_COMMON_DIR)/models -name '*.yang' -exec cp {} $(DESTDIR)/usr/models/yang/ \;
+
 
 deinstall:
 	rm $(DESTDIR)/usr/sbin/telemetry
