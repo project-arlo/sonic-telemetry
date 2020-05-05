@@ -1,4 +1,4 @@
-package gnmi_server
+package gnmi
 
 // server_test covers gNMI get, subscribe (stream and poll) test
 // Prerequisite: redis-server should be running.
@@ -7,7 +7,7 @@ import (
     "crypto/tls"
     "encoding/json"
     testcert "github.com/Azure/sonic-telemetry/testdata/tls"
-    "github.com/go-redis/redis/v7"
+    "github.com/go-redis/redis"
     "github.com/golang/protobuf/proto"
     "path/filepath"
     "github.com/kylelemons/godebug/pretty"
@@ -23,7 +23,6 @@ import (
     "io/ioutil"
     "os"
     "os/exec"
-    // "reflect"
     "testing"
     "time"
     "fmt"

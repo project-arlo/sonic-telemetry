@@ -1,4 +1,4 @@
-package gnmi_server
+package gnmi
 
 import (
 	"github.com/Azure/sonic-telemetry/common_utils"
