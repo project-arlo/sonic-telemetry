@@ -262,5 +262,3 @@ func isTranslibSuccess(err error) bool {
 
         return true
 }
-
-

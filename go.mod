@@ -5,8 +5,10 @@ go 1.12
 require (
 	github.com/Azure/sonic-mgmt-common v0.0.0-00010101000000-000000000000
 	github.com/Workiva/go-datastructures v1.0.52
+	github.com/bgentry/speakeasy v0.1.0 // indirect
 	github.com/c9s/goprocinfo v0.0.0-20191125144613-4acdd056c72d
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
+	github.com/go-redis/redis v6.15.7+incompatible
 	github.com/go-redis/redis/v7 v7.2.0
 	github.com/gogo/protobuf v1.3.1
 	github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b
