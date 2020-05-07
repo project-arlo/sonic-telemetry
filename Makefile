@@ -46,8 +46,6 @@ sonic-telemetry: $(MAKEFILE_LIST) go.mod
 check:
 	sudo mkdir -p ${DBDIR}
 	sudo cp ./testdata/database_config.json ${DBDIR}
-	sudo mkdir -p /usr/models/yang || true
-	sudo find $(MGMT_COMMON_DIR)/models -name '*.yang' -exec cp {} /usr/models/yang/ \;
 	-$(GO) test -mod=vendor -v github.com/Azure/sonic-telemetry/gnmi_server
 	-$(GO) test -mod=vendor -v github.com/Azure/sonic-telemetry/dialout/dialout_client
 
@@ -68,9 +66,6 @@ install:
 	$(INSTALL) -D $(BUILD_DIR)/gnmi_cli $(DESTDIR)/usr/sbin/gnmi_cli
 	$(INSTALL) -D $(BUILD_DIR)/gnoi_client $(DESTDIR)/usr/sbin/gnoi_client
 	mkdir -p $(DESTDIR)/usr/bin/
-	cp -r $(MGMT_COMMON_DIR)/build/cvl/schema $(DESTDIR)/usr/sbin
-	mkdir -p $(DESTDIR)/usr/models/yang
-	find $(MGMT_COMMON_DIR)/models -name '*.yang' -exec cp {} $(DESTDIR)/usr/models/yang/ \;
 
 
 deinstall:
