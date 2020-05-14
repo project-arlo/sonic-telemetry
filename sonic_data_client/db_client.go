@@ -15,7 +15,8 @@ import (
 	log "github.com/golang/glog"
 
 	spb "github.com/Azure/sonic-telemetry/proto"
-	"github.com/go-redis/redis/v7"
+	sdcfg "github.com/Azure/sonic-telemetry/sonic_db_config"
+	"github.com/go-redis/redis"
 	gnmipb "github.com/openconfig/gnmi/proto/gnmi"
 	"github.com/Workiva/go-datastructures/queue"
 )
@@ -46,7 +47,7 @@ type Client interface {
 	// Get return data from the data source in format of *spb.Value
 	Get(w *sync.WaitGroup) ([]*spb.Value, error)
 	// Set data based on path and value
-	Set(path *gnmipb.Path,  t *gnmipb.TypedValue, op int) error
+	Set(delete []*gnmipb.Path, replace []*gnmipb.Update, update []*gnmipb.Update) error
 	// Capabilities of the switch
 	Capabilities() ([]gnmipb.ModelData)
 
@@ -313,15 +314,7 @@ func GetTableKeySeparator(target string) (string, error) {
 		return "", fmt.Errorf("%v not a valid path target", target)
 	}
 
-	var separator string
-	switch target {
-	case "CONFIG_DB":
-		separator = "|"
-	case "STATE_DB":
-		separator = "|"
-	default:
-		separator = ":"
-	}
+	var separator string = sdcfg.GetDbSeparator(target)
 	return separator, nil
 }
 
@@ -1021,7 +1014,7 @@ func dbTableKeySubscribe(gnmiPath *gnmipb.Path, c *DbClient) {
 	}
 }
 
-func  (c *DbClient) Set(path *gnmipb.Path, t *gnmipb.TypedValue, flagop int) error {
+func  (c *DbClient) Set(delete []*gnmipb.Path, replace []*gnmipb.Update, update []*gnmipb.Update) error {
 	return nil
 }
 func (c *DbClient) Capabilities() ([]gnmipb.ModelData) {

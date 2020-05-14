@@ -1,4 +1,4 @@
-package gnmi_server
+package gnmi
 
 import (
 	"errors"
@@ -119,7 +119,6 @@ func NewServer(config *Config, opts []grpc.ServerOption) (*Server, error) {
 	}
 
 	s := grpc.NewServer(opts...)
-
 	reflection.Register(s)
 
 	srv := &Server{
@@ -139,7 +138,6 @@ func NewServer(config *Config, opts []grpc.ServerOption) (*Server, error) {
 	gnoi_system_pb.RegisterSystemServer(srv.s, srv)
 	spb_gnoi.RegisterSonicServiceServer(srv.s, srv)
 	log.V(1).Infof("Created Server on %s", srv.Address())
-
 	return srv, nil
 }
 
@@ -261,8 +259,8 @@ func (s *Server) checkEncodingAndModel(encoding gnmipb.Encoding, models []*gnmip
 }
 
 // Get implements the Get RPC in gNMI spec.
-func (srv *Server) Get(ctx context.Context, req *gnmipb.GetRequest) (*gnmipb.GetResponse, error) {
-	ctx, err := authenticate(srv.config.UserAuth, ctx)
+func (s *Server) Get(ctx context.Context, req *gnmipb.GetRequest) (*gnmipb.GetResponse, error) {
+	ctx, err := authenticate(s.config.UserAuth, ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -271,7 +269,7 @@ func (srv *Server) Get(ctx context.Context, req *gnmipb.GetRequest) (*gnmipb.Get
 		return nil, status.Errorf(codes.Unimplemented, "unsupported request type: %s", gnmipb.GetRequest_DataType_name[int32(req.GetType())])
 	}
 
-	if err = srv.checkEncodingAndModel(req.GetEncoding(), req.GetUseModels()); err != nil {
+	if err = s.checkEncodingAndModel(req.GetEncoding(), req.GetUseModels()); err != nil {
 		return nil, status.Error(codes.Unimplemented, err.Error())
 	}
 
@@ -279,7 +277,6 @@ func (srv *Server) Get(ctx context.Context, req *gnmipb.GetRequest) (*gnmipb.Get
 	prefix := req.GetPrefix()
 	paths := req.GetPath()
 	extensions := req.GetExtension()
-	
 	target = prefix.GetTarget()
 	log.V(5).Infof("GetRequest paths: %v", paths)
 
@@ -320,8 +317,8 @@ func (srv *Server) Get(ctx context.Context, req *gnmipb.GetRequest) (*gnmipb.Get
 }
 
 // Set method is not implemented. Refer to gnxi for examples with openconfig integration
-func (srv *Server) Set(ctx context.Context,req *gnmipb.SetRequest) (*gnmipb.SetResponse, error) {
-	ctx, err := authenticate(srv.config.UserAuth, ctx)
+func (s *Server) Set(ctx context.Context,req *gnmipb.SetRequest) (*gnmipb.SetResponse, error) {
+	ctx, err := authenticate(s.config.UserAuth, ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -338,12 +335,6 @@ func (srv *Server) Set(ctx context.Context,req *gnmipb.SetRequest) (*gnmipb.SetR
 	for _, path := range req.GetDelete() {
 		log.V(2).Infof("Delete path: %v", path)
 
-		err := dc.Set(path, nil, sdc.DELETE)
-
-		if err != nil {
-			return nil, err
-		}
-
 		res := gnmipb.UpdateResult{
 						Path: path,
       						Op:   gnmipb.UpdateResult_DELETE,
@@ -358,11 +349,6 @@ func (srv *Server) Set(ctx context.Context,req *gnmipb.SetRequest) (*gnmipb.SetR
 	for _, path := range req.GetReplace(){
 		log.V(2).Infof("Replace path: %v ", path)
 
-		err = dc.Set(path.GetPath(), path.GetVal(), sdc.REPLACE)
-
-		if err != nil {
-			return nil, err
-		}
 		res := gnmipb.UpdateResult{
 						Path: path.GetPath(),
       						Op:   gnmipb.UpdateResult_REPLACE,
@@ -376,12 +362,6 @@ func (srv *Server) Set(ctx context.Context,req *gnmipb.SetRequest) (*gnmipb.SetR
 	for _, path := range req.GetUpdate(){
 		log.V(2).Infof("Update path: %v ", path)
 
-		err = dc.Set(path.GetPath(), path.GetVal(), sdc.UPDATE)
-
-		if err != nil {
-			return nil, err
-		}
-
 		res := gnmipb.UpdateResult{
 						Path: path.GetPath(),
       						Op:   gnmipb.UpdateResult_UPDATE,
@@ -389,19 +369,20 @@ func (srv *Server) Set(ctx context.Context,req *gnmipb.SetRequest) (*gnmipb.SetR
 		/* Add to Set response results. */
  			results = append(results, &res)
 	}
+	err = dc.Set(req.GetDelete(), req.GetReplace(), req.GetUpdate())
 
 
 
 	return &gnmipb.SetResponse{
  					Prefix:   req.GetPrefix(),
 		  			Response: results,
-				  }, nil
+				  }, err
 
 }
 
 // Capabilities method is not implemented. Refer to gnxi for examples with openconfig integration
-func (srv *Server) Capabilities(ctx context.Context, req *gnmipb.CapabilityRequest) (*gnmipb.CapabilityResponse, error) {
-	ctx, err := authenticate(srv.config.UserAuth, ctx)
+func (s *Server) Capabilities(ctx context.Context, req *gnmipb.CapabilityRequest) (*gnmipb.CapabilityResponse, error) {
+	ctx, err := authenticate(s.config.UserAuth, ctx)
 	if err != nil {
 		return nil, err
 	}

@@ -15,15 +15,15 @@ Install __go__ in your system https://golang.org/doc/install. Requires golang1.8
 
 To install dial-in mode system telemetry server, run
 
-    go get -u github.com/project-arlo/sonic-telemetry/telemetry
+    go get -u github.com/Azure/sonic-telemetry/telemetry
 
 To install dial-out mode system telemetry client, run
 
-    go get -u github.com/project-arlo/sonic-telemetry/dialout/dialout_client_cli
+    go get -u github.com/Azure/sonic-telemetry/dialout/dialout_client_cli
 
 There is also a test program dialout_server_cli for collecting data from dial-out mode system telemetry client. _Note_: it is for testing purpose only.
 
-    go get -u github.com/project-arlo/sonic-telemetry/dialout/dialout_server_cli
+    go get -u github.com/Azure/sonic-telemetry/dialout/dialout_server_cli
 
 The binaries will be installed under $GOPATH/bin/, they may be copied to any SONiC switch and run there.
 
@@ -47,7 +47,7 @@ For bug reports or feature requests, please open an Issue.
 
 ## Contribution guide
 
-See the [contributors guide](https://github.com/project-arlo/SONiC/blob/gh-pages/CONTRIBUTING.md) for information about how to contribute.
+See the [contributors guide](https://github.com/Azure/SONiC/blob/gh-pages/CONTRIBUTING.md) for information about how to contribute.
 
 ### GitHub Workflow
 
