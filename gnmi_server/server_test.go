@@ -314,7 +314,8 @@ func prepareDb(t *testing.T) {
     rclient.FlushDB()
     //Enable keysapce notification
     os.Setenv("PATH", "/usr/bin:/sbin:/bin:/usr/local/bin")
-    cmd := exec.Command("redis-cli", "config", "set", "notify-keyspace-events", "KEA")
+    // CHECK ME Multi-DB changed redis-cli to sonic-db-cli
+    cmd := exec.Command("sonic-db-cli", "config", "set", "notify-keyspace-events", "KEA")
     _, err := cmd.Output()
     if err != nil {
         t.Fatal("failed to enable redis keyspace notification ", err)
