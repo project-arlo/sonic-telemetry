@@ -7,6 +7,7 @@ import (
 	"fmt"
 	spb "github.com/Azure/sonic-telemetry/proto"
 	sdc "github.com/Azure/sonic-telemetry/sonic_data_client"
+        sdcfg "github.com/Azure/sonic-telemetry/sonic_db_config"
 	"github.com/go-redis/redis/v7"
 	log "github.com/golang/glog"
 	gpb "github.com/openconfig/gnmi/proto/gnmi"
@@ -461,7 +462,7 @@ func setupDestGroupClients(ctx context.Context, destGroupName string) {
 // start/stop/update telemetry publist client as requested
 // TODO: more validation on db data
 func processTelemetryClientConfig(ctx context.Context, redisDb *redis.Client, key string, op string) error {
-	separator, _ := sdc.GetTableKeySeparator("CONFIG_DB")
+	separator, _ := sdcfg.GetDbId("CONFIG_DB")
 	tableKey := "TELEMETRY_CLIENT" + separator + key
 	fv, err := redisDb.HGetAll(tableKey).Result()
 	if err != nil {
@@ -647,17 +648,17 @@ func DialOutRun(ctx context.Context, ccfg *ClientConfig) error {
 	if sdc.UseRedisLocalTcpPort == false {
 		redisDb = redis.NewClient(&redis.Options{
 			Network:     "unix",
-			Addr:        sdc.Default_REDIS_UNIXSOCKET,
+			Addr:        sdcfg.GetDbSock("CONFIG_DB"),
 			Password:    "", // no password set
-			DB:          int(dbn),
+			DB:          dbn,
 			DialTimeout: 0,
 		})
 	} else {
 		redisDb = redis.NewClient(&redis.Options{
 			Network:     "tcp",
-			Addr:        sdc.Default_REDIS_LOCAL_TCP_PORT,
+			Addr:        sdcfg.GetDbTcpAddr("CONFIG_DB"),
 			Password:    "", // no password set
-			DB:          int(dbn),
+			DB:          dbn,
 			DialTimeout: 0,
 		})
 	}
