@@ -462,7 +462,7 @@ func setupDestGroupClients(ctx context.Context, destGroupName string) {
 // start/stop/update telemetry publist client as requested
 // TODO: more validation on db data
 func processTelemetryClientConfig(ctx context.Context, redisDb *redis.Client, key string, op string) error {
-	separator, _ := sdcfg.GetDbId("CONFIG_DB")
+	separator, _ := sdc.GetTableKeySeparator("CONFIG_DB")
 	tableKey := "TELEMETRY_CLIENT" + separator + key
 	fv, err := redisDb.HGetAll(tableKey).Result()
 	if err != nil {
@@ -642,7 +642,7 @@ func processTelemetryClientConfig(ctx context.Context, redisDb *redis.Client, ke
 // read configDB data for telemetry client and start publishing service for client subscription
 func DialOutRun(ctx context.Context, ccfg *ClientConfig) error {
 	clientCfg = ccfg
-	dbn := spb.Target_value["CONFIG_DB"]
+	dbn := sdcfg.GetDbId("CONFIG_DB")
 
 	var redisDb *redis.Client
 	if sdc.UseRedisLocalTcpPort == false {

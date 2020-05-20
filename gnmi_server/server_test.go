@@ -29,6 +29,7 @@ import (
     "fmt"
     "github.com/xeipuuv/gojsonschema"
     // Register supported client types.
+    spb "github.com/Azure/sonic-telemetry/proto"
     sgpb "github.com/Azure/sonic-telemetry/proto/gnoi"
     sdc "github.com/Azure/sonic-telemetry/sonic_data_client"
     sdcfg "github.com/Azure/sonic-telemetry/sonic_db_config"
@@ -242,7 +243,6 @@ func runServer(t *testing.T, s *Server) {
 }
 
 func getRedisClient(t *testing.T) *redis.Client {
-    dbn := spb.Target_value["COUNTERS_DB"]
     rclient := redis.NewClient(&redis.Options{
         Network:     "tcp",
         Addr:        sdcfg.GetDbTcpAddr("COUNTERS_DB"),
