@@ -21,12 +21,15 @@ TEST_FILES=$(wildcard *_test.go)
 TELEMETRY_TEST_DIR = build/tests/gnmi_server
 TELEMETRY_TEST_BIN = $(TELEMETRY_TEST_DIR)/server.test
 
+GO_DEPS := vendor/.done
+PATCHES := $(wildcard patches/*.patch)
+
 all: sonic-telemetry $(TELEMETRY_TEST_BIN)
 
 go.mod:
 	$(GO) mod init github.com/Azure/sonic-telemetry
 
-sonic-telemetry: $(MAKEFILE_LIST) go.mod
+$(GO_DEPS): go.mod $(PATCHES)
 	$(GO) mod vendor
 	$(MGMT_COMMON_DIR)/patches/apply.sh vendor
 	cp -r $(GOPATH)/pkg/mod/github.com/jipanyang/gnxi@v0.0.0-20181221084354-f0a90cca6fd0/* vendor/github.com/jipanyang/gnxi/
@@ -35,7 +38,14 @@ sonic-telemetry: $(MAKEFILE_LIST) go.mod
 	patch -d vendor -p0 < patches/gnmi_cli.all.patch
 	patch -d vendor -p0 < patches/gnmi_set.patch
 	patch -d vendor -p0 < patches/gnmi_get.patch
-	
+	touch $@
+
+go-deps: $(GO_DEPS)
+
+go-deps-clean:
+	$(RM) -r vendor
+
+sonic-telemetry: $(MAKEFILE_LIST) $(GO_DEPS)
 	$(GO) install -mod=vendor github.com/Azure/sonic-telemetry/telemetry
 	$(GO) install -mod=vendor github.com/Azure/sonic-telemetry/dialout/dialout_client_cli
 	$(GO) install -mod=vendor github.com/Azure/sonic-telemetry/gnoi_client
@@ -50,8 +60,8 @@ check:
 	-$(GO) test -mod=vendor -v github.com/Azure/sonic-telemetry/dialout/dialout_client
 
 clean:
-	rm -rf build
-	rm -rf vendor
+	$(RM) -r build
+	$(RM) -r vendor
 
 $(TELEMETRY_TEST_BIN): $(TEST_FILES) $(SRC_FILES)
 	mkdir -p $(@D)
