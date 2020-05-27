@@ -212,6 +212,84 @@ func TranslProcessUpdate(uri string, t *gnmipb.TypedValue, ctx context.Context) 
 	return nil
 }
 
+func TranslProcessBulk(delete []*gnmipb.Path, replace []*gnmipb.Update, update []*gnmipb.Update, prefix *gnmipb.Path, ctx context.Context) error {
+	var br translib.BulkRequest
+	var uri string
+	rc, ctx := common_utils.GetContext(ctx)
+	for _,d := range delete {
+		ConvertToURI(prefix, d, &uri)
+		var str3 string
+		payload := []byte(str3)
+		req := translib.SetRequest{
+			Path: uri,
+			Payload: payload,
+			User: translib.UserRoles{Name: rc.Auth.User, Roles: rc.Auth.Roles},
+		}
+		if rc.Auth.AuthEnabled {
+			req.AuthEnabled = true
+		}
+		br.DeleteRequest = append(br.DeleteRequest, req)
+	}
+	for _,r := range replace {
+		ConvertToURI(prefix, r.GetPath(), &uri)
+		str := string(r.GetVal().GetJsonIetfVal())
+		str3 := strings.Replace(str, "\n", "", -1)
+		log.V(2).Infof("Incoming JSON body is", str)
+		payload := []byte(str3)
+		req := translib.SetRequest{
+			Path: uri,
+			Payload: payload,
+			User: translib.UserRoles{Name: rc.Auth.User, Roles: rc.Auth.Roles},
+		}
+		if rc.Auth.AuthEnabled {
+			req.AuthEnabled = true
+		}
+		br.ReplaceRequest = append(br.ReplaceRequest, req)
+	}
+	for _,u := range update {
+		ConvertToURI(prefix, u.GetPath(), &uri)
+		str := string(u.GetVal().GetJsonIetfVal())
+		str3 := strings.Replace(str, "\n", "", -1)
+		log.V(2).Infof("Incoming JSON body is", str)
+		payload := []byte(str3)
+		req := translib.SetRequest{
+			Path: uri,
+			Payload: payload,
+			User: translib.UserRoles{Name: rc.Auth.User, Roles: rc.Auth.Roles},
+		}
+		if rc.Auth.AuthEnabled {
+			req.AuthEnabled = true
+		}
+		br.UpdateRequest = append(br.UpdateRequest, req)
+	}
+
+	resp,err := translib.Bulk(br)
+	var errors []string
+	if err != nil{
+		log.V(2).Infof("BULK SET operation failed with error(s):")
+		for _,d := range resp.DeleteResponse {
+			if d.Err != nil {
+				log.V(2).Infof("%s=%v", d.Err.Error(), d.ErrSrc)
+				errors = append(errors, d.Err.Error())
+			}
+		}
+		for _,r := range resp.ReplaceResponse {
+			if r.Err != nil {
+				log.V(2).Infof("%s=%v", r.Err.Error(), r.ErrSrc)
+				errors = append(errors, r.Err.Error())
+			}
+		}
+		for _,u := range resp.UpdateResponse {
+			if u.Err != nil {
+				log.V(2).Infof("%s=%v", u.Err.Error(), u.ErrSrc)
+				errors = append(errors, u.Err.Error())
+			}
+		}
+		return fmt.Errorf("SET failed: %s", strings.Join(errors, "; "))
+	}
+
+	return nil
+}
 /* Action/rpc request handling. */
 func TranslProcessAction(uri string, payload []byte, ctx context.Context) ([]byte, error) {
 	rc, ctx := common_utils.GetContext(ctx)
@@ -262,5 +340,3 @@ func isTranslibSuccess(err error) bool {
 
         return true
 }
-
-

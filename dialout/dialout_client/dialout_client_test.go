@@ -30,7 +30,7 @@ import (
 
 	sds "github.com/Azure/sonic-telemetry/dialout/dialout_server"
 	sdc "github.com/Azure/sonic-telemetry/sonic_data_client"
-        sdcfg "github.com/Azure/sonic-telemetry/sonic_db_config"
+	sdcfg "github.com/Azure/sonic-telemetry/sonic_db_config"
 	gclient "github.com/openconfig/gnmi/client/gnmi"
 )
 
