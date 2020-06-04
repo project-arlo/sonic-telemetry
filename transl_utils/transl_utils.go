@@ -216,6 +216,7 @@ func TranslProcessBulk(delete []*gnmipb.Path, replace []*gnmipb.Update, update [
 	var br translib.BulkRequest
 	var uri string
 	rc, ctx := common_utils.GetContext(ctx)
+	log.V(2).Info("TranslProcessBulk Called")
 	for _,d := range delete {
 		ConvertToURI(prefix, d, &uri)
 		var str3 string

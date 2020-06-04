@@ -1625,6 +1625,58 @@ func TestBundleVersion(t *testing.T) {
             t.Fatalf("got return code %v, want %v", gotRetStatus.Code(), codes.OK)
         }
     })
+}
+
+func TestBulkSet(t *testing.T) {
+    s := createServer(t, 8084)
+    go runServer(t, s)
+    defer s.s.Stop()
+
+    // prepareDb(t)
+
+    //t.Log("Start gNMI client")
+    tlsConfig := &tls.Config{InsecureSkipVerify: true}
+    opts := []grpc.DialOption{grpc.WithTransportCredentials(credentials.NewTLS(tlsConfig))}
+
+    //targetAddr := "30.57.185.38:8080"
+    targetAddr := "127.0.0.1:8084"
+    conn, err := grpc.Dial(targetAddr, opts...)
+    if err != nil {
+        t.Fatalf("Dialing to %q failed: %v", targetAddr, err)
+    }
+    defer conn.Close()
+
+    gClient := pb.NewGNMIClient(conn)
+    ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+    defer cancel()
+    t.Run("Set Multiple mtu", func(t *testing.T) {
+        pbPath1, _ := xpath.ToGNMIPath("openconfig-interfaces:interfaces/interface[name=Ethernet3]/config/mtu")
+        v := &pb.TypedValue{
+            Value: &pb.TypedValue_JsonIetfVal{JsonIetfVal: []byte("{\"mtu\": 9104}")}}
+        update1 := &pb.Update {
+            Path: pbPath1,
+            Val: v,
+        }
+        pbPath2, _ := xpath.ToGNMIPath("openconfig-interfaces:interfaces/interface[name=Ethernet4]/config/mtu")
+        v2 := &pb.TypedValue{
+            Value: &pb.TypedValue_JsonIetfVal{JsonIetfVal: []byte("{\"mtu\": 9105}")}}
+        update2 := &pb.Update {
+            Path: pbPath2,
+            Val: v2,
+        }
+       
+
+        req := &pb.SetRequest{
+            Update:     []*pb.Update{update1, update2},
+        }
+
+        _, err = gClient.Set(ctx, req)
+        _, ok := status.FromError(err)
+        if !ok {
+            t.Fatal("got a non-grpc error from grpc call")
+        }
+
+    })
 
 
 }
