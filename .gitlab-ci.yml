@@ -1,0 +1,26 @@
+stages:
+  - build
+  - test
+  - cleanup
+
+sonic-submodules:
+  only:
+    - merge_requests
+    - api
+    - web
+  stage: build
+  tags:
+    - sonic
+  script:
+    - date
+    - cat /etc/issue
+    - pwd
+    - env
+    - du -hs .
+    - rm -rf *
+    - du -hs .
+    - export PLATFORM=broadcom
+    - git clone -q ssh://git@gitlab.force10networks.com/e-sonic/sonic-buildimage.git
+    - cd sonic-buildimage
+    - git clone -q -b OT-9999-sonic-sync-improvements ssh://git@gitlab.force10networks.com/e-sonic/tools tools$$
+    - tools$$/submodule-code-review
