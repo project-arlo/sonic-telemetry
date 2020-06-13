@@ -31,6 +31,7 @@ import (
     spb "github.com/Azure/sonic-telemetry/proto"
     sgpb "github.com/Azure/sonic-telemetry/proto/gnoi"
     sdc "github.com/Azure/sonic-telemetry/sonic_data_client"
+    sdcfg "github.com/Azure/sonic-telemetry/sonic_db_config"
     gclient "github.com/jipanyang/gnmi/client/gnmi"
     "github.com/jipanyang/gnxi/utils/xpath"
     gnoi_system_pb "github.com/openconfig/gnoi/system"
@@ -241,12 +242,11 @@ func runServer(t *testing.T, s *Server) {
 }
 
 func getRedisClient(t *testing.T) *redis.Client {
-    dbn := spb.Target_value["COUNTERS_DB"]
     rclient := redis.NewClient(&redis.Options{
         Network:     "tcp",
-        Addr:        "localhost:6379",
+        Addr:        sdcfg.GetDbTcpAddr("COUNTERS_DB"),
         Password:    "", // no password set
-        DB:          int(dbn),
+        DB:          sdcfg.GetDbId("COUNTERS_DB"),
         DialTimeout: 0,
     })
     _, err := rclient.Ping().Result()
@@ -257,12 +257,11 @@ func getRedisClient(t *testing.T) *redis.Client {
 }
 
 func getConfigDbClient(t *testing.T) *redis.Client {
-    dbn := spb.Target_value["CONFIG_DB"]
     rclient := redis.NewClient(&redis.Options{
         Network:     "tcp",
-        Addr:        "localhost:6379",
+        Addr:        sdcfg.GetDbTcpAddr("CONFIG_DB"),
         Password:    "", // no password set
-        DB:          int(dbn),
+        DB:          sdcfg.GetDbId("COUNTERS_DB"),
         DialTimeout: 0,
     })
     _, err := rclient.Ping().Result()
@@ -314,7 +313,8 @@ func prepareDb(t *testing.T) {
     rclient.FlushDB()
     //Enable keysapce notification
     os.Setenv("PATH", "/usr/bin:/sbin:/bin:/usr/local/bin")
-    cmd := exec.Command("redis-cli", "config", "set", "notify-keyspace-events", "KEA")
+    // CHECK ME Multi-DB changed redis-cli to sonic-db-cli
+    cmd := exec.Command("sonic-db-cli", "config", "set", "notify-keyspace-events", "KEA")
     _, err := cmd.Output()
     if err != nil {
         t.Fatal("failed to enable redis keyspace notification ", err)

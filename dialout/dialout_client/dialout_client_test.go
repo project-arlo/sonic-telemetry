@@ -29,7 +29,6 @@ import (
 	"time"
 
 	sds "github.com/Azure/sonic-telemetry/dialout/dialout_server"
-	spb "github.com/Azure/sonic-telemetry/proto"
 	sdc "github.com/Azure/sonic-telemetry/sonic_data_client"
 	sdcfg "github.com/Azure/sonic-telemetry/sonic_db_config"
 	gclient "github.com/openconfig/gnmi/client/gnmi"
@@ -181,7 +180,8 @@ func prepareDb(t *testing.T) {
 	rclient.FlushDB()
 	//Enable keysapce notification
 	os.Setenv("PATH", "$PATH:/usr/bin:/sbin:/bin:/usr/local/bin:/usr/local/Cellar/redis/4.0.8/bin")
-	cmd := exec.Command("redis-cli", "config", "set", "notify-keyspace-events", "KEA")
+        // CHECK ME Multi-DB changed redis-cli to sonic-db-cli
+	cmd := exec.Command("sonic-db-cli", "config", "set", "notify-keyspace-events", "KEA")
 	_, err := cmd.Output()
 	if err != nil {
 		t.Fatal("failed to enable redis keyspace notification ", err)
@@ -353,10 +353,10 @@ func TestGNMIDialOutPublish(t *testing.T) {
 
 	go DialOutRun(ctx, &clientCfg)
 
-	exe_cmd(t, "redis-cli -n 4 hset TELEMETRY_CLIENT|Global retry_interval 5")
-	exe_cmd(t, "redis-cli -n 4 hset TELEMETRY_CLIENT|Global encoding JSON_IETF")
-	exe_cmd(t, "redis-cli -n 4 hset TELEMETRY_CLIENT|Global unidirectional true")
-	exe_cmd(t, "redis-cli -n 4 hset TELEMETRY_CLIENT|Global src_ip  30.57.185.38")
+	exe_cmd(t, "sonic-db-cli CONFIG_DB hset TELEMETRY_CLIENT|Global retry_interval 5")
+	exe_cmd(t, "sonic-db-cli CONFIG_DB hset TELEMETRY_CLIENT|Global encoding JSON_IETF")
+	exe_cmd(t, "sonic-db-cli CONFIG_DB hset TELEMETRY_CLIENT|Global unidirectional true")
+	exe_cmd(t, "sonic-db-cli CONFIG_DB hset TELEMETRY_CLIENT|Global src_ip  30.57.185.38")
 
 	tests := []struct {
 		desc     string
@@ -372,8 +372,8 @@ func TestGNMIDialOutPublish(t *testing.T) {
 	}{{
 		desc: "DialOut to first collector in stream mode and synced",
 		cmds: []string{
-			"redis-cli -n 4 hset TELEMETRY_CLIENT|DestinationGroup_HS dst_addr 127.0.0.1:8080,127.0.0.1:8081",
-			"redis-cli -n 4 hmset TELEMETRY_CLIENT|Subscription_HS_RDMA path_target COUNTERS_DB dst_group HS report_type stream paths COUNTERS/Ethernet*",
+			"sonic-db-cli CONFIG_DB hset TELEMETRY_CLIENT|DestinationGroup_HS dst_addr 127.0.0.1:8080,127.0.0.1:8081",
+			"sonic-db-cli CONFIG_DB hmset TELEMETRY_CLIENT|Subscription_HS_RDMA path_target COUNTERS_DB dst_group HS report_type stream paths COUNTERS/Ethernet*",
 		},
 		collector: "s1",
 		wantRespVal: []*pb.SubscribeResponse{
@@ -402,8 +402,8 @@ func TestGNMIDialOutPublish(t *testing.T) {
 	}, {
 		desc: "DialOut to second collector in stream mode upon failure of first collector",
 		cmds: []string{
-			"redis-cli -n 4 hset TELEMETRY_CLIENT|DestinationGroup_HS dst_addr 127.0.0.1:8080,127.0.0.1:8081",
-			"redis-cli -n 4 hmset TELEMETRY_CLIENT|Subscription_HS_RDMA path_target COUNTERS_DB dst_group HS report_type stream paths COUNTERS/Ethernet*/SAI_PORT_STAT_PFC_7_RX_PKTS",
+			"sonic-db-cli CONFIG_DB hset TELEMETRY_CLIENT|DestinationGroup_HS dst_addr 127.0.0.1:8080,127.0.0.1:8081",
+			"sonic-db-cli CONFIG_DB hmset TELEMETRY_CLIENT|Subscription_HS_RDMA path_target COUNTERS_DB dst_group HS report_type stream paths COUNTERS/Ethernet*/SAI_PORT_STAT_PFC_7_RX_PKTS",
 		},
 		collector: "s2",
 		sop:       S1Stop,

@@ -25,8 +25,6 @@ const (
 	// indentString represents the default indentation string used for
 	// JSON. Two spaces are used here.
 	indentString                 string = "  "
-	Default_REDIS_UNIXSOCKET     string = "/var/run/redis/redis.sock"
-	Default_REDIS_LOCAL_TCP_PORT string = "localhost:6379"
 )
 
 // Client defines a set of methods which every client must implement.
@@ -327,7 +325,7 @@ func useRedisTcpClient() {
 			if UseRedisLocalTcpPort {
 				redisDb = redis.NewClient(&redis.Options{
 					Network:     "tcp",
-					Addr:        Default_REDIS_LOCAL_TCP_PORT,
+					Addr:        sdcfg.GetDbTcpAddr(dbName),
 					Password:    "", // no password set
 					DB:          int(dbn),
 					DialTimeout: 0,
@@ -347,7 +345,7 @@ func init() {
 
 			redisDb = redis.NewClient(&redis.Options{
 				Network:     "unix",
-				Addr:        Default_REDIS_UNIXSOCKET,
+				Addr:        sdcfg.GetDbSock(dbName),
 				Password:    "", // no password set
 				DB:          int(dbn),
 				DialTimeout: 0,
