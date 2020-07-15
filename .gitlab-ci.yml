@@ -22,5 +22,5 @@ sonic-submodules:
     - export PLATFORM=broadcom
     - git clone -q ssh://git@gitlab.force10networks.com/e-sonic/sonic-buildimage.git
     - cd sonic-buildimage
-    - git clone -q -b OT-9999-sonic-sync-improvements ssh://git@gitlab.force10networks.com/e-sonic/tools tools$$
+    - git clone -q -b stable ssh://git@gitlab.force10networks.com/e-sonic/tools tools$$
     - tools$$/submodule-code-review
