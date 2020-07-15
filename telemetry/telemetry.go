@@ -17,7 +17,7 @@ import (
 
 var (
 	userAuth = gnmi.AuthTypes{"password": true, "cert": false, "jwt": true}
-	port = flag.Int("port", -1, "port to listen on")
+	port = flag.Int("port", 8080, "port to listen on")
 	// Certificate files.
 	caCert            = flag.String("ca_crt", "", "CA certificate for client certificate validation. Optional.")
 	serverCert        = flag.String("server_crt", "", "TLS server certificate")
@@ -33,8 +33,8 @@ func main() {
 
 	switch {
 	case *port <= 0:
-		log.Errorf("port must be > 0.")
-		return
+		*port = 8080
+		log.Warning("port must be > 0. Using default port 8080.")
 	}
 	var certificate tls.Certificate
 	var err error
@@ -91,7 +91,8 @@ func main() {
 		tlsCfg.ClientCAs = certPool
 	} else {
 		if userAuth.Enabled("cert") {
-			log.Exit("client_auth mode cert requires ca_crt option.")
+			userAuth.Unset("cert")
+			log.Warning("client_auth mode cert requires ca_crt option. Disabling cert mode authentication.")
 		}
 	}
 
