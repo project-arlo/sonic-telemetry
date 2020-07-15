@@ -3,7 +3,7 @@ stages:
   - test
   - cleanup
 
-sonic-submodules:
+sonic-submodule:
   only:
     - merge_requests
     - api
@@ -12,15 +12,12 @@ sonic-submodules:
   tags:
     - sonic
   script:
-    - date
-    - cat /etc/issue
-    - pwd
     - env
     - du -hs .
     - rm -rf *
     - du -hs .
-    - export PLATFORM=broadcom
     - git clone -q ssh://git@gitlab.force10networks.com/e-sonic/sonic-buildimage.git
     - cd sonic-buildimage
     - git clone -q -b stable ssh://git@gitlab.force10networks.com/e-sonic/tools tools$$
+    - export PLATFORM=broadcom
     - tools$$/submodule-code-review
