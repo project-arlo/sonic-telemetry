@@ -10,6 +10,8 @@ import (
 	log "github.com/golang/glog"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
+	"github.com/grpc-ecosystem/go-grpc-middleware"
+	"github.com/grpc-ecosystem/go-grpc-middleware/recovery"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/peer"
 	"google.golang.org/grpc/reflection"
@@ -112,12 +114,24 @@ func (i AuthTypes) Unset(mode string) error {
 	}
 	return nil
 }
+
 // New returns an initialized Server.
 func NewServer(config *Config, opts []grpc.ServerOption) (*Server, error) {
 	if config == nil {
 		return nil, errors.New("config not provided")
 	}
 
+	PanicRecover := func(p interface{}) (err error) {
+		log.Error(p)
+		return status.Errorf(codes.Unknown, "%v", p)
+	}
+	recopts := []grpc_recovery.Option{
+		grpc_recovery.WithRecoveryHandler(PanicRecover),
+	}
+
+	opts = append(opts, grpc_middleware.WithStreamServerChain(grpc_recovery.StreamServerInterceptor(recopts...)))
+	opts = append(opts, grpc_middleware.WithUnaryServerChain(grpc_recovery.UnaryServerInterceptor(recopts...)))
+	
 	s := grpc.NewServer(opts...)
 	reflection.Register(s)
 
