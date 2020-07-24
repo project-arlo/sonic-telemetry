@@ -19,6 +19,8 @@ import (
 	"github.com/go-redis/redis"
 	gnmipb "github.com/openconfig/gnmi/proto/gnmi"
 	"github.com/Workiva/go-datastructures/queue"
+	"google.golang.org/grpc/status"
+	"google.golang.org/grpc/codes"
 )
 
 const (
@@ -154,9 +156,23 @@ func (c *DbClient) String() string {
 	return fmt.Sprintf("DbClient Prefix %v  sendMsg %v, recvMsg %v",
 		c.prefix.GetTarget(), c.sendMsg, c.recvMsg)
 }
-
+func enqueFatalMsgDbClient(c *DbClient, msg string) {
+	log.Error(msg)
+	c.q.Put(Value{
+		&spb.Value{
+			Timestamp: time.Now().UnixNano(),
+			Fatal:     msg,
+		},
+	})
+}
 func (c *DbClient) StreamRun(q *queue.PriorityQueue, stop chan struct{}, w *sync.WaitGroup, subscribe *gnmipb.SubscriptionList) {
 	c.w = w
+	defer func() {
+			if r := recover(); r != nil {
+				err := status.Errorf(codes.Internal, "%v", r)
+				enqueFatalMsgDbClient(c, fmt.Sprintf("Subscribe operation failed with error =%v", err.Error()))
+			}
+		}()
 	defer c.w.Done()
 	c.q = q
 	c.channel = stop
@@ -202,6 +218,12 @@ func (c *DbClient) StreamRun(q *queue.PriorityQueue, stop chan struct{}, w *sync
 
 func (c *DbClient) PollRun(q *queue.PriorityQueue, poll chan struct{}, w *sync.WaitGroup, subscribe *gnmipb.SubscriptionList) {
 	c.w = w
+	defer func() {
+			if r := recover(); r != nil {
+				err := status.Errorf(codes.Internal, "%v", r)
+				enqueFatalMsgDbClient(c, fmt.Sprintf("Subscribe operation failed with error =%v", err.Error()))
+			}
+		}()
 	defer c.w.Done()
 	c.q = q
 	c.channel = poll
@@ -653,6 +675,7 @@ func tableData2TypedValue(tblPaths []tablePath, op *string) (*gnmipb.TypedValue,
 }
 
 func enqueFatalMsg(c *DbClient, msg string) {
+	log.Error(msg)
 	c.q.Put(Value{
 		&spb.Value{
 			Timestamp: time.Now().UnixNano(),

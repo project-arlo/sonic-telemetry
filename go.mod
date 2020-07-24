@@ -14,6 +14,7 @@ require (
 	github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b
 	github.com/golang/protobuf v1.4.0
 	github.com/google/gnxi v0.0.0-20191016182648-6697a080bc2d
+	github.com/grpc-ecosystem/go-grpc-middleware v1.2.0
 	github.com/jipanyang/gnmi v0.0.0-20180820232453-cb4d464fa018
 	github.com/jipanyang/gnxi v0.0.0-20181221084354-f0a90cca6fd0
 	github.com/kylelemons/godebug v1.1.0
