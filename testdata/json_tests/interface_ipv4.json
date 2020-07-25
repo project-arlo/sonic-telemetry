@@ -147,7 +147,7 @@
                                 "address": {
                                   "$id": "#/properties/openconfig-interfaces:interface/items/properties/subinterfaces/properties/subinterface/items/properties/openconfig-if-ip:ipv4/properties/addresses/properties/address",
                                   "type": "array",
-                                  "minItems": 2,
+                                  "minItems": 1,
                                   "maxItems": 2,
                                   "uniqueItems": true,
                                   "contains":

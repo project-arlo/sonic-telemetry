@@ -10,6 +10,8 @@ import (
 	"github.com/Workiva/go-datastructures/queue"
 	"sync"
 	"time"
+	"google.golang.org/grpc/status"
+	"google.golang.org/grpc/codes"
 )
 
 // Non db client is to Handle
@@ -334,9 +336,23 @@ func (c *NonDbClient) String() string {
 func (c *NonDbClient) StreamRun(q *queue.PriorityQueue, stop chan struct{}, w *sync.WaitGroup, subscribe *gnmipb.SubscriptionList) {
 	return
 }
-
+func enqueFatalMsgNonDbClient(c *NonDbClient, msg string) {
+	log.Error(msg)
+	c.q.Put(Value{
+		&spb.Value{
+			Timestamp: time.Now().UnixNano(),
+			Fatal:     msg,
+		},
+	})
+}
 func (c *NonDbClient) PollRun(q *queue.PriorityQueue, poll chan struct{}, w *sync.WaitGroup, subscribe *gnmipb.SubscriptionList) {
 	c.w = w
+	defer func() {
+			if r := recover(); r != nil {
+				err := status.Errorf(codes.Internal, "%v", r)
+				enqueFatalMsgNonDbClient(c, fmt.Sprintf("Subscribe operation failed with error =%v", err.Error()))
+			}
+		}()
 	defer c.w.Done()
 	c.q = q
 	c.channel = poll

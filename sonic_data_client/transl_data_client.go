@@ -18,6 +18,8 @@ import (
 	"encoding/json"
 	"context"
 	"github.com/Azure/sonic-telemetry/common_utils"
+	"google.golang.org/grpc/status"
+	"google.golang.org/grpc/codes"
 )
 
 const (
@@ -127,6 +129,7 @@ func (c *TranslClient) Set(delete []*gnmipb.Path, replace []*gnmipb.Update, upda
 	return nil
 }
 func enqueFatalMsgTranslib(c *TranslClient, msg string) {
+	log.Error(msg)
 	c.q.Put(Value{
 		&spb.Value{
 			Timestamp: time.Now().UnixNano(),
@@ -144,6 +147,14 @@ func (c *TranslClient) StreamRun(q *queue.PriorityQueue, stop chan struct{}, w *
 	rc, ctx := common_utils.GetContext(c.ctx)
 	c.ctx = ctx
 	c.w = w
+
+	defer func() {
+		if r := recover(); r != nil {
+			err := status.Errorf(codes.Internal, "%v", r)
+			enqueFatalMsgTranslib(c, fmt.Sprintf("Subscribe operation failed with error =%v", err.Error()))
+		}
+	}()
+
 	defer c.w.Done()
 	c.q = q
 	c.channel = stop
@@ -168,7 +179,7 @@ func (c *TranslClient) StreamRun(q *queue.PriorityQueue, stop chan struct{}, w *
 	valueCache := make(map[string]string)
 
 	for i,sub := range subscribe.Subscription {
-		fmt.Println(sub.Mode, sub.SampleInterval)
+		log.V(6).Infof("%s %s", sub.Mode, sub.SampleInterval)
 		switch sub.Mode {
 
 		case gnmipb.SubscriptionMode_TARGET_DEFINED:
@@ -207,7 +218,7 @@ func (c *TranslClient) StreamRun(q *queue.PriorityQueue, stop chan struct{}, w *
 			enqueFatalMsgTranslib(c, fmt.Sprintf("Invalid Subscription Mode %d", sub.Mode))
 			return
 		}
-		fmt.Println("subscribe_mode:", subscribe_mode)
+		log.V(6).Infof("subscribe_mode:", subscribe_mode)
 		if subscribe_mode == gnmipb.SubscriptionMode_SAMPLE {
 			interval := int(sub.SampleInterval)
 			if interval == 0 {
@@ -285,7 +296,7 @@ func (c *TranslClient) StreamRun(q *queue.PriorityQueue, stop chan struct{}, w *
 		}
 
 		for _,tick := range ticker_map[cases_map[chosen]] {
-			fmt.Printf("tick, heartbeat: %t, path: %s", tick.heartbeat, c.path2URI[tick.sub.Path])
+			log.V(6).Infof("tick, heartbeat: %t, path: %s\n", tick.heartbeat, c.path2URI[tick.sub.Path])
 			val, err := transutil.TranslProcessGet(c.path2URI[tick.sub.Path], nil, c.ctx)
 			if err != nil {
 				return
@@ -335,6 +346,12 @@ func addTimer(c *TranslClient, ticker_map map[int][]*ticker_info, cases *[]refle
 }
 
 func TranslSubscribe(gnmiPaths []*gnmipb.Path, stringPaths []string, pathMap map[string]*gnmipb.Path, c *TranslClient, updates_only bool) {
+	defer func() {
+			if r := recover(); r != nil {
+				err := status.Errorf(codes.Internal, "%v", r)
+				enqueFatalMsgTranslib(c, fmt.Sprintf("Subscribe operation failed with error =%v", err.Error()))
+			}
+		}()
 	defer c.w.Done()
 	rc, ctx := common_utils.GetContext(c.ctx)
 	c.ctx = ctx
@@ -397,7 +414,7 @@ func TranslSubscribe(gnmiPaths []*gnmipb.Path, stringPaths []string, pathMap map
 			log.V(6).Infof("Added spbv #%v", spbv)
 			
 			if v.SyncComplete && !sync_done {
-				fmt.Println("SENDING SYNC")
+				log.V(6).Infof("SENDING SYNC")
 				c.synced.Done()
 				sync_done = true
 			}
@@ -413,6 +430,14 @@ func (c *TranslClient) PollRun(q *queue.PriorityQueue, poll chan struct{}, w *sy
 	rc, ctx := common_utils.GetContext(c.ctx)
 	c.ctx = ctx
 	c.w = w
+
+	defer func() {
+			if r := recover(); r != nil {
+				err := status.Errorf(codes.Internal, "%v", r)
+				enqueFatalMsgTranslib(c, fmt.Sprintf("Subscribe operation failed with error =%v", err.Error()))
+			}
+		}()
+
 	defer c.w.Done()
 	c.q = q
 	c.channel = poll
@@ -465,6 +490,14 @@ func (c *TranslClient) OnceRun(q *queue.PriorityQueue, once chan struct{}, w *sy
 	rc, ctx := common_utils.GetContext(c.ctx)
 	c.ctx = ctx
 	c.w = w
+
+	defer func() {
+			if r := recover(); r != nil {
+				err := status.Errorf(codes.Internal, "%v", r)
+				enqueFatalMsgTranslib(c, fmt.Sprintf("Subscribe operation failed with error =%v", err.Error()))
+			}
+		}()
+
 	defer c.w.Done()
 	c.q = q
 	c.channel = once
