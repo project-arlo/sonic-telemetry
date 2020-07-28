@@ -51,6 +51,8 @@ type Config struct {
 	UserAuth AuthTypes
 }
 
+var AuthLock sync.Mutex
+
 func (i AuthTypes) String() string {
 	if i["none"] {
 		return ""
