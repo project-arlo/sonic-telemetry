@@ -64,6 +64,8 @@ func GetUserRoles(usr *user.User) ([]string, error) {
 }
 func PopulateAuthStruct(username string, auth *common_utils.AuthInfo, r []string) error {
 	if len(r) == 0 {
+		AuthLock.Lock()
+		defer AuthLock.Unlock()
 		usr, err := user.Lookup(username)
 		if err != nil {
 			return err
