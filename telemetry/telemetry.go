@@ -16,7 +16,8 @@ import (
 )
 
 var (
-	userAuth = gnmi.AuthTypes{"password": true, "cert": false, "jwt": true}
+	defUserAuth = gnmi.AuthTypes{"password": true, "cert": false, "jwt": true}
+	userAuth = gnmi.AuthTypes{"password": false, "cert": false, "jwt": false}
 	port = flag.Int("port", 8080, "port to listen on")
 	// Certificate files.
 	caCert            = flag.String("ca_crt", "", "CA certificate for client certificate validation. Optional.")
@@ -30,6 +31,12 @@ var (
 func main() {
 	flag.Var(userAuth, "client_auth", "Client auth mode(s) - none,cert,password,jwt")
 	flag.Parse()
+	if isFlagPassed("client_auth") {
+		log.V(1).Infof("client_auth provided")
+	}else {
+		log.V(1).Infof("client_auth not provided, using defaults.")
+		userAuth = defUserAuth
+	}
 
 	switch {
 	case *port <= 0:
@@ -108,8 +115,19 @@ func main() {
 		log.Errorf("Failed to create gNMI server: %v", err)
 		return
 	}
+	log.V(1).Infof("Auth Modes: ", userAuth)
 
 	log.V(1).Infof("Starting RPC server on address: %s", s.Address())
 	s.Serve() // blocks until close
 	log.Flush()
+}
+
+func isFlagPassed(name string) bool {
+    found := false
+    flag.Visit(func(f *flag.Flag) {
+        if f.Name == name {
+            found = true
+        }
+    })
+    return found
 }
