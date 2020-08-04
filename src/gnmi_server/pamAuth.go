@@ -99,11 +99,12 @@ func UserPwAuth(username string, passwd string) (bool, error) {
 		},
 		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
 	}
-	_, err := ssh.Dial("tcp", "127.0.0.1:22", config)
+	c, err := ssh.Dial("tcp", "127.0.0.1:22", config)
 	if err != nil {
 		glog.Infof("Authentication failed. user=%s, error:%s", username, err.Error())
 		return false, err
 	}
+	defer c.Conn.Close()
 
 	return true, nil
 }
