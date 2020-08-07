@@ -143,6 +143,15 @@ type ticker_info struct{
 	heartbeat      bool
 }
 
+func tickerCleanup(ticker_map map[int][]*ticker_info, c *TranslClient ) {
+	for _,v := range(ticker_map){
+		for _,ti := range(v) {
+			fmt.Println("Ticker Cleanup: ", c.path2URI[ti.sub.Path])
+			ti.t.Stop()
+		}
+	}
+}
+
 func (c *TranslClient) StreamRun(q *queue.PriorityQueue, stop chan struct{}, w *sync.WaitGroup, subscribe *gnmipb.SubscriptionList) {
 	rc, ctx := common_utils.GetContext(c.ctx)
 	c.ctx = ctx
@@ -156,6 +165,7 @@ func (c *TranslClient) StreamRun(q *queue.PriorityQueue, stop chan struct{}, w *
 	}()
 
 	defer c.w.Done()
+
 	c.q = q
 	c.channel = stop
 	version := getBundleVersion(c.extensions)
@@ -164,6 +174,8 @@ func (c *TranslClient) StreamRun(q *queue.PriorityQueue, stop chan struct{}, w *
 	}
 
 	ticker_map := make(map[int][]*ticker_info)
+
+	defer tickerCleanup(ticker_map, c)
 	var cases []reflect.SelectCase
 	cases_map := make(map[int]int)
 	var subscribe_mode gnmipb.SubscriptionMode
