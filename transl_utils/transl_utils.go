@@ -10,6 +10,7 @@ import (
 	"github.com/Azure/sonic-mgmt-common/translib"
 	"github.com/Azure/sonic-telemetry/common_utils"
 	"context"
+	"github.com/Azure/sonic-mgmt-common/translib/tlerr"
 )
 
 func GnmiTranslFullPath(prefix, path *gnmipb.Path) *gnmipb.Path {
@@ -163,12 +164,8 @@ func TranslProcessReplace(uri string, t *gnmipb.TypedValue, ctx context.Context)
 	if rc.Auth.AuthEnabled {
 		req.AuthEnabled = true
 	}
-	resp, err1 := translib.Create(req)
-	if err1 != nil{
-		//If Create fails, it may be due to object already existing/can not be created
-		// such as interface, in this case use Update.
-		resp, err1 = translib.Replace(req)
-	}
+	resp, err1 := translib.Replace(req)
+	
 	if err1 != nil{
 		log.V(2).Infof("REPLACE operation failed with error =%v, %v", resp.ErrSrc, err1.Error())
 		return fmt.Errorf("REPLACE failed for this message: %v", err1.Error())
@@ -199,11 +196,16 @@ func TranslProcessUpdate(uri string, t *gnmipb.TypedValue, ctx context.Context) 
 	if rc.Auth.AuthEnabled {
 		req.AuthEnabled = true
 	}
-	resp, err := translib.Create(req)
+	resp, err := translib.Update(req)
 	if err != nil{
-		//If Create fails, it may be due to object already existing/can not be created
-		// such as interface, in this case use Update.
-		resp, err = translib.Update(req)
+		switch err.(type) {
+		case tlerr.NotFoundError:
+			//If Update fails, it may be due to object not existing in this case use Replace to create and update the object.
+			resp, err = translib.Replace(req)
+		default:
+			log.V(2).Infof("UPDATE operation failed with error =%v, %v", resp.ErrSrc, err.Error())
+			return fmt.Errorf("UPDATE failed for this message: %v", err.Error())
+		}
 	}
 	if err != nil{
 		log.V(2).Infof("UPDATE operation failed with error =%v, %v", resp.ErrSrc, err.Error())
