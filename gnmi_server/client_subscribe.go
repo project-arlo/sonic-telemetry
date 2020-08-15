@@ -7,12 +7,15 @@ import (
 	"sync"
 
 	log "github.com/golang/glog"
-	"github.com/Workiva/go-datastructures/queue"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 
 	sdc "github.com/Azure/sonic-telemetry/sonic_data_client"
 	gnmipb "github.com/openconfig/gnmi/proto/gnmi"
+)
+
+var (
+	OutputQueSize uint64
 )
 
 // Client contains information about a subscribe client that has connected to the server.
@@ -25,7 +28,7 @@ type Client struct {
 	stop      chan struct{}
 	once      chan struct{}
 	mu        sync.RWMutex
-	q         *queue.PriorityQueue
+	q         *sdc.LimitedQueue
 	subscribe *gnmipb.SubscriptionList
 	// Wait for all sub go routine to finish
 	w     sync.WaitGroup
@@ -34,7 +37,7 @@ type Client struct {
 
 // NewClient returns a new initialized client.
 func NewClient(addr net.Addr) *Client {
-	pq := queue.NewPriorityQueue(1, false)
+	pq := sdc.NewLimitedQueue(1, false, OutputQueSize)
 	return &Client{
 		addr: addr,
 		q:    pq,
@@ -172,11 +175,11 @@ func (c *Client) Close() {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	log.V(1).Infof("Client %s Close, sendMsg %v recvMsg %v errors %v", c, c.sendMsg, c.recvMsg, c.errors)
-	if c.q != nil {
-		if c.q.Disposed() {
+	if c.q.Q != nil {
+		if c.q.Q.Disposed() {
 			return
 		}
-		c.q.Dispose()
+		c.q.Q.Dispose()
 	}
 	if c.stop != nil {
 		close(c.stop)
@@ -223,12 +226,8 @@ func (c *Client) recv(stream gnmipb.GNMI_SubscribeServer) {
 // send runs until process Queue returns an error.
 func (c *Client) send(stream gnmipb.GNMI_SubscribeServer) error {
 	for {
-		items, err := c.q.Get(1)
+		item, err := c.q.DequeueItem()
 
-		if items == nil {
-			log.V(1).Infof("%v", err)
-			return err
-		}
 		if err != nil {
 			c.errors++
 			log.V(1).Infof("%v", err)
@@ -236,16 +235,12 @@ func (c *Client) send(stream gnmipb.GNMI_SubscribeServer) error {
 		}
 
 		var resp *gnmipb.SubscribeResponse
-		switch v := items[0].(type) {
-		case sdc.Value:
-			if resp, err = sdc.ValToResp(v); err != nil {
-				c.errors++
-				return err
-			}
-		default:
-			log.V(1).Infof("Unknown data type %v for %s in queue", items[0], c)
+
+		if resp, err = sdc.ValToResp(item); err != nil {
 			c.errors++
+			return err
 		}
+
 
 		c.sendMsg++
 		err = stream.Send(resp)

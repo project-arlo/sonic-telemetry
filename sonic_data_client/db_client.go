@@ -18,9 +18,10 @@ import (
 	sdcfg "github.com/Azure/sonic-telemetry/sonic_db_config"
 	"github.com/go-redis/redis"
 	gnmipb "github.com/openconfig/gnmi/proto/gnmi"
-	"github.com/Workiva/go-datastructures/queue"
 	"google.golang.org/grpc/status"
 	"google.golang.org/grpc/codes"
+	"github.com/Workiva/go-datastructures/queue"
+
 )
 
 const (
@@ -37,13 +38,13 @@ type Client interface {
 	// and enqueue data change to the priority queue.
 	// It stops all activities upon receiving signal on stop channel
 	// It should run as a go routine
-	StreamRun(q *queue.PriorityQueue, stop chan struct{}, w *sync.WaitGroup, subscribe *gnmipb.SubscriptionList)
+	StreamRun(q *LimitedQueue, stop chan struct{}, w *sync.WaitGroup, subscribe *gnmipb.SubscriptionList)
 	// Poll will  start service to respond poll signal received on poll channel.
 	// data read from data source will be enqueued on to the priority queue
 	// The service will stop upon detection of poll channel closing.
 	// It should run as a go routine
-	PollRun(q *queue.PriorityQueue, poll chan struct{}, w *sync.WaitGroup, subscribe *gnmipb.SubscriptionList)
-	OnceRun(q *queue.PriorityQueue, once chan struct{}, w *sync.WaitGroup, subscribe *gnmipb.SubscriptionList)
+	PollRun(q *LimitedQueue, poll chan struct{}, w *sync.WaitGroup, subscribe *gnmipb.SubscriptionList)
+	OnceRun(q *LimitedQueue, once chan struct{}, w *sync.WaitGroup, subscribe *gnmipb.SubscriptionList)
 	// Get return data from the data source in format of *spb.Value
 	Get(w *sync.WaitGroup) ([]*spb.Value, error)
 	// Set data based on path and value
@@ -100,7 +101,7 @@ func (val Value) Compare(other queue.Item) int {
 type DbClient struct {
 	prefix  *gnmipb.Path
 	pathG2S map[*gnmipb.Path][]tablePath
-	q       *queue.PriorityQueue
+	q       *LimitedQueue
 	channel chan struct{}
 
 	synced sync.WaitGroup  // Control when to send gNMI sync_response
@@ -111,6 +112,60 @@ type DbClient struct {
 	recvMsg int64
 	errors  int64
 }
+
+
+var queueLengthSum uint64;
+var queueLengthLock sync.Mutex;
+
+type LimitedQueue struct {
+	Q *queue.PriorityQueue
+	maxSize uint64
+}
+
+func (q *LimitedQueue) EnqueueItem(item Value) error {
+	queueLengthLock.Lock()
+	defer queueLengthLock.Unlock()
+	ilen := uint64(len(item.Val.GetJsonIetfVal()))
+	if ilen + queueLengthSum < q.maxSize {
+		queueLengthSum += ilen
+		log.V(2).Infof("Output queue size: %d", queueLengthSum)
+		return q.Q.Put(item)
+	} else {
+		//In case the queue is full, discard item and log error
+		log.Error("Telemetry output queue full, discarding item!")
+		return nil
+	}
+}
+// This is for the case of enqueueing fatal messages only
+func (q *LimitedQueue) ForceEnqueueItem(item Value) error {
+	queueLengthLock.Lock()
+	defer queueLengthLock.Unlock()
+	queueLengthSum += uint64(len(item.Val.GetJsonIetfVal()))
+	log.V(2).Infof("Output queue size: %d", queueLengthSum)
+	return q.Q.Put(item)
+}
+func (q *LimitedQueue) DequeueItem() (Value, error) {
+
+	items, err := q.Q.Get(1)
+	if err != nil {
+		return Value{}, err
+	}
+	ilen := uint64(len(items[0].(Value).Val.GetJsonIetfVal()))
+	queueLengthLock.Lock()
+	defer queueLengthLock.Unlock()
+	queueLengthSum -= ilen
+	log.V(2).Infof("Output queue size: %d", queueLengthSum)
+	return items[0].(Value), nil
+
+}
+
+func NewLimitedQueue(hint int, allowDuplicates bool, maxSize uint64) *LimitedQueue {
+	return &LimitedQueue{
+		Q: queue.NewPriorityQueue(hint, allowDuplicates),
+		maxSize: maxSize,
+	}
+}
+
 
 func NewDbClient(paths []*gnmipb.Path, prefix *gnmipb.Path) (Client, error) {
 	var client DbClient
@@ -158,14 +213,14 @@ func (c *DbClient) String() string {
 }
 func enqueFatalMsgDbClient(c *DbClient, msg string) {
 	log.Error(msg)
-	c.q.Put(Value{
+	c.q.ForceEnqueueItem(Value{
 		&spb.Value{
 			Timestamp: time.Now().UnixNano(),
 			Fatal:     msg,
 		},
 	})
 }
-func (c *DbClient) StreamRun(q *queue.PriorityQueue, stop chan struct{}, w *sync.WaitGroup, subscribe *gnmipb.SubscriptionList) {
+func (c *DbClient) StreamRun(q *LimitedQueue, stop chan struct{}, w *sync.WaitGroup, subscribe *gnmipb.SubscriptionList) {
 	c.w = w
 	defer func() {
 			if r := recover(); r != nil {
@@ -198,7 +253,7 @@ func (c *DbClient) StreamRun(q *queue.PriorityQueue, stop chan struct{}, w *sync
 	// in the SubscriptionList has been transmitted at least once
 	c.synced.Wait()
 	// Inject sync message
-	c.q.Put(Value{
+	c.q.EnqueueItem(Value{
 		&spb.Value{
 			Timestamp:    time.Now().UnixNano(),
 			SyncResponse: true,
@@ -216,7 +271,7 @@ func (c *DbClient) StreamRun(q *queue.PriorityQueue, stop chan struct{}, w *sync
 	}
 }
 
-func (c *DbClient) PollRun(q *queue.PriorityQueue, poll chan struct{}, w *sync.WaitGroup, subscribe *gnmipb.SubscriptionList) {
+func (c *DbClient) PollRun(q *LimitedQueue, poll chan struct{}, w *sync.WaitGroup, subscribe *gnmipb.SubscriptionList) {
 	c.w = w
 	defer func() {
 			if r := recover(); r != nil {
@@ -249,11 +304,11 @@ func (c *DbClient) PollRun(q *queue.PriorityQueue, poll chan struct{}, w *sync.W
 				Val:          val,
 			}
 
-			c.q.Put(Value{spbv})
+			c.q.EnqueueItem(Value{spbv})
 			log.V(6).Infof("Added spbv #%v", spbv)
 		}
 
-		c.q.Put(Value{
+		c.q.EnqueueItem(Value{
 			&spb.Value{
 				Timestamp:    time.Now().UnixNano(),
 				SyncResponse: true,
@@ -262,7 +317,7 @@ func (c *DbClient) PollRun(q *queue.PriorityQueue, poll chan struct{}, w *sync.W
 		log.V(4).Infof("Sync done, poll time taken: %v ms", int64(time.Since(t1)/time.Millisecond))
 	}
 }
-func (c *DbClient) OnceRun(q *queue.PriorityQueue, once chan struct{}, w *sync.WaitGroup, subscribe *gnmipb.SubscriptionList) {
+func (c *DbClient) OnceRun(q *LimitedQueue, once chan struct{}, w *sync.WaitGroup, subscribe *gnmipb.SubscriptionList) {
 	return
 }
 func (c *DbClient) Get(w *sync.WaitGroup) ([]*spb.Value, error) {
@@ -676,7 +731,7 @@ func tableData2TypedValue(tblPaths []tablePath, op *string) (*gnmipb.TypedValue,
 
 func enqueFatalMsg(c *DbClient, msg string) {
 	log.Error(msg)
-	c.q.Put(Value{
+	c.q.ForceEnqueueItem(Value{
 		&spb.Value{
 			Timestamp: time.Now().UnixNano(),
 			Fatal:     msg,
@@ -752,7 +807,7 @@ func dbFieldMultiSubscribe(gnmiPath *gnmipb.Path, c *DbClient) {
 					Val:       val,
 				}
 
-				if err = c.q.Put(Value{spbv}); err != nil {
+				if err = c.q.EnqueueItem(Value{spbv}); err != nil {
 					log.V(1).Infof("Queue error:  %v", err)
 					return
 				}
@@ -815,7 +870,7 @@ func dbFieldSubscribe(gnmiPath *gnmipb.Path, c *DbClient) {
 					},
 				}
 
-				if err = c.q.Put(Value{spbv}); err != nil {
+				if err = c.q.EnqueueItem(Value{spbv}); err != nil {
 					log.V(1).Infof("Queue error:  %v", err)
 					return
 				}
@@ -985,7 +1040,7 @@ func dbTableKeySubscribe(gnmiPath *gnmipb.Path, c *DbClient) {
 		Timestamp: time.Now().UnixNano(),
 		Val:       val,
 	}
-	if err = c.q.Put(Value{spbv}); err != nil {
+	if err = c.q.EnqueueItem(Value{spbv}); err != nil {
 		log.V(1).Infof("Queue error:  %v", err)
 		return
 	}
@@ -1019,7 +1074,7 @@ func dbTableKeySubscribe(gnmiPath *gnmipb.Path, c *DbClient) {
 				}
 
 				log.V(5).Infof("dbTableKeySubscribe enque: %v", spbv)
-				if err = c.q.Put(Value{spbv}); err != nil {
+				if err = c.q.EnqueueItem(Value{spbv}); err != nil {
 					log.V(1).Infof("Queue error:  %v", err)
 					return
 				}
