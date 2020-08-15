@@ -26,6 +26,7 @@ var (
 	insecure          = flag.Bool("insecure", false, "Skip providing TLS cert and key, for testing only!")
 	jwtRefInt         = flag.Uint64("jwt_refresh_int", 30, "Seconds before JWT expiry the token can be refreshed.")
 	jwtValInt         = flag.Uint64("jwt_valid_int", 3600, "Seconds that JWT token is valid for.")
+	outputQueSz      = flag.Uint64("output_queue_size", 100, "Output Queue Maximum Size (in MB)")
 )
 
 func main() {
@@ -47,6 +48,7 @@ func main() {
 	var err error
 	gnmi.JwtRefreshInt = time.Duration(*jwtRefInt*uint64(time.Second))
 	gnmi.JwtValidInt = time.Duration(*jwtValInt*uint64(time.Second))
+	gnmi.OutputQueSize = *outputQueSz * uint64(1e6)
 	if *insecure {
 		certificate, err = testcert.NewCert()
 		if err != nil {
