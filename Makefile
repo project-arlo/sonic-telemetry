@@ -42,7 +42,10 @@ $(BUILD_DIR)/.deps: $(MAKEFILE_LIST)
 	GOPATH=$(GO_DEP_PATH) $(GO) get -u  golang.org/x/net/context
 	GOPATH=$(GO_DEP_PATH) $(GO) get -u  google.golang.org/grpc
 	GOPATH=$(GO_DEP_PATH) $(GO) get -u google.golang.org/grpc/credentials
-	GOPATH=$(GO_DEP_PATH) $(GO) get -u github.com/google/gnxi/utils
+	GOPATH=$(GO_DEP_PATH) $(GO) get -d github.com/google/gnxi/utils
+	cd $(GO_DEP_PATH)/src/github.com/google/gnxi/utils; \
+		git reset --hard HEAD; git clean -f -d; git checkout 97477153283d35eb1c7a1b808ebe75bee055e7d8 2>/dev/null; \
+		GOPATH=$(GO_DEP_PATH) $(GO) install -v -gcflags "-N -l" $(GO_DEP_PATH)/src/github.com/google/gnxi/utils
 	GOPATH=$(GO_DEP_PATH) $(GO) get -d github.com/jipanyang/gnxi/utils/xpath
 	cd $(GO_DEP_PATH)/src/github.com/openconfig/gnmi/proto/gnmi; git reset --hard HEAD;git clean -f -d;git checkout e7106f7f5493a9fa152d28ab314f2cc734244ed8 2>/dev/null ; true; \
   GOPATH=$(GO_DEP_PATH) $(GO) install -v -gcflags "-N -l" $(GO_DEP_PATH)/src/github.com/openconfig/gnmi/proto/gnmi
