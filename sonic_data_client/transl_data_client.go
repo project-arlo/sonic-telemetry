@@ -33,7 +33,7 @@ type TranslClient struct {
 	/* GNMI Path to REST URL Mapping */
 	path2URI map[*gnmipb.Path]string
 	channel  chan struct{}
-	q        *queue.PriorityQueue
+	q *LimitedQueue
 
 	synced sync.WaitGroup  // Control when to send gNMI sync_response
 	w      *sync.WaitGroup // wait for all sub go routines to finish
@@ -130,7 +130,7 @@ func (c *TranslClient) Set(delete []*gnmipb.Path, replace []*gnmipb.Update, upda
 }
 func enqueFatalMsgTranslib(c *TranslClient, msg string) {
 	log.Error(msg)
-	c.q.Put(Value{
+	c.q.ForceEnqueueItem(Value{
 		&spb.Value{
 			Timestamp: time.Now().UnixNano(),
 			Fatal:     msg,
@@ -152,7 +152,7 @@ func tickerCleanup(ticker_map map[int][]*ticker_info, c *TranslClient ) {
 	}
 }
 
-func (c *TranslClient) StreamRun(q *queue.PriorityQueue, stop chan struct{}, w *sync.WaitGroup, subscribe *gnmipb.SubscriptionList) {
+func (c *TranslClient) StreamRun(q *LimitedQueue, stop chan struct{}, w *sync.WaitGroup, subscribe *gnmipb.SubscriptionList) {
 	rc, ctx := common_utils.GetContext(c.ctx)
 	c.ctx = ctx
 	c.w = w
@@ -256,7 +256,7 @@ func (c *TranslClient) StreamRun(q *queue.PriorityQueue, stop chan struct{}, w *
 					SyncResponse: false,
 					Val:          val,
 				}
-				c.q.Put(Value{spbv})
+				c.q.EnqueueItem(Value{spbv})
 				valueCache[c.path2URI[sub.Path]] = string(val.GetJsonIetfVal())
 			}
 			
@@ -296,7 +296,7 @@ func (c *TranslClient) StreamRun(q *queue.PriorityQueue, stop chan struct{}, w *
 		Timestamp:    time.Now().UnixNano(),
 		SyncResponse: true,
 	}
-	c.q.Put(Value{spbs})
+	c.q.EnqueueItem(Value{spbs})
 	cases = append(cases, reflect.SelectCase{Dir: reflect.SelectRecv, Chan: reflect.ValueOf(c.channel)})
 
 	for {
@@ -325,7 +325,7 @@ func (c *TranslClient) StreamRun(q *queue.PriorityQueue, stop chan struct{}, w *
 			if (tick.sub.SuppressRedundant) && (!tick.heartbeat) && (string(val.GetJsonIetfVal()) == valueCache[c.path2URI[tick.sub.Path]]) {
 				log.V(6).Infof("Redundant Message Suppressed #%v", string(val.GetJsonIetfVal()))
 			} else {
-				c.q.Put(Value{spbv})
+				c.q.EnqueueItem(Value{spbv})
 				valueCache[c.path2URI[tick.sub.Path]] = string(val.GetJsonIetfVal())
 				log.V(6).Infof("Added spbv #%v", spbv)
 			}
@@ -420,7 +420,7 @@ func TranslSubscribe(gnmiPaths []*gnmipb.Path, stringPaths []string, pathMap map
 			if updates_only && !sync_done {
 				log.V(1).Infof("Msg suppressed due to updates_only")
 			} else {
-				c.q.Put(Value{spbv})
+				c.q.EnqueueItem(Value{spbv})
 			}
 
 			log.V(6).Infof("Added spbv #%v", spbv)
@@ -438,7 +438,7 @@ func TranslSubscribe(gnmiPaths []*gnmipb.Path, stringPaths []string, pathMap map
 
 
 
-func (c *TranslClient) PollRun(q *queue.PriorityQueue, poll chan struct{}, w *sync.WaitGroup, subscribe *gnmipb.SubscriptionList) {
+func (c *TranslClient) PollRun(q *LimitedQueue, poll chan struct{}, w *sync.WaitGroup, subscribe *gnmipb.SubscriptionList) {
 	rc, ctx := common_utils.GetContext(c.ctx)
 	c.ctx = ctx
 	c.w = w
@@ -483,12 +483,12 @@ func (c *TranslClient) PollRun(q *queue.PriorityQueue, poll chan struct{}, w *sy
 					Val:          val,
 				}
 
-				c.q.Put(Value{spbv})
+				c.q.EnqueueItem(Value{spbv})
 				log.V(6).Infof("Added spbv #%v", spbv)
 			}
 		}
 
-		c.q.Put(Value{
+		c.q.EnqueueItem(Value{
 			&spb.Value{
 				Timestamp:    time.Now().UnixNano(),
 				SyncResponse: true,
@@ -498,7 +498,7 @@ func (c *TranslClient) PollRun(q *queue.PriorityQueue, poll chan struct{}, w *sy
 		log.V(4).Infof("Sync done, poll time taken: %v ms", int64(time.Since(t1)/time.Millisecond))
 	}
 }
-func (c *TranslClient) OnceRun(q *queue.PriorityQueue, once chan struct{}, w *sync.WaitGroup, subscribe *gnmipb.SubscriptionList) {
+func (c *TranslClient) OnceRun(q *LimitedQueue, once chan struct{}, w *sync.WaitGroup, subscribe *gnmipb.SubscriptionList) {
 	rc, ctx := common_utils.GetContext(c.ctx)
 	c.ctx = ctx
 	c.w = w
@@ -541,12 +541,12 @@ func (c *TranslClient) OnceRun(q *queue.PriorityQueue, once chan struct{}, w *sy
 				Val:          val,
 			}
 
-			c.q.Put(Value{spbv})
+			c.q.EnqueueItem(Value{spbv})
 			log.V(6).Infof("Added spbv #%v", spbv)
 		}
 	}
 
-	c.q.Put(Value{
+	c.q.EnqueueItem(Value{
 		&spb.Value{
 			Timestamp:    time.Now().UnixNano(),
 			SyncResponse: true,

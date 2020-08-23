@@ -20,7 +20,9 @@ var (
 		Encoding:       gpb.Encoding_JSON_IETF,
 		Unidirectional: true,
 		TLS:            &tls.Config{},
+		OutputQueueSz:  100e6,
 	}
+	outputQueueSz = flag.Uint64("output_queue_size", 100, "Output Queue Maximum Size (in MB)")
 )
 
 func init() {
@@ -28,6 +30,7 @@ func init() {
 	flag.BoolVar(&clientCfg.TLS.InsecureSkipVerify, "insecure", false, "When set, client will not verify the server certificate during TLS handshake.")
 	flag.DurationVar(&clientCfg.RetryInterval, "retry_interval", 30*time.Second, "Interval at which client tries to reconnect to destination servers")
 	flag.BoolVar(&clientCfg.Unidirectional, "unidirectional", true, "No repesponse from server is expected")
+	
 }
 
 func main() {
@@ -40,6 +43,7 @@ func main() {
 		<-c
 		cancel()
 	}()
+	clientCfg.OutputQueueSz = *outputQueueSz * uint64(1e6)
 	log.V(1).Infof("Starting telemetry publish client")
 	err := dc.DialOutRun(ctx, &clientCfg)
 	log.V(1).Infof("Exiting telemetry publish client: %v", err)
