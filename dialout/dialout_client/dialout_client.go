@@ -12,7 +12,7 @@ import (
 	log "github.com/golang/glog"
 	gpb "github.com/openconfig/gnmi/proto/gnmi"
 	"github.com/openconfig/ygot/ygot"
-	"github.com/Workiva/go-datastructures/queue"
+	
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
@@ -101,6 +101,7 @@ type ClientConfig struct {
 	Unidirectional bool        // by default, no reponse from remote server
 	TLS            *tls.Config // TLS config to use when connecting to target. Optional.
 	RedisConType   string      // "unix"  or "tcp"
+	OutputQueueSz  uint64
 }
 
 // clientSubscription is the container for config data,
@@ -119,7 +120,7 @@ type clientSubscription struct {
 	client *Client              // GNMIDialOutClient
 	dc     sdc.Client           // SONiC data client
 	stop   chan struct{}        // Inform publishRun routine to stop
-	q      *queue.PriorityQueue // for data passing among go routine
+	q      *sdc.LimitedQueue // for data passing among go routine
 	w      sync.WaitGroup       // Wait for all sub go routine to finish
 	opened bool                 // whether there is opened instance for this client subscription
 	cancel context.CancelFunc
@@ -156,9 +157,9 @@ func (cs *clientSubscription) Close() {
 		close(cs.stop) //Inform the clientSubscription publish service routine to stop
 	}
 
-	if cs.q != nil {
-		if !cs.q.Disposed() {
-			cs.q.Dispose()
+	if cs.q.Q != nil {
+		if !cs.q.Q.Disposed() {
+			cs.q.Q.Dispose()
 		}
 	}
 	if cs.client != nil {
@@ -210,12 +211,9 @@ func (cs *clientSubscription) NewInstance(ctx context.Context) error {
 // send runs until process Queue returns an error.
 func (cs *clientSubscription) send(stream spb.GNMIDialOut_PublishClient) error {
 	for {
-		items, err := cs.q.Get(1)
+		item, err := cs.q.DequeueItem()
 
-		if items == nil {
-			log.V(1).Infof("%v", err)
-			return err
-		}
+		
 		if err != nil {
 			cs.errors++
 			log.V(1).Infof("%v", err)
@@ -223,16 +221,12 @@ func (cs *clientSubscription) send(stream spb.GNMIDialOut_PublishClient) error {
 		}
 
 		var resp *gpb.SubscribeResponse
-		switch v := items[0].(type) {
-		case sdc.Value:
-			if resp, err = sdc.ValToResp(v); err != nil {
-				cs.errors++
-				return err
-			}
-		default:
-			log.V(1).Infof("Unknown data type %v for %s in queue", items[0], cs)
+
+		if resp, err = sdc.ValToResp(item); err != nil {
 			cs.errors++
+			return err
 		}
+
 
 		cs.sendMsg++
 		err = stream.Send(resp)
@@ -295,7 +289,7 @@ func publishRun(ctx context.Context, cs *clientSubscription, dests []Destination
 restart: //Remote server might go down, in that case we restart with next destination in the group
 	cs.cMu.Lock()
 	cs.stop = make(chan struct{}, 1)
-	cs.q = queue.NewPriorityQueue(1, false)
+	cs.q = sdc.NewLimitedQueue(1, false, clientCfg.OutputQueueSz)
 	cs.opened = true
 	cs.client = nil
 	cs.cMu.Unlock()
