@@ -7,15 +7,13 @@ import (
 	context "context"
 	fmt "fmt"
 	_ "github.com/gogo/protobuf/gogoproto"
-	proto "github.com/gogo/protobuf/proto"
+	proto "github.com/golang/protobuf/proto"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
 	io "io"
 	math "math"
 	math_bits "math/bits"
-	reflect "reflect"
-	strings "strings"
 )
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -27,15 +25,19 @@ var _ = math.Inf
 // is compatible with the proto package it is being compiled against.
 // A compilation error at this line likely means your copy of the
 // proto package needs to be updated.
-const _ = proto.GoGoProtoPackageIsVersion3 // please upgrade the proto package
+const _ = proto.ProtoPackageIsVersion3 // please upgrade the proto package
 
 type SonicOutput struct {
-	Status       int32  `protobuf:"varint,1,opt,name=status,proto3" json:"status,omitempty"`
-	StatusDetail string `protobuf:"bytes,2,opt,name=status_detail,json=statusDetail,proto3" json:"status-detail" xml:",comment"`
+	Status               int32    `protobuf:"varint,1,opt,name=status,proto3" json:"status,omitempty"`
+	StatusDetail         string   `protobuf:"bytes,2,opt,name=status_detail,json=statusDetail,proto3" json:"status-detail" xml:",comment"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
 }
 
-func (m *SonicOutput) Reset()      { *m = SonicOutput{} }
-func (*SonicOutput) ProtoMessage() {}
+func (m *SonicOutput) Reset()         { *m = SonicOutput{} }
+func (m *SonicOutput) String() string { return proto.CompactTextString(m) }
+func (*SonicOutput) ProtoMessage()    {}
 func (*SonicOutput) Descriptor() ([]byte, []int) {
 	return fileDescriptor_2d8b4eb81a68e9be, []int{0}
 }
@@ -81,11 +83,15 @@ func (m *SonicOutput) GetStatusDetail() string {
 }
 
 type TechsupportRequest struct {
-	Input *TechsupportRequest_Input `protobuf:"bytes,1,opt,name=input,proto3" json:"sonic-show-techsupport:input" xml:",comment"`
+	Input                *TechsupportRequest_Input `protobuf:"bytes,1,opt,name=input,proto3" json:"sonic-show-techsupport:input" xml:",comment"`
+	XXX_NoUnkeyedLiteral struct{}                  `json:"-"`
+	XXX_unrecognized     []byte                    `json:"-"`
+	XXX_sizecache        int32                     `json:"-"`
 }
 
-func (m *TechsupportRequest) Reset()      { *m = TechsupportRequest{} }
-func (*TechsupportRequest) ProtoMessage() {}
+func (m *TechsupportRequest) Reset()         { *m = TechsupportRequest{} }
+func (m *TechsupportRequest) String() string { return proto.CompactTextString(m) }
+func (*TechsupportRequest) ProtoMessage()    {}
 func (*TechsupportRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_2d8b4eb81a68e9be, []int{1}
 }
@@ -124,11 +130,15 @@ func (m *TechsupportRequest) GetInput() *TechsupportRequest_Input {
 }
 
 type TechsupportRequest_Input struct {
-	Date string `protobuf:"bytes,1,opt,name=date,proto3" json:"date,omitempty"`
+	Date                 string   `protobuf:"bytes,1,opt,name=date,proto3" json:"date,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
 }
 
-func (m *TechsupportRequest_Input) Reset()      { *m = TechsupportRequest_Input{} }
-func (*TechsupportRequest_Input) ProtoMessage() {}
+func (m *TechsupportRequest_Input) Reset()         { *m = TechsupportRequest_Input{} }
+func (m *TechsupportRequest_Input) String() string { return proto.CompactTextString(m) }
+func (*TechsupportRequest_Input) ProtoMessage()    {}
 func (*TechsupportRequest_Input) Descriptor() ([]byte, []int) {
 	return fileDescriptor_2d8b4eb81a68e9be, []int{1, 0}
 }
@@ -167,11 +177,15 @@ func (m *TechsupportRequest_Input) GetDate() string {
 }
 
 type TechsupportResponse struct {
-	Output *TechsupportResponse_Output `protobuf:"bytes,1,opt,name=output,proto3" json:"sonic-show-techsupport:output" xml:",comment"`
+	Output               *TechsupportResponse_Output `protobuf:"bytes,1,opt,name=output,proto3" json:"sonic-show-techsupport:output" xml:",comment"`
+	XXX_NoUnkeyedLiteral struct{}                    `json:"-"`
+	XXX_unrecognized     []byte                      `json:"-"`
+	XXX_sizecache        int32                       `json:"-"`
 }
 
-func (m *TechsupportResponse) Reset()      { *m = TechsupportResponse{} }
-func (*TechsupportResponse) ProtoMessage() {}
+func (m *TechsupportResponse) Reset()         { *m = TechsupportResponse{} }
+func (m *TechsupportResponse) String() string { return proto.CompactTextString(m) }
+func (*TechsupportResponse) ProtoMessage()    {}
 func (*TechsupportResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_2d8b4eb81a68e9be, []int{2}
 }
@@ -210,11 +224,15 @@ func (m *TechsupportResponse) GetOutput() *TechsupportResponse_Output {
 }
 
 type TechsupportResponse_Output struct {
-	OutputFilename string `protobuf:"bytes,1,opt,name=output_filename,json=outputFilename,proto3" json:"output-filename" xml:",comment"`
+	OutputFilename       string   `protobuf:"bytes,1,opt,name=output_filename,json=outputFilename,proto3" json:"output-filename" xml:",comment"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
 }
 
-func (m *TechsupportResponse_Output) Reset()      { *m = TechsupportResponse_Output{} }
-func (*TechsupportResponse_Output) ProtoMessage() {}
+func (m *TechsupportResponse_Output) Reset()         { *m = TechsupportResponse_Output{} }
+func (m *TechsupportResponse_Output) String() string { return proto.CompactTextString(m) }
+func (*TechsupportResponse_Output) ProtoMessage()    {}
 func (*TechsupportResponse_Output) Descriptor() ([]byte, []int) {
 	return fileDescriptor_2d8b4eb81a68e9be, []int{2, 0}
 }
@@ -253,11 +271,15 @@ func (m *TechsupportResponse_Output) GetOutputFilename() string {
 }
 
 type ClearNeighborsRequest struct {
-	Input *ClearNeighborsRequest_Input `protobuf:"bytes,1,opt,name=input,proto3" json:"sonic-neighbor:input" xml:",comment"`
+	Input                *ClearNeighborsRequest_Input `protobuf:"bytes,1,opt,name=input,proto3" json:"sonic-neighbor:input" xml:",comment"`
+	XXX_NoUnkeyedLiteral struct{}                     `json:"-"`
+	XXX_unrecognized     []byte                       `json:"-"`
+	XXX_sizecache        int32                        `json:"-"`
 }
 
-func (m *ClearNeighborsRequest) Reset()      { *m = ClearNeighborsRequest{} }
-func (*ClearNeighborsRequest) ProtoMessage() {}
+func (m *ClearNeighborsRequest) Reset()         { *m = ClearNeighborsRequest{} }
+func (m *ClearNeighborsRequest) String() string { return proto.CompactTextString(m) }
+func (*ClearNeighborsRequest) ProtoMessage()    {}
 func (*ClearNeighborsRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_2d8b4eb81a68e9be, []int{3}
 }
@@ -296,14 +318,18 @@ func (m *ClearNeighborsRequest) GetInput() *ClearNeighborsRequest_Input {
 }
 
 type ClearNeighborsRequest_Input struct {
-	Force  bool   `protobuf:"varint,1,opt,name=force,proto3" json:"force,omitempty"`
-	Family string `protobuf:"bytes,2,opt,name=family,proto3" json:"family,omitempty"`
-	Ip     string `protobuf:"bytes,3,opt,name=ip,proto3" json:"ip,omitempty"`
-	Ifname string `protobuf:"bytes,4,opt,name=ifname,proto3" json:"ifname,omitempty"`
+	Force                bool     `protobuf:"varint,1,opt,name=force,proto3" json:"force,omitempty"`
+	Family               string   `protobuf:"bytes,2,opt,name=family,proto3" json:"family,omitempty"`
+	Ip                   string   `protobuf:"bytes,3,opt,name=ip,proto3" json:"ip,omitempty"`
+	Ifname               string   `protobuf:"bytes,4,opt,name=ifname,proto3" json:"ifname,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
 }
 
-func (m *ClearNeighborsRequest_Input) Reset()      { *m = ClearNeighborsRequest_Input{} }
-func (*ClearNeighborsRequest_Input) ProtoMessage() {}
+func (m *ClearNeighborsRequest_Input) Reset()         { *m = ClearNeighborsRequest_Input{} }
+func (m *ClearNeighborsRequest_Input) String() string { return proto.CompactTextString(m) }
+func (*ClearNeighborsRequest_Input) ProtoMessage()    {}
 func (*ClearNeighborsRequest_Input) Descriptor() ([]byte, []int) {
 	return fileDescriptor_2d8b4eb81a68e9be, []int{3, 0}
 }
@@ -363,11 +389,15 @@ func (m *ClearNeighborsRequest_Input) GetIfname() string {
 }
 
 type ClearNeighborsResponse struct {
-	Output *ClearNeighborsResponse_Output `protobuf:"bytes,1,opt,name=output,proto3" json:"sonic-neighbor:output" xml:",comment"`
+	Output               *ClearNeighborsResponse_Output `protobuf:"bytes,1,opt,name=output,proto3" json:"sonic-neighbor:output" xml:",comment"`
+	XXX_NoUnkeyedLiteral struct{}                       `json:"-"`
+	XXX_unrecognized     []byte                         `json:"-"`
+	XXX_sizecache        int32                          `json:"-"`
 }
 
-func (m *ClearNeighborsResponse) Reset()      { *m = ClearNeighborsResponse{} }
-func (*ClearNeighborsResponse) ProtoMessage() {}
+func (m *ClearNeighborsResponse) Reset()         { *m = ClearNeighborsResponse{} }
+func (m *ClearNeighborsResponse) String() string { return proto.CompactTextString(m) }
+func (*ClearNeighborsResponse) ProtoMessage()    {}
 func (*ClearNeighborsResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_2d8b4eb81a68e9be, []int{4}
 }
@@ -406,11 +436,15 @@ func (m *ClearNeighborsResponse) GetOutput() *ClearNeighborsResponse_Output {
 }
 
 type ClearNeighborsResponse_Output struct {
-	Response string `protobuf:"bytes,1,opt,name=response,proto3" json:"response,omitempty"`
+	Response             string   `protobuf:"bytes,1,opt,name=response,proto3" json:"response,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
 }
 
-func (m *ClearNeighborsResponse_Output) Reset()      { *m = ClearNeighborsResponse_Output{} }
-func (*ClearNeighborsResponse_Output) ProtoMessage() {}
+func (m *ClearNeighborsResponse_Output) Reset()         { *m = ClearNeighborsResponse_Output{} }
+func (m *ClearNeighborsResponse_Output) String() string { return proto.CompactTextString(m) }
+func (*ClearNeighborsResponse_Output) ProtoMessage()    {}
 func (*ClearNeighborsResponse_Output) Descriptor() ([]byte, []int) {
 	return fileDescriptor_2d8b4eb81a68e9be, []int{4, 0}
 }
@@ -449,11 +483,15 @@ func (m *ClearNeighborsResponse_Output) GetResponse() string {
 }
 
 type SumRequest struct {
-	Input *SumRequest_Input `protobuf:"bytes,1,opt,name=input,proto3" json:"sonic-tests:input" xml:",comment"`
+	Input                *SumRequest_Input `protobuf:"bytes,1,opt,name=input,proto3" json:"sonic-tests:input" xml:",comment"`
+	XXX_NoUnkeyedLiteral struct{}          `json:"-"`
+	XXX_unrecognized     []byte            `json:"-"`
+	XXX_sizecache        int32             `json:"-"`
 }
 
-func (m *SumRequest) Reset()      { *m = SumRequest{} }
-func (*SumRequest) ProtoMessage() {}
+func (m *SumRequest) Reset()         { *m = SumRequest{} }
+func (m *SumRequest) String() string { return proto.CompactTextString(m) }
+func (*SumRequest) ProtoMessage()    {}
 func (*SumRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_2d8b4eb81a68e9be, []int{5}
 }
@@ -492,12 +530,16 @@ func (m *SumRequest) GetInput() *SumRequest_Input {
 }
 
 type SumRequest_Input struct {
-	Left  int32 `protobuf:"varint,1,opt,name=left,proto3" json:"left,omitempty"`
-	Right int32 `protobuf:"varint,2,opt,name=right,proto3" json:"right,omitempty"`
+	Left                 int32    `protobuf:"varint,1,opt,name=left,proto3" json:"left,omitempty"`
+	Right                int32    `protobuf:"varint,2,opt,name=right,proto3" json:"right,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
 }
 
-func (m *SumRequest_Input) Reset()      { *m = SumRequest_Input{} }
-func (*SumRequest_Input) ProtoMessage() {}
+func (m *SumRequest_Input) Reset()         { *m = SumRequest_Input{} }
+func (m *SumRequest_Input) String() string { return proto.CompactTextString(m) }
+func (*SumRequest_Input) ProtoMessage()    {}
 func (*SumRequest_Input) Descriptor() ([]byte, []int) {
 	return fileDescriptor_2d8b4eb81a68e9be, []int{5, 0}
 }
@@ -543,11 +585,15 @@ func (m *SumRequest_Input) GetRight() int32 {
 }
 
 type SumResponse struct {
-	Output *SumResponse_Output `protobuf:"bytes,1,opt,name=output,proto3" json:"sonic-tests:output" xml:",comment"`
+	Output               *SumResponse_Output `protobuf:"bytes,1,opt,name=output,proto3" json:"sonic-tests:output" xml:",comment"`
+	XXX_NoUnkeyedLiteral struct{}            `json:"-"`
+	XXX_unrecognized     []byte              `json:"-"`
+	XXX_sizecache        int32               `json:"-"`
 }
 
-func (m *SumResponse) Reset()      { *m = SumResponse{} }
-func (*SumResponse) ProtoMessage() {}
+func (m *SumResponse) Reset()         { *m = SumResponse{} }
+func (m *SumResponse) String() string { return proto.CompactTextString(m) }
+func (*SumResponse) ProtoMessage()    {}
 func (*SumResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_2d8b4eb81a68e9be, []int{6}
 }
@@ -586,11 +632,15 @@ func (m *SumResponse) GetOutput() *SumResponse_Output {
 }
 
 type SumResponse_Output struct {
-	Result int32 `protobuf:"varint,1,opt,name=result,proto3" json:"result,omitempty"`
+	Result               int32    `protobuf:"varint,1,opt,name=result,proto3" json:"result,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
 }
 
-func (m *SumResponse_Output) Reset()      { *m = SumResponse_Output{} }
-func (*SumResponse_Output) ProtoMessage() {}
+func (m *SumResponse_Output) Reset()         { *m = SumResponse_Output{} }
+func (m *SumResponse_Output) String() string { return proto.CompactTextString(m) }
+func (*SumResponse_Output) ProtoMessage()    {}
 func (*SumResponse_Output) Descriptor() ([]byte, []int) {
 	return fileDescriptor_2d8b4eb81a68e9be, []int{6, 0}
 }
@@ -629,11 +679,15 @@ func (m *SumResponse_Output) GetResult() int32 {
 }
 
 type CopyConfigRequest struct {
-	Input *CopyConfigRequest_Input `protobuf:"bytes,1,opt,name=input,proto3" json:"sonic-config-mgmt:input" xml:",comment"`
+	Input                *CopyConfigRequest_Input `protobuf:"bytes,1,opt,name=input,proto3" json:"sonic-config-mgmt:input" xml:",comment"`
+	XXX_NoUnkeyedLiteral struct{}                 `json:"-"`
+	XXX_unrecognized     []byte                   `json:"-"`
+	XXX_sizecache        int32                    `json:"-"`
 }
 
-func (m *CopyConfigRequest) Reset()      { *m = CopyConfigRequest{} }
-func (*CopyConfigRequest) ProtoMessage() {}
+func (m *CopyConfigRequest) Reset()         { *m = CopyConfigRequest{} }
+func (m *CopyConfigRequest) String() string { return proto.CompactTextString(m) }
+func (*CopyConfigRequest) ProtoMessage()    {}
 func (*CopyConfigRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_2d8b4eb81a68e9be, []int{7}
 }
@@ -672,13 +726,17 @@ func (m *CopyConfigRequest) GetInput() *CopyConfigRequest_Input {
 }
 
 type CopyConfigRequest_Input struct {
-	Source      string `protobuf:"bytes,1,opt,name=source,proto3" json:"source,omitempty"`
-	Overwrite   bool   `protobuf:"varint,2,opt,name=overwrite,proto3" json:"overwrite,omitempty"`
-	Destination string `protobuf:"bytes,3,opt,name=destination,proto3" json:"destination,omitempty"`
+	Source               string   `protobuf:"bytes,1,opt,name=source,proto3" json:"source,omitempty"`
+	Overwrite            bool     `protobuf:"varint,2,opt,name=overwrite,proto3" json:"overwrite,omitempty"`
+	Destination          string   `protobuf:"bytes,3,opt,name=destination,proto3" json:"destination,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
 }
 
-func (m *CopyConfigRequest_Input) Reset()      { *m = CopyConfigRequest_Input{} }
-func (*CopyConfigRequest_Input) ProtoMessage() {}
+func (m *CopyConfigRequest_Input) Reset()         { *m = CopyConfigRequest_Input{} }
+func (m *CopyConfigRequest_Input) String() string { return proto.CompactTextString(m) }
+func (*CopyConfigRequest_Input) ProtoMessage()    {}
 func (*CopyConfigRequest_Input) Descriptor() ([]byte, []int) {
 	return fileDescriptor_2d8b4eb81a68e9be, []int{7, 0}
 }
@@ -731,11 +789,15 @@ func (m *CopyConfigRequest_Input) GetDestination() string {
 }
 
 type CopyConfigResponse struct {
-	Output *SonicOutput `protobuf:"bytes,1,opt,name=output,proto3" json:"sonic-config-mgmt:output" xml:",comment"`
+	Output               *SonicOutput `protobuf:"bytes,1,opt,name=output,proto3" json:"sonic-config-mgmt:output" xml:",comment"`
+	XXX_NoUnkeyedLiteral struct{}     `json:"-"`
+	XXX_unrecognized     []byte       `json:"-"`
+	XXX_sizecache        int32        `json:"-"`
 }
 
-func (m *CopyConfigResponse) Reset()      { *m = CopyConfigResponse{} }
-func (*CopyConfigResponse) ProtoMessage() {}
+func (m *CopyConfigResponse) Reset()         { *m = CopyConfigResponse{} }
+func (m *CopyConfigResponse) String() string { return proto.CompactTextString(m) }
+func (*CopyConfigResponse) ProtoMessage()    {}
 func (*CopyConfigResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_2d8b4eb81a68e9be, []int{8}
 }
@@ -774,11 +836,15 @@ func (m *CopyConfigResponse) GetOutput() *SonicOutput {
 }
 
 type ImageInstallRequest struct {
-	Input *ImageInstallRequest_Input `protobuf:"bytes,1,opt,name=input,proto3" json:"sonic-image-management:input" xml:",comment"`
+	Input                *ImageInstallRequest_Input `protobuf:"bytes,1,opt,name=input,proto3" json:"sonic-image-management:input" xml:",comment"`
+	XXX_NoUnkeyedLiteral struct{}                   `json:"-"`
+	XXX_unrecognized     []byte                     `json:"-"`
+	XXX_sizecache        int32                      `json:"-"`
 }
 
-func (m *ImageInstallRequest) Reset()      { *m = ImageInstallRequest{} }
-func (*ImageInstallRequest) ProtoMessage() {}
+func (m *ImageInstallRequest) Reset()         { *m = ImageInstallRequest{} }
+func (m *ImageInstallRequest) String() string { return proto.CompactTextString(m) }
+func (*ImageInstallRequest) ProtoMessage()    {}
 func (*ImageInstallRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_2d8b4eb81a68e9be, []int{9}
 }
@@ -817,11 +883,15 @@ func (m *ImageInstallRequest) GetInput() *ImageInstallRequest_Input {
 }
 
 type ImageInstallRequest_Input struct {
-	Imagename string `protobuf:"bytes,2,opt,name=imagename,proto3" json:"imagename,omitempty"`
+	Imagename            string   `protobuf:"bytes,2,opt,name=imagename,proto3" json:"imagename,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
 }
 
-func (m *ImageInstallRequest_Input) Reset()      { *m = ImageInstallRequest_Input{} }
-func (*ImageInstallRequest_Input) ProtoMessage() {}
+func (m *ImageInstallRequest_Input) Reset()         { *m = ImageInstallRequest_Input{} }
+func (m *ImageInstallRequest_Input) String() string { return proto.CompactTextString(m) }
+func (*ImageInstallRequest_Input) ProtoMessage()    {}
 func (*ImageInstallRequest_Input) Descriptor() ([]byte, []int) {
 	return fileDescriptor_2d8b4eb81a68e9be, []int{9, 0}
 }
@@ -860,11 +930,15 @@ func (m *ImageInstallRequest_Input) GetImagename() string {
 }
 
 type ImageInstallResponse struct {
-	Output *SonicOutput `protobuf:"bytes,1,opt,name=output,proto3" json:"sonic-image-management:output" xml:",comment"`
+	Output               *SonicOutput `protobuf:"bytes,1,opt,name=output,proto3" json:"sonic-image-management:output" xml:",comment"`
+	XXX_NoUnkeyedLiteral struct{}     `json:"-"`
+	XXX_unrecognized     []byte       `json:"-"`
+	XXX_sizecache        int32        `json:"-"`
 }
 
-func (m *ImageInstallResponse) Reset()      { *m = ImageInstallResponse{} }
-func (*ImageInstallResponse) ProtoMessage() {}
+func (m *ImageInstallResponse) Reset()         { *m = ImageInstallResponse{} }
+func (m *ImageInstallResponse) String() string { return proto.CompactTextString(m) }
+func (*ImageInstallResponse) ProtoMessage()    {}
 func (*ImageInstallResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_2d8b4eb81a68e9be, []int{10}
 }
@@ -903,11 +977,15 @@ func (m *ImageInstallResponse) GetOutput() *SonicOutput {
 }
 
 type ImageRemoveRequest struct {
-	Input *ImageRemoveRequest_Input `protobuf:"bytes,1,opt,name=input,proto3" json:"sonic-image-management:input" xml:",comment"`
+	Input                *ImageRemoveRequest_Input `protobuf:"bytes,1,opt,name=input,proto3" json:"sonic-image-management:input" xml:",comment"`
+	XXX_NoUnkeyedLiteral struct{}                  `json:"-"`
+	XXX_unrecognized     []byte                    `json:"-"`
+	XXX_sizecache        int32                     `json:"-"`
 }
 
-func (m *ImageRemoveRequest) Reset()      { *m = ImageRemoveRequest{} }
-func (*ImageRemoveRequest) ProtoMessage() {}
+func (m *ImageRemoveRequest) Reset()         { *m = ImageRemoveRequest{} }
+func (m *ImageRemoveRequest) String() string { return proto.CompactTextString(m) }
+func (*ImageRemoveRequest) ProtoMessage()    {}
 func (*ImageRemoveRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_2d8b4eb81a68e9be, []int{11}
 }
@@ -946,11 +1024,15 @@ func (m *ImageRemoveRequest) GetInput() *ImageRemoveRequest_Input {
 }
 
 type ImageRemoveRequest_Input struct {
-	Imagename string `protobuf:"bytes,1,opt,name=imagename,proto3" json:"imagename,omitempty"`
+	Imagename            string   `protobuf:"bytes,1,opt,name=imagename,proto3" json:"imagename,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
 }
 
-func (m *ImageRemoveRequest_Input) Reset()      { *m = ImageRemoveRequest_Input{} }
-func (*ImageRemoveRequest_Input) ProtoMessage() {}
+func (m *ImageRemoveRequest_Input) Reset()         { *m = ImageRemoveRequest_Input{} }
+func (m *ImageRemoveRequest_Input) String() string { return proto.CompactTextString(m) }
+func (*ImageRemoveRequest_Input) ProtoMessage()    {}
 func (*ImageRemoveRequest_Input) Descriptor() ([]byte, []int) {
 	return fileDescriptor_2d8b4eb81a68e9be, []int{11, 0}
 }
@@ -989,11 +1071,15 @@ func (m *ImageRemoveRequest_Input) GetImagename() string {
 }
 
 type ImageRemoveResponse struct {
-	Output *SonicOutput `protobuf:"bytes,1,opt,name=output,proto3" json:"sonic-image-management:output" xml:",comment"`
+	Output               *SonicOutput `protobuf:"bytes,1,opt,name=output,proto3" json:"sonic-image-management:output" xml:",comment"`
+	XXX_NoUnkeyedLiteral struct{}     `json:"-"`
+	XXX_unrecognized     []byte       `json:"-"`
+	XXX_sizecache        int32        `json:"-"`
 }
 
-func (m *ImageRemoveResponse) Reset()      { *m = ImageRemoveResponse{} }
-func (*ImageRemoveResponse) ProtoMessage() {}
+func (m *ImageRemoveResponse) Reset()         { *m = ImageRemoveResponse{} }
+func (m *ImageRemoveResponse) String() string { return proto.CompactTextString(m) }
+func (*ImageRemoveResponse) ProtoMessage()    {}
 func (*ImageRemoveResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_2d8b4eb81a68e9be, []int{12}
 }
@@ -1032,11 +1118,15 @@ func (m *ImageRemoveResponse) GetOutput() *SonicOutput {
 }
 
 type ImageDefaultRequest struct {
-	Input *ImageDefaultRequest_Input `protobuf:"bytes,1,opt,name=input,proto3" json:"sonic-image-management:input" xml:",comment"`
+	Input                *ImageDefaultRequest_Input `protobuf:"bytes,1,opt,name=input,proto3" json:"sonic-image-management:input" xml:",comment"`
+	XXX_NoUnkeyedLiteral struct{}                   `json:"-"`
+	XXX_unrecognized     []byte                     `json:"-"`
+	XXX_sizecache        int32                      `json:"-"`
 }
 
-func (m *ImageDefaultRequest) Reset()      { *m = ImageDefaultRequest{} }
-func (*ImageDefaultRequest) ProtoMessage() {}
+func (m *ImageDefaultRequest) Reset()         { *m = ImageDefaultRequest{} }
+func (m *ImageDefaultRequest) String() string { return proto.CompactTextString(m) }
+func (*ImageDefaultRequest) ProtoMessage()    {}
 func (*ImageDefaultRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_2d8b4eb81a68e9be, []int{13}
 }
@@ -1075,11 +1165,15 @@ func (m *ImageDefaultRequest) GetInput() *ImageDefaultRequest_Input {
 }
 
 type ImageDefaultRequest_Input struct {
-	Imagename string `protobuf:"bytes,1,opt,name=imagename,proto3" json:"imagename,omitempty"`
+	Imagename            string   `protobuf:"bytes,1,opt,name=imagename,proto3" json:"imagename,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
 }
 
-func (m *ImageDefaultRequest_Input) Reset()      { *m = ImageDefaultRequest_Input{} }
-func (*ImageDefaultRequest_Input) ProtoMessage() {}
+func (m *ImageDefaultRequest_Input) Reset()         { *m = ImageDefaultRequest_Input{} }
+func (m *ImageDefaultRequest_Input) String() string { return proto.CompactTextString(m) }
+func (*ImageDefaultRequest_Input) ProtoMessage()    {}
 func (*ImageDefaultRequest_Input) Descriptor() ([]byte, []int) {
 	return fileDescriptor_2d8b4eb81a68e9be, []int{13, 0}
 }
@@ -1118,11 +1212,15 @@ func (m *ImageDefaultRequest_Input) GetImagename() string {
 }
 
 type ImageDefaultResponse struct {
-	Output *SonicOutput `protobuf:"bytes,1,opt,name=output,proto3" json:"sonic-image-management:output" xml:",comment"`
+	Output               *SonicOutput `protobuf:"bytes,1,opt,name=output,proto3" json:"sonic-image-management:output" xml:",comment"`
+	XXX_NoUnkeyedLiteral struct{}     `json:"-"`
+	XXX_unrecognized     []byte       `json:"-"`
+	XXX_sizecache        int32        `json:"-"`
 }
 
-func (m *ImageDefaultResponse) Reset()      { *m = ImageDefaultResponse{} }
-func (*ImageDefaultResponse) ProtoMessage() {}
+func (m *ImageDefaultResponse) Reset()         { *m = ImageDefaultResponse{} }
+func (m *ImageDefaultResponse) String() string { return proto.CompactTextString(m) }
+func (*ImageDefaultResponse) ProtoMessage()    {}
 func (*ImageDefaultResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_2d8b4eb81a68e9be, []int{14}
 }
@@ -1160,16 +1258,294 @@ func (m *ImageDefaultResponse) GetOutput() *SonicOutput {
 	return nil
 }
 
-type JwtToken struct {
-	AccessToken string `protobuf:"bytes,1,opt,name=access_token,json=accessToken,proto3" json:"access_token,omitempty"`
-	Type        string `protobuf:"bytes,2,opt,name=type,proto3" json:"type,omitempty"`
-	ExpiresIn   int64  `protobuf:"varint,3,opt,name=expires_in,json=expiresIn,proto3" json:"expires_in,omitempty"`
+type GetAuditLogRequest struct {
+	Input                *GetAuditLogRequest_Input `protobuf:"bytes,1,opt,name=input,proto3" json:"sonic-auditlog:input" xml:",comment"`
+	XXX_NoUnkeyedLiteral struct{}                  `json:"-"`
+	XXX_unrecognized     []byte                    `json:"-"`
+	XXX_sizecache        int32                     `json:"-"`
 }
 
-func (m *JwtToken) Reset()      { *m = JwtToken{} }
-func (*JwtToken) ProtoMessage() {}
-func (*JwtToken) Descriptor() ([]byte, []int) {
+func (m *GetAuditLogRequest) Reset()         { *m = GetAuditLogRequest{} }
+func (m *GetAuditLogRequest) String() string { return proto.CompactTextString(m) }
+func (*GetAuditLogRequest) ProtoMessage()    {}
+func (*GetAuditLogRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_2d8b4eb81a68e9be, []int{15}
+}
+func (m *GetAuditLogRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *GetAuditLogRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_GetAuditLogRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *GetAuditLogRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_GetAuditLogRequest.Merge(m, src)
+}
+func (m *GetAuditLogRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *GetAuditLogRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_GetAuditLogRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_GetAuditLogRequest proto.InternalMessageInfo
+
+func (m *GetAuditLogRequest) GetInput() *GetAuditLogRequest_Input {
+	if m != nil {
+		return m.Input
+	}
+	return nil
+}
+
+type GetAuditLogRequest_Input struct {
+	ContentType          string   `protobuf:"bytes,1,opt,name=content_type,json=contentType,proto3" json:"content-type" xml:",comment"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *GetAuditLogRequest_Input) Reset()         { *m = GetAuditLogRequest_Input{} }
+func (m *GetAuditLogRequest_Input) String() string { return proto.CompactTextString(m) }
+func (*GetAuditLogRequest_Input) ProtoMessage()    {}
+func (*GetAuditLogRequest_Input) Descriptor() ([]byte, []int) {
+	return fileDescriptor_2d8b4eb81a68e9be, []int{15, 0}
+}
+func (m *GetAuditLogRequest_Input) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *GetAuditLogRequest_Input) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_GetAuditLogRequest_Input.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *GetAuditLogRequest_Input) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_GetAuditLogRequest_Input.Merge(m, src)
+}
+func (m *GetAuditLogRequest_Input) XXX_Size() int {
+	return m.Size()
+}
+func (m *GetAuditLogRequest_Input) XXX_DiscardUnknown() {
+	xxx_messageInfo_GetAuditLogRequest_Input.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_GetAuditLogRequest_Input proto.InternalMessageInfo
+
+func (m *GetAuditLogRequest_Input) GetContentType() string {
+	if m != nil {
+		return m.ContentType
+	}
+	return ""
+}
+
+type GetAuditLogResponse struct {
+	Output               *GetAuditLogResponse_AuditOutput `protobuf:"bytes,1,opt,name=output,proto3" json:"sonic-get-auditlog:output" xml:",comment"`
+	XXX_NoUnkeyedLiteral struct{}                         `json:"-"`
+	XXX_unrecognized     []byte                           `json:"-"`
+	XXX_sizecache        int32                            `json:"-"`
+}
+
+func (m *GetAuditLogResponse) Reset()         { *m = GetAuditLogResponse{} }
+func (m *GetAuditLogResponse) String() string { return proto.CompactTextString(m) }
+func (*GetAuditLogResponse) ProtoMessage()    {}
+func (*GetAuditLogResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_2d8b4eb81a68e9be, []int{16}
+}
+func (m *GetAuditLogResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *GetAuditLogResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_GetAuditLogResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *GetAuditLogResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_GetAuditLogResponse.Merge(m, src)
+}
+func (m *GetAuditLogResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *GetAuditLogResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_GetAuditLogResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_GetAuditLogResponse proto.InternalMessageInfo
+
+func (m *GetAuditLogResponse) GetOutput() *GetAuditLogResponse_AuditOutput {
+	if m != nil {
+		return m.Output
+	}
+	return nil
+}
+
+type GetAuditLogResponse_AuditOutput struct {
+	AuditContent         []string `protobuf:"bytes,1,rep,name=audit_content,json=auditContent,proto3" json:"audit-content" xml:",comment"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *GetAuditLogResponse_AuditOutput) Reset()         { *m = GetAuditLogResponse_AuditOutput{} }
+func (m *GetAuditLogResponse_AuditOutput) String() string { return proto.CompactTextString(m) }
+func (*GetAuditLogResponse_AuditOutput) ProtoMessage()    {}
+func (*GetAuditLogResponse_AuditOutput) Descriptor() ([]byte, []int) {
+	return fileDescriptor_2d8b4eb81a68e9be, []int{16, 0}
+}
+func (m *GetAuditLogResponse_AuditOutput) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *GetAuditLogResponse_AuditOutput) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_GetAuditLogResponse_AuditOutput.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *GetAuditLogResponse_AuditOutput) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_GetAuditLogResponse_AuditOutput.Merge(m, src)
+}
+func (m *GetAuditLogResponse_AuditOutput) XXX_Size() int {
+	return m.Size()
+}
+func (m *GetAuditLogResponse_AuditOutput) XXX_DiscardUnknown() {
+	xxx_messageInfo_GetAuditLogResponse_AuditOutput.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_GetAuditLogResponse_AuditOutput proto.InternalMessageInfo
+
+func (m *GetAuditLogResponse_AuditOutput) GetAuditContent() []string {
+	if m != nil {
+		return m.AuditContent
+	}
+	return nil
+}
+
+type ClearAuditLogRequest struct {
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *ClearAuditLogRequest) Reset()         { *m = ClearAuditLogRequest{} }
+func (m *ClearAuditLogRequest) String() string { return proto.CompactTextString(m) }
+func (*ClearAuditLogRequest) ProtoMessage()    {}
+func (*ClearAuditLogRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_2d8b4eb81a68e9be, []int{17}
+}
+func (m *ClearAuditLogRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *ClearAuditLogRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_ClearAuditLogRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *ClearAuditLogRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ClearAuditLogRequest.Merge(m, src)
+}
+func (m *ClearAuditLogRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *ClearAuditLogRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_ClearAuditLogRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_ClearAuditLogRequest proto.InternalMessageInfo
+
+type ClearAuditLogResponse struct {
+	Output               *SonicOutput `protobuf:"bytes,1,opt,name=output,proto3" json:"sonic-clear-auditlog:output" xml:",comment"`
+	XXX_NoUnkeyedLiteral struct{}     `json:"-"`
+	XXX_unrecognized     []byte       `json:"-"`
+	XXX_sizecache        int32        `json:"-"`
+}
+
+func (m *ClearAuditLogResponse) Reset()         { *m = ClearAuditLogResponse{} }
+func (m *ClearAuditLogResponse) String() string { return proto.CompactTextString(m) }
+func (*ClearAuditLogResponse) ProtoMessage()    {}
+func (*ClearAuditLogResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_2d8b4eb81a68e9be, []int{18}
+}
+func (m *ClearAuditLogResponse) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *ClearAuditLogResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_ClearAuditLogResponse.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *ClearAuditLogResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ClearAuditLogResponse.Merge(m, src)
+}
+func (m *ClearAuditLogResponse) XXX_Size() int {
+	return m.Size()
+}
+func (m *ClearAuditLogResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_ClearAuditLogResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_ClearAuditLogResponse proto.InternalMessageInfo
+
+func (m *ClearAuditLogResponse) GetOutput() *SonicOutput {
+	if m != nil {
+		return m.Output
+	}
+	return nil
+}
+
+type JwtToken struct {
+	AccessToken          string   `protobuf:"bytes,1,opt,name=access_token,json=accessToken,proto3" json:"access_token,omitempty"`
+	Type                 string   `protobuf:"bytes,2,opt,name=type,proto3" json:"type,omitempty"`
+	ExpiresIn            int64    `protobuf:"varint,3,opt,name=expires_in,json=expiresIn,proto3" json:"expires_in,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *JwtToken) Reset()         { *m = JwtToken{} }
+func (m *JwtToken) String() string { return proto.CompactTextString(m) }
+func (*JwtToken) ProtoMessage()    {}
+func (*JwtToken) Descriptor() ([]byte, []int) {
+	return fileDescriptor_2d8b4eb81a68e9be, []int{19}
 }
 func (m *JwtToken) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1220,14 +1596,18 @@ func (m *JwtToken) GetExpiresIn() int64 {
 }
 
 type AuthenticateRequest struct {
-	Username string `protobuf:"bytes,1,opt,name=username,proto3" json:"username,omitempty"`
-	Password string `protobuf:"bytes,2,opt,name=password,proto3" json:"password,omitempty"`
+	Username             string   `protobuf:"bytes,1,opt,name=username,proto3" json:"username,omitempty"`
+	Password             string   `protobuf:"bytes,2,opt,name=password,proto3" json:"password,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
 }
 
-func (m *AuthenticateRequest) Reset()      { *m = AuthenticateRequest{} }
-func (*AuthenticateRequest) ProtoMessage() {}
+func (m *AuthenticateRequest) Reset()         { *m = AuthenticateRequest{} }
+func (m *AuthenticateRequest) String() string { return proto.CompactTextString(m) }
+func (*AuthenticateRequest) ProtoMessage()    {}
 func (*AuthenticateRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_2d8b4eb81a68e9be, []int{16}
+	return fileDescriptor_2d8b4eb81a68e9be, []int{20}
 }
 func (m *AuthenticateRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1271,13 +1651,17 @@ func (m *AuthenticateRequest) GetPassword() string {
 }
 
 type AuthenticateResponse struct {
-	Token *JwtToken `protobuf:"bytes,1,opt,name=Token,proto3" json:"Token,omitempty"`
+	Token                *JwtToken `protobuf:"bytes,1,opt,name=Token,proto3" json:"Token,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}  `json:"-"`
+	XXX_unrecognized     []byte    `json:"-"`
+	XXX_sizecache        int32     `json:"-"`
 }
 
-func (m *AuthenticateResponse) Reset()      { *m = AuthenticateResponse{} }
-func (*AuthenticateResponse) ProtoMessage() {}
+func (m *AuthenticateResponse) Reset()         { *m = AuthenticateResponse{} }
+func (m *AuthenticateResponse) String() string { return proto.CompactTextString(m) }
+func (*AuthenticateResponse) ProtoMessage()    {}
 func (*AuthenticateResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_2d8b4eb81a68e9be, []int{17}
+	return fileDescriptor_2d8b4eb81a68e9be, []int{21}
 }
 func (m *AuthenticateResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1314,12 +1698,16 @@ func (m *AuthenticateResponse) GetToken() *JwtToken {
 }
 
 type RefreshRequest struct {
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
 }
 
-func (m *RefreshRequest) Reset()      { *m = RefreshRequest{} }
-func (*RefreshRequest) ProtoMessage() {}
+func (m *RefreshRequest) Reset()         { *m = RefreshRequest{} }
+func (m *RefreshRequest) String() string { return proto.CompactTextString(m) }
+func (*RefreshRequest) ProtoMessage()    {}
 func (*RefreshRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_2d8b4eb81a68e9be, []int{18}
+	return fileDescriptor_2d8b4eb81a68e9be, []int{22}
 }
 func (m *RefreshRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1349,13 +1737,17 @@ func (m *RefreshRequest) XXX_DiscardUnknown() {
 var xxx_messageInfo_RefreshRequest proto.InternalMessageInfo
 
 type RefreshResponse struct {
-	Token *JwtToken `protobuf:"bytes,1,opt,name=Token,proto3" json:"Token,omitempty"`
+	Token                *JwtToken `protobuf:"bytes,1,opt,name=Token,proto3" json:"Token,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}  `json:"-"`
+	XXX_unrecognized     []byte    `json:"-"`
+	XXX_sizecache        int32     `json:"-"`
 }
 
-func (m *RefreshResponse) Reset()      { *m = RefreshResponse{} }
-func (*RefreshResponse) ProtoMessage() {}
+func (m *RefreshResponse) Reset()         { *m = RefreshResponse{} }
+func (m *RefreshResponse) String() string { return proto.CompactTextString(m) }
+func (*RefreshResponse) ProtoMessage()    {}
 func (*RefreshResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_2d8b4eb81a68e9be, []int{19}
+	return fileDescriptor_2d8b4eb81a68e9be, []int{23}
 }
 func (m *RefreshResponse) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -1417,6 +1809,12 @@ func init() {
 	proto.RegisterType((*ImageDefaultRequest)(nil), "gnoi.sonic.ImageDefaultRequest")
 	proto.RegisterType((*ImageDefaultRequest_Input)(nil), "gnoi.sonic.ImageDefaultRequest.Input")
 	proto.RegisterType((*ImageDefaultResponse)(nil), "gnoi.sonic.ImageDefaultResponse")
+	proto.RegisterType((*GetAuditLogRequest)(nil), "gnoi.sonic.GetAuditLogRequest")
+	proto.RegisterType((*GetAuditLogRequest_Input)(nil), "gnoi.sonic.GetAuditLogRequest.Input")
+	proto.RegisterType((*GetAuditLogResponse)(nil), "gnoi.sonic.GetAuditLogResponse")
+	proto.RegisterType((*GetAuditLogResponse_AuditOutput)(nil), "gnoi.sonic.GetAuditLogResponse.AuditOutput")
+	proto.RegisterType((*ClearAuditLogRequest)(nil), "gnoi.sonic.ClearAuditLogRequest")
+	proto.RegisterType((*ClearAuditLogResponse)(nil), "gnoi.sonic.ClearAuditLogResponse")
 	proto.RegisterType((*JwtToken)(nil), "gnoi.sonic.JwtToken")
 	proto.RegisterType((*AuthenticateRequest)(nil), "gnoi.sonic.AuthenticateRequest")
 	proto.RegisterType((*AuthenticateResponse)(nil), "gnoi.sonic.AuthenticateResponse")
@@ -1427,1176 +1825,89 @@ func init() {
 func init() { proto.RegisterFile("sonic.proto", fileDescriptor_2d8b4eb81a68e9be) }
 
 var fileDescriptor_2d8b4eb81a68e9be = []byte{
-	// 1151 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xbc, 0x57, 0xcf, 0x6f, 0x1b, 0xc5,
-	0x17, 0xf7, 0xb6, 0x71, 0xbe, 0xf1, 0x73, 0xbe, 0x09, 0x9d, 0xa4, 0x49, 0xb4, 0x4d, 0x76, 0xd3,
-	0x6d, 0x43, 0x43, 0xc1, 0xae, 0x48, 0x39, 0xa0, 0x4a, 0x1c, 0x70, 0x22, 0x44, 0x90, 0x5a, 0xd0,
-	0x3a, 0x07, 0x10, 0x42, 0xee, 0xc6, 0x19, 0xdb, 0x23, 0xbc, 0x3b, 0xcb, 0xce, 0x6c, 0xd2, 0x08,
-	0x0e, 0xfc, 0x09, 0x70, 0xe7, 0xc2, 0x0d, 0x09, 0xc1, 0xdf, 0xc1, 0x31, 0xc7, 0x9e, 0x16, 0xe2,
-	0x70, 0x40, 0x3e, 0x55, 0xfc, 0x05, 0xc8, 0x33, 0xb3, 0xeb, 0x5d, 0xff, 0xc8, 0x86, 0x03, 0xb9,
-	0xed, 0x9b, 0xf7, 0x99, 0xf7, 0x3e, 0xf3, 0x79, 0x6f, 0x9e, 0xc7, 0x50, 0x66, 0xd4, 0x23, 0xcd,
-	0xaa, 0x1f, 0x50, 0x4e, 0x11, 0xb4, 0x3d, 0x4a, 0xaa, 0x62, 0x45, 0xaf, 0xb4, 0x09, 0xef, 0x84,
-	0x87, 0xd5, 0x26, 0x75, 0x1f, 0xb5, 0x69, 0x9b, 0x3e, 0x12, 0x90, 0xc3, 0xb0, 0x25, 0x2c, 0x61,
-	0x88, 0x2f, 0xb9, 0xd5, 0xa2, 0x50, 0xae, 0x0f, 0xf6, 0x7d, 0x1c, 0x72, 0x3f, 0xe4, 0x68, 0x05,
-	0x66, 0x19, 0x77, 0x78, 0xc8, 0xd6, 0xb4, 0x4d, 0x6d, 0xbb, 0x68, 0x2b, 0x0b, 0x7d, 0x08, 0xff,
-	0x97, 0x5f, 0x8d, 0x23, 0xcc, 0x1d, 0xd2, 0x5d, 0xbb, 0xb1, 0xa9, 0x6d, 0x97, 0x6a, 0xf7, 0xfa,
-	0x91, 0xa9, 0x1c, 0x15, 0xe9, 0xf8, 0x3b, 0x32, 0x17, 0x5e, 0xb8, 0xdd, 0x27, 0xd6, 0x5b, 0x4d,
-	0xea, 0xba, 0xd8, 0xe3, 0x96, 0x3d, 0x2f, 0x01, 0x7b, 0xc2, 0x6f, 0xfd, 0xa8, 0x01, 0x3a, 0xc0,
-	0xcd, 0x0e, 0x0b, 0x7d, 0x9f, 0x06, 0xdc, 0xc6, 0x5f, 0x85, 0x98, 0x71, 0xe4, 0x41, 0x91, 0x78,
-	0x7e, 0xc8, 0x45, 0xde, 0xf2, 0xce, 0xfd, 0xea, 0xf0, 0x48, 0xd5, 0x71, 0x78, 0x75, 0x7f, 0x80,
-	0xad, 0xed, 0xf4, 0x23, 0x73, 0x5d, 0x60, 0x2a, 0xac, 0x43, 0x4f, 0x2a, 0x7c, 0x08, 0x7c, 0x22,
-	0xa2, 0x4d, 0x60, 0x23, 0xd3, 0xe8, 0x77, 0xa0, 0x28, 0x62, 0x20, 0x04, 0x33, 0x47, 0x0e, 0xc7,
-	0x22, 0x6f, 0xc9, 0x16, 0xdf, 0xd6, 0x9f, 0x1a, 0x2c, 0x65, 0x92, 0x32, 0x9f, 0x7a, 0x0c, 0x23,
-	0x06, 0xb3, 0x54, 0xe8, 0xa4, 0x58, 0xbe, 0x3e, 0x95, 0xa5, 0xdc, 0x50, 0x95, 0xaa, 0xd6, 0x1e,
-	0xf7, 0x23, 0x73, 0x63, 0x0a, 0x4f, 0x19, 0x70, 0x02, 0x51, 0x95, 0x4a, 0xff, 0x14, 0x66, 0x55,
-	0x71, 0x9e, 0xc1, 0xa2, 0x5c, 0x6b, 0xb4, 0x48, 0x17, 0x7b, 0x8e, 0xab, 0x58, 0xd7, 0xb6, 0xfa,
-	0x91, 0xa9, 0x5c, 0x95, 0xd8, 0x35, 0x21, 0xe2, 0x82, 0x84, 0x7c, 0xa0, 0x10, 0xd6, 0xb9, 0x06,
-	0xb7, 0x77, 0xbb, 0xd8, 0x09, 0x9e, 0x61, 0xd2, 0xee, 0x1c, 0xd2, 0x80, 0xc5, 0xd5, 0x20, 0xd9,
-	0x6a, 0x3c, 0x48, 0x9f, 0x73, 0xe2, 0x0e, 0x55, 0x90, 0x87, 0xfd, 0xc8, 0x5c, 0x96, 0x07, 0xf5,
-	0x14, 0x22, 0xaf, 0x10, 0x5f, 0xc4, 0x85, 0x58, 0x86, 0x62, 0x8b, 0x06, 0x4d, 0x79, 0xa6, 0x39,
-	0x5b, 0x1a, 0x83, 0x86, 0x6c, 0x39, 0x2e, 0xe9, 0x9e, 0xca, 0x8e, 0xb3, 0x95, 0x85, 0x16, 0xe0,
-	0x06, 0xf1, 0xd7, 0x6e, 0x8a, 0xb5, 0x1b, 0xc4, 0x1f, 0xe0, 0x48, 0x4b, 0x48, 0x32, 0x23, 0x71,
-	0xd2, 0xb2, 0x7e, 0xd5, 0x60, 0x65, 0x94, 0xb1, 0xaa, 0xa6, 0x37, 0x52, 0xcd, 0x37, 0x2e, 0x3b,
-	0x65, 0xb6, 0xa0, 0x6f, 0xf6, 0x23, 0xf3, 0xf6, 0xc8, 0x39, 0x73, 0x0b, 0x79, 0x3f, 0x29, 0xa4,
-	0x0e, 0x73, 0x81, 0x8a, 0xa8, 0xfa, 0x2e, 0xb1, 0xad, 0x1f, 0x34, 0x80, 0x7a, 0xe8, 0xc6, 0x95,
-	0xf8, 0x3c, 0x5b, 0x89, 0xf5, 0x34, 0xc7, 0x21, 0x4c, 0xc9, 0xff, 0xa0, 0x1f, 0x99, 0xb7, 0x24,
-	0x2d, 0x8e, 0x19, 0x67, 0x79, 0xda, 0xbf, 0x9d, 0xba, 0x04, 0x5d, 0xdc, 0xe2, 0xea, 0xd2, 0x8b,
-	0xef, 0x41, 0x3d, 0x02, 0xd2, 0xee, 0x70, 0x21, 0x7c, 0xd1, 0x96, 0x86, 0xf5, 0xbd, 0x06, 0x65,
-	0x91, 0x57, 0x89, 0xf8, 0x7c, 0x44, 0x44, 0x63, 0x8c, 0x60, 0x56, 0xb9, 0xed, 0x7e, 0x64, 0xa2,
-	0x34, 0xc5, 0x5c, 0xd9, 0x36, 0x13, 0xd9, 0x56, 0x60, 0x36, 0xc0, 0x2c, 0xec, 0xc6, 0x3c, 0x95,
-	0x65, 0x45, 0x1a, 0xdc, 0xda, 0xa5, 0xfe, 0xe9, 0x2e, 0xf5, 0x5a, 0xa4, 0x1d, 0x2b, 0xd7, 0xc9,
-	0x2a, 0x77, 0x2f, 0x53, 0xdd, 0x51, 0xb4, 0x12, 0xb0, 0xd2, 0x8f, 0xcc, 0x55, 0xc9, 0xae, 0x29,
-	0xdc, 0x15, 0xb7, 0xed, 0xe6, 0xce, 0x92, 0x46, 0x2c, 0xe3, 0x60, 0x7a, 0xd2, 0x30, 0xee, 0xe1,
-	0x92, 0xad, 0x2c, 0xb4, 0x0e, 0x25, 0x7a, 0x8c, 0x83, 0x93, 0x80, 0x70, 0x2c, 0xe4, 0x9c, 0xb3,
-	0x87, 0x0b, 0x68, 0x13, 0xca, 0x47, 0x98, 0x71, 0xe2, 0x39, 0x9c, 0x50, 0x4f, 0xf5, 0x74, 0x7a,
-	0xc9, 0x0a, 0x01, 0xa5, 0x19, 0x2b, 0xe9, 0x1b, 0x23, 0xd2, 0xaf, 0x66, 0xa4, 0x1f, 0x0e, 0xf5,
-	0x5a, 0xb5, 0x1f, 0x99, 0x6b, 0xe3, 0xa7, 0xca, 0x53, 0xde, 0xfa, 0x45, 0x83, 0xa5, 0x7d, 0xd7,
-	0x69, 0xe3, 0x7d, 0x8f, 0x71, 0xa7, 0xdb, 0x8d, 0x95, 0xa5, 0x59, 0x65, 0xb7, 0xd2, 0x79, 0x27,
-	0xe0, 0xc7, 0x87, 0x35, 0x19, 0x80, 0x2a, 0xae, 0xe3, 0x39, 0x6d, 0x3c, 0x48, 0x99, 0x27, 0xf0,
-	0x56, 0x2c, 0xf0, 0x3a, 0x94, 0xc4, 0x5e, 0x71, 0xd1, 0xe5, 0x40, 0x18, 0x2e, 0x58, 0xdf, 0xc0,
-	0x72, 0x36, 0xbd, 0x12, 0xea, 0xe8, 0xaa, 0x42, 0xa5, 0xe6, 0xf4, 0x18, 0xc5, 0x5c, 0xb5, 0x7e,
-	0xd6, 0x00, 0x89, 0xf4, 0x36, 0x76, 0xe9, 0x31, 0xbe, 0xca, 0x0f, 0xdb, 0x38, 0xfc, 0xbf, 0xd2,
-	0x4a, 0x1b, 0xd5, 0xea, 0x6b, 0x55, 0xda, 0x38, 0xfb, 0xb5, 0x4a, 0x95, 0x34, 0xd6, 0x1e, 0x6e,
-	0x39, 0x61, 0x97, 0x5f, 0xb9, 0xb1, 0xb2, 0xf8, 0x6b, 0x13, 0x2b, 0x6e, 0xac, 0x24, 0xfd, 0xb5,
-	0xaa, 0xf5, 0x1c, 0xe6, 0x3e, 0x3a, 0xe1, 0x07, 0xf4, 0x4b, 0xec, 0xa1, 0xbb, 0x30, 0xef, 0x34,
-	0x9b, 0x98, 0xb1, 0x06, 0x1f, 0xd8, 0x8a, 0x6a, 0x59, 0xae, 0x49, 0x08, 0x82, 0x19, 0x7e, 0xea,
-	0xc7, 0xd7, 0x43, 0x7c, 0xa3, 0x0d, 0x00, 0xfc, 0xc2, 0x27, 0x01, 0x66, 0x0d, 0x22, 0x27, 0xcc,
-	0x4d, 0xbb, 0xa4, 0x56, 0xf6, 0x3d, 0xeb, 0x29, 0x2c, 0xbd, 0x1f, 0xf2, 0x0e, 0xf6, 0x38, 0x69,
-	0x3a, 0x3c, 0x69, 0x5d, 0x1d, 0xe6, 0x42, 0x86, 0x83, 0x94, 0x26, 0x89, 0x3d, 0xf0, 0xf9, 0x0e,
-	0x63, 0x27, 0x34, 0x38, 0x52, 0x99, 0x12, 0xdb, 0xaa, 0xc1, 0x72, 0x36, 0x9c, 0x92, 0xeb, 0x21,
-	0x14, 0x0f, 0x12, 0xd6, 0xe5, 0x9d, 0xe5, 0xb4, 0x5a, 0xf1, 0x09, 0x6d, 0x09, 0xb1, 0x5e, 0x83,
-	0x05, 0x1b, 0xb7, 0x02, 0xcc, 0x3a, 0x8a, 0x8d, 0xf5, 0x1e, 0x2c, 0x26, 0x2b, 0xff, 0x3e, 0xe0,
-	0xce, 0xef, 0x45, 0x98, 0x17, 0x25, 0xa9, 0xe3, 0xe0, 0x98, 0x34, 0x31, 0x3a, 0x80, 0xc5, 0x7a,
-	0x87, 0x9e, 0xa4, 0x9e, 0x6d, 0xc8, 0xb8, 0xfc, 0xd5, 0xa9, 0x9b, 0x39, 0xef, 0x3d, 0xab, 0x80,
-	0xde, 0x85, 0x9b, 0xf5, 0xd0, 0x45, 0x2b, 0x93, 0x7f, 0xa7, 0xf5, 0xd5, 0x29, 0x3f, 0x8f, 0x56,
-	0x01, 0x3d, 0x05, 0x18, 0x0e, 0x79, 0xb4, 0x71, 0xe9, 0xcf, 0x95, 0x6e, 0x4c, 0x73, 0x27, 0xe1,
-	0xea, 0x30, 0x9f, 0x1e, 0x86, 0xc8, 0xcc, 0x99, 0xd2, 0xfa, 0xe6, 0x74, 0x40, 0x12, 0xf4, 0x13,
-	0x28, 0xa7, 0xa6, 0x46, 0x56, 0xaf, 0xf1, 0x61, 0xa6, 0x9b, 0x53, 0xfd, 0x63, 0x34, 0xd5, 0xd5,
-	0x9a, 0x40, 0x33, 0x7b, 0xe7, 0x27, 0xd0, 0x1c, 0xb9, 0x95, 0x32, 0x68, 0xba, 0x01, 0xb3, 0x41,
-	0x27, 0x74, 0x7a, 0x36, 0xe8, 0xa4, 0xde, 0xb5, 0x0a, 0x68, 0x0f, 0xfe, 0xa7, 0xfa, 0x0f, 0xe9,
-	0x69, 0x78, 0xb6, 0x4d, 0xf5, 0x3b, 0x13, 0x7d, 0x49, 0x94, 0xcf, 0x60, 0x21, 0xfb, 0xb4, 0x44,
-	0x77, 0x73, 0x1f, 0xd7, 0xba, 0x95, 0xff, 0x32, 0xb5, 0x0a, 0xb5, 0x77, 0xce, 0xce, 0x8d, 0xc2,
-	0xcb, 0x73, 0xa3, 0xf0, 0xea, 0xdc, 0xd0, 0xbe, 0xed, 0x19, 0xda, 0x4f, 0x3d, 0x43, 0xfb, 0xad,
-	0x67, 0x68, 0x67, 0x3d, 0x43, 0xfb, 0xa3, 0x67, 0x68, 0x7f, 0xf5, 0x8c, 0xc2, 0xab, 0x9e, 0xa1,
-	0x7d, 0x77, 0x61, 0x14, 0xce, 0x2e, 0x8c, 0xc2, 0xcb, 0x0b, 0xa3, 0x70, 0x38, 0x2b, 0xfe, 0x07,
-	0x3e, 0xfe, 0x27, 0x00, 0x00, 0xff, 0xff, 0x18, 0x88, 0xd8, 0xe0, 0x51, 0x0e, 0x00, 0x00,
-}
-
-func (this *SonicOutput) Equal(that interface{}) bool {
-	if that == nil {
-		return this == nil
-	}
-
-	that1, ok := that.(*SonicOutput)
-	if !ok {
-		that2, ok := that.(SonicOutput)
-		if ok {
-			that1 = &that2
-		} else {
-			return false
-		}
-	}
-	if that1 == nil {
-		return this == nil
-	} else if this == nil {
-		return false
-	}
-	if this.Status != that1.Status {
-		return false
-	}
-	if this.StatusDetail != that1.StatusDetail {
-		return false
-	}
-	return true
-}
-func (this *TechsupportRequest) Equal(that interface{}) bool {
-	if that == nil {
-		return this == nil
-	}
-
-	that1, ok := that.(*TechsupportRequest)
-	if !ok {
-		that2, ok := that.(TechsupportRequest)
-		if ok {
-			that1 = &that2
-		} else {
-			return false
-		}
-	}
-	if that1 == nil {
-		return this == nil
-	} else if this == nil {
-		return false
-	}
-	if !this.Input.Equal(that1.Input) {
-		return false
-	}
-	return true
-}
-func (this *TechsupportRequest_Input) Equal(that interface{}) bool {
-	if that == nil {
-		return this == nil
-	}
-
-	that1, ok := that.(*TechsupportRequest_Input)
-	if !ok {
-		that2, ok := that.(TechsupportRequest_Input)
-		if ok {
-			that1 = &that2
-		} else {
-			return false
-		}
-	}
-	if that1 == nil {
-		return this == nil
-	} else if this == nil {
-		return false
-	}
-	if this.Date != that1.Date {
-		return false
-	}
-	return true
-}
-func (this *TechsupportResponse) Equal(that interface{}) bool {
-	if that == nil {
-		return this == nil
-	}
-
-	that1, ok := that.(*TechsupportResponse)
-	if !ok {
-		that2, ok := that.(TechsupportResponse)
-		if ok {
-			that1 = &that2
-		} else {
-			return false
-		}
-	}
-	if that1 == nil {
-		return this == nil
-	} else if this == nil {
-		return false
-	}
-	if !this.Output.Equal(that1.Output) {
-		return false
-	}
-	return true
-}
-func (this *TechsupportResponse_Output) Equal(that interface{}) bool {
-	if that == nil {
-		return this == nil
-	}
-
-	that1, ok := that.(*TechsupportResponse_Output)
-	if !ok {
-		that2, ok := that.(TechsupportResponse_Output)
-		if ok {
-			that1 = &that2
-		} else {
-			return false
-		}
-	}
-	if that1 == nil {
-		return this == nil
-	} else if this == nil {
-		return false
-	}
-	if this.OutputFilename != that1.OutputFilename {
-		return false
-	}
-	return true
-}
-func (this *ClearNeighborsRequest) Equal(that interface{}) bool {
-	if that == nil {
-		return this == nil
-	}
-
-	that1, ok := that.(*ClearNeighborsRequest)
-	if !ok {
-		that2, ok := that.(ClearNeighborsRequest)
-		if ok {
-			that1 = &that2
-		} else {
-			return false
-		}
-	}
-	if that1 == nil {
-		return this == nil
-	} else if this == nil {
-		return false
-	}
-	if !this.Input.Equal(that1.Input) {
-		return false
-	}
-	return true
-}
-func (this *ClearNeighborsRequest_Input) Equal(that interface{}) bool {
-	if that == nil {
-		return this == nil
-	}
-
-	that1, ok := that.(*ClearNeighborsRequest_Input)
-	if !ok {
-		that2, ok := that.(ClearNeighborsRequest_Input)
-		if ok {
-			that1 = &that2
-		} else {
-			return false
-		}
-	}
-	if that1 == nil {
-		return this == nil
-	} else if this == nil {
-		return false
-	}
-	if this.Force != that1.Force {
-		return false
-	}
-	if this.Family != that1.Family {
-		return false
-	}
-	if this.Ip != that1.Ip {
-		return false
-	}
-	if this.Ifname != that1.Ifname {
-		return false
-	}
-	return true
-}
-func (this *ClearNeighborsResponse) Equal(that interface{}) bool {
-	if that == nil {
-		return this == nil
-	}
-
-	that1, ok := that.(*ClearNeighborsResponse)
-	if !ok {
-		that2, ok := that.(ClearNeighborsResponse)
-		if ok {
-			that1 = &that2
-		} else {
-			return false
-		}
-	}
-	if that1 == nil {
-		return this == nil
-	} else if this == nil {
-		return false
-	}
-	if !this.Output.Equal(that1.Output) {
-		return false
-	}
-	return true
-}
-func (this *ClearNeighborsResponse_Output) Equal(that interface{}) bool {
-	if that == nil {
-		return this == nil
-	}
-
-	that1, ok := that.(*ClearNeighborsResponse_Output)
-	if !ok {
-		that2, ok := that.(ClearNeighborsResponse_Output)
-		if ok {
-			that1 = &that2
-		} else {
-			return false
-		}
-	}
-	if that1 == nil {
-		return this == nil
-	} else if this == nil {
-		return false
-	}
-	if this.Response != that1.Response {
-		return false
-	}
-	return true
-}
-func (this *SumRequest) Equal(that interface{}) bool {
-	if that == nil {
-		return this == nil
-	}
-
-	that1, ok := that.(*SumRequest)
-	if !ok {
-		that2, ok := that.(SumRequest)
-		if ok {
-			that1 = &that2
-		} else {
-			return false
-		}
-	}
-	if that1 == nil {
-		return this == nil
-	} else if this == nil {
-		return false
-	}
-	if !this.Input.Equal(that1.Input) {
-		return false
-	}
-	return true
-}
-func (this *SumRequest_Input) Equal(that interface{}) bool {
-	if that == nil {
-		return this == nil
-	}
-
-	that1, ok := that.(*SumRequest_Input)
-	if !ok {
-		that2, ok := that.(SumRequest_Input)
-		if ok {
-			that1 = &that2
-		} else {
-			return false
-		}
-	}
-	if that1 == nil {
-		return this == nil
-	} else if this == nil {
-		return false
-	}
-	if this.Left != that1.Left {
-		return false
-	}
-	if this.Right != that1.Right {
-		return false
-	}
-	return true
-}
-func (this *SumResponse) Equal(that interface{}) bool {
-	if that == nil {
-		return this == nil
-	}
-
-	that1, ok := that.(*SumResponse)
-	if !ok {
-		that2, ok := that.(SumResponse)
-		if ok {
-			that1 = &that2
-		} else {
-			return false
-		}
-	}
-	if that1 == nil {
-		return this == nil
-	} else if this == nil {
-		return false
-	}
-	if !this.Output.Equal(that1.Output) {
-		return false
-	}
-	return true
-}
-func (this *SumResponse_Output) Equal(that interface{}) bool {
-	if that == nil {
-		return this == nil
-	}
-
-	that1, ok := that.(*SumResponse_Output)
-	if !ok {
-		that2, ok := that.(SumResponse_Output)
-		if ok {
-			that1 = &that2
-		} else {
-			return false
-		}
-	}
-	if that1 == nil {
-		return this == nil
-	} else if this == nil {
-		return false
-	}
-	if this.Result != that1.Result {
-		return false
-	}
-	return true
-}
-func (this *CopyConfigRequest) Equal(that interface{}) bool {
-	if that == nil {
-		return this == nil
-	}
-
-	that1, ok := that.(*CopyConfigRequest)
-	if !ok {
-		that2, ok := that.(CopyConfigRequest)
-		if ok {
-			that1 = &that2
-		} else {
-			return false
-		}
-	}
-	if that1 == nil {
-		return this == nil
-	} else if this == nil {
-		return false
-	}
-	if !this.Input.Equal(that1.Input) {
-		return false
-	}
-	return true
-}
-func (this *CopyConfigRequest_Input) Equal(that interface{}) bool {
-	if that == nil {
-		return this == nil
-	}
-
-	that1, ok := that.(*CopyConfigRequest_Input)
-	if !ok {
-		that2, ok := that.(CopyConfigRequest_Input)
-		if ok {
-			that1 = &that2
-		} else {
-			return false
-		}
-	}
-	if that1 == nil {
-		return this == nil
-	} else if this == nil {
-		return false
-	}
-	if this.Source != that1.Source {
-		return false
-	}
-	if this.Overwrite != that1.Overwrite {
-		return false
-	}
-	if this.Destination != that1.Destination {
-		return false
-	}
-	return true
-}
-func (this *CopyConfigResponse) Equal(that interface{}) bool {
-	if that == nil {
-		return this == nil
-	}
-
-	that1, ok := that.(*CopyConfigResponse)
-	if !ok {
-		that2, ok := that.(CopyConfigResponse)
-		if ok {
-			that1 = &that2
-		} else {
-			return false
-		}
-	}
-	if that1 == nil {
-		return this == nil
-	} else if this == nil {
-		return false
-	}
-	if !this.Output.Equal(that1.Output) {
-		return false
-	}
-	return true
-}
-func (this *ImageInstallRequest) Equal(that interface{}) bool {
-	if that == nil {
-		return this == nil
-	}
-
-	that1, ok := that.(*ImageInstallRequest)
-	if !ok {
-		that2, ok := that.(ImageInstallRequest)
-		if ok {
-			that1 = &that2
-		} else {
-			return false
-		}
-	}
-	if that1 == nil {
-		return this == nil
-	} else if this == nil {
-		return false
-	}
-	if !this.Input.Equal(that1.Input) {
-		return false
-	}
-	return true
-}
-func (this *ImageInstallRequest_Input) Equal(that interface{}) bool {
-	if that == nil {
-		return this == nil
-	}
-
-	that1, ok := that.(*ImageInstallRequest_Input)
-	if !ok {
-		that2, ok := that.(ImageInstallRequest_Input)
-		if ok {
-			that1 = &that2
-		} else {
-			return false
-		}
-	}
-	if that1 == nil {
-		return this == nil
-	} else if this == nil {
-		return false
-	}
-	if this.Imagename != that1.Imagename {
-		return false
-	}
-	return true
-}
-func (this *ImageInstallResponse) Equal(that interface{}) bool {
-	if that == nil {
-		return this == nil
-	}
-
-	that1, ok := that.(*ImageInstallResponse)
-	if !ok {
-		that2, ok := that.(ImageInstallResponse)
-		if ok {
-			that1 = &that2
-		} else {
-			return false
-		}
-	}
-	if that1 == nil {
-		return this == nil
-	} else if this == nil {
-		return false
-	}
-	if !this.Output.Equal(that1.Output) {
-		return false
-	}
-	return true
-}
-func (this *ImageRemoveRequest) Equal(that interface{}) bool {
-	if that == nil {
-		return this == nil
-	}
-
-	that1, ok := that.(*ImageRemoveRequest)
-	if !ok {
-		that2, ok := that.(ImageRemoveRequest)
-		if ok {
-			that1 = &that2
-		} else {
-			return false
-		}
-	}
-	if that1 == nil {
-		return this == nil
-	} else if this == nil {
-		return false
-	}
-	if !this.Input.Equal(that1.Input) {
-		return false
-	}
-	return true
-}
-func (this *ImageRemoveRequest_Input) Equal(that interface{}) bool {
-	if that == nil {
-		return this == nil
-	}
-
-	that1, ok := that.(*ImageRemoveRequest_Input)
-	if !ok {
-		that2, ok := that.(ImageRemoveRequest_Input)
-		if ok {
-			that1 = &that2
-		} else {
-			return false
-		}
-	}
-	if that1 == nil {
-		return this == nil
-	} else if this == nil {
-		return false
-	}
-	if this.Imagename != that1.Imagename {
-		return false
-	}
-	return true
-}
-func (this *ImageRemoveResponse) Equal(that interface{}) bool {
-	if that == nil {
-		return this == nil
-	}
-
-	that1, ok := that.(*ImageRemoveResponse)
-	if !ok {
-		that2, ok := that.(ImageRemoveResponse)
-		if ok {
-			that1 = &that2
-		} else {
-			return false
-		}
-	}
-	if that1 == nil {
-		return this == nil
-	} else if this == nil {
-		return false
-	}
-	if !this.Output.Equal(that1.Output) {
-		return false
-	}
-	return true
-}
-func (this *ImageDefaultRequest) Equal(that interface{}) bool {
-	if that == nil {
-		return this == nil
-	}
-
-	that1, ok := that.(*ImageDefaultRequest)
-	if !ok {
-		that2, ok := that.(ImageDefaultRequest)
-		if ok {
-			that1 = &that2
-		} else {
-			return false
-		}
-	}
-	if that1 == nil {
-		return this == nil
-	} else if this == nil {
-		return false
-	}
-	if !this.Input.Equal(that1.Input) {
-		return false
-	}
-	return true
-}
-func (this *ImageDefaultRequest_Input) Equal(that interface{}) bool {
-	if that == nil {
-		return this == nil
-	}
-
-	that1, ok := that.(*ImageDefaultRequest_Input)
-	if !ok {
-		that2, ok := that.(ImageDefaultRequest_Input)
-		if ok {
-			that1 = &that2
-		} else {
-			return false
-		}
-	}
-	if that1 == nil {
-		return this == nil
-	} else if this == nil {
-		return false
-	}
-	if this.Imagename != that1.Imagename {
-		return false
-	}
-	return true
-}
-func (this *ImageDefaultResponse) Equal(that interface{}) bool {
-	if that == nil {
-		return this == nil
-	}
-
-	that1, ok := that.(*ImageDefaultResponse)
-	if !ok {
-		that2, ok := that.(ImageDefaultResponse)
-		if ok {
-			that1 = &that2
-		} else {
-			return false
-		}
-	}
-	if that1 == nil {
-		return this == nil
-	} else if this == nil {
-		return false
-	}
-	if !this.Output.Equal(that1.Output) {
-		return false
-	}
-	return true
-}
-func (this *JwtToken) Equal(that interface{}) bool {
-	if that == nil {
-		return this == nil
-	}
-
-	that1, ok := that.(*JwtToken)
-	if !ok {
-		that2, ok := that.(JwtToken)
-		if ok {
-			that1 = &that2
-		} else {
-			return false
-		}
-	}
-	if that1 == nil {
-		return this == nil
-	} else if this == nil {
-		return false
-	}
-	if this.AccessToken != that1.AccessToken {
-		return false
-	}
-	if this.Type != that1.Type {
-		return false
-	}
-	if this.ExpiresIn != that1.ExpiresIn {
-		return false
-	}
-	return true
-}
-func (this *AuthenticateRequest) Equal(that interface{}) bool {
-	if that == nil {
-		return this == nil
-	}
-
-	that1, ok := that.(*AuthenticateRequest)
-	if !ok {
-		that2, ok := that.(AuthenticateRequest)
-		if ok {
-			that1 = &that2
-		} else {
-			return false
-		}
-	}
-	if that1 == nil {
-		return this == nil
-	} else if this == nil {
-		return false
-	}
-	if this.Username != that1.Username {
-		return false
-	}
-	if this.Password != that1.Password {
-		return false
-	}
-	return true
-}
-func (this *AuthenticateResponse) Equal(that interface{}) bool {
-	if that == nil {
-		return this == nil
-	}
-
-	that1, ok := that.(*AuthenticateResponse)
-	if !ok {
-		that2, ok := that.(AuthenticateResponse)
-		if ok {
-			that1 = &that2
-		} else {
-			return false
-		}
-	}
-	if that1 == nil {
-		return this == nil
-	} else if this == nil {
-		return false
-	}
-	if !this.Token.Equal(that1.Token) {
-		return false
-	}
-	return true
-}
-func (this *RefreshRequest) Equal(that interface{}) bool {
-	if that == nil {
-		return this == nil
-	}
-
-	that1, ok := that.(*RefreshRequest)
-	if !ok {
-		that2, ok := that.(RefreshRequest)
-		if ok {
-			that1 = &that2
-		} else {
-			return false
-		}
-	}
-	if that1 == nil {
-		return this == nil
-	} else if this == nil {
-		return false
-	}
-	return true
-}
-func (this *RefreshResponse) Equal(that interface{}) bool {
-	if that == nil {
-		return this == nil
-	}
-
-	that1, ok := that.(*RefreshResponse)
-	if !ok {
-		that2, ok := that.(RefreshResponse)
-		if ok {
-			that1 = &that2
-		} else {
-			return false
-		}
-	}
-	if that1 == nil {
-		return this == nil
-	} else if this == nil {
-		return false
-	}
-	if !this.Token.Equal(that1.Token) {
-		return false
-	}
-	return true
-}
-func (this *SonicOutput) GoString() string {
-	if this == nil {
-		return "nil"
-	}
-	s := make([]string, 0, 6)
-	s = append(s, "&gnoi_sonic.SonicOutput{")
-	s = append(s, "Status: "+fmt.Sprintf("%#v", this.Status)+",\n")
-	s = append(s, "StatusDetail: "+fmt.Sprintf("%#v", this.StatusDetail)+",\n")
-	s = append(s, "}")
-	return strings.Join(s, "")
-}
-func (this *TechsupportRequest) GoString() string {
-	if this == nil {
-		return "nil"
-	}
-	s := make([]string, 0, 5)
-	s = append(s, "&gnoi_sonic.TechsupportRequest{")
-	if this.Input != nil {
-		s = append(s, "Input: "+fmt.Sprintf("%#v", this.Input)+",\n")
-	}
-	s = append(s, "}")
-	return strings.Join(s, "")
-}
-func (this *TechsupportRequest_Input) GoString() string {
-	if this == nil {
-		return "nil"
-	}
-	s := make([]string, 0, 5)
-	s = append(s, "&gnoi_sonic.TechsupportRequest_Input{")
-	s = append(s, "Date: "+fmt.Sprintf("%#v", this.Date)+",\n")
-	s = append(s, "}")
-	return strings.Join(s, "")
-}
-func (this *TechsupportResponse) GoString() string {
-	if this == nil {
-		return "nil"
-	}
-	s := make([]string, 0, 5)
-	s = append(s, "&gnoi_sonic.TechsupportResponse{")
-	if this.Output != nil {
-		s = append(s, "Output: "+fmt.Sprintf("%#v", this.Output)+",\n")
-	}
-	s = append(s, "}")
-	return strings.Join(s, "")
-}
-func (this *TechsupportResponse_Output) GoString() string {
-	if this == nil {
-		return "nil"
-	}
-	s := make([]string, 0, 5)
-	s = append(s, "&gnoi_sonic.TechsupportResponse_Output{")
-	s = append(s, "OutputFilename: "+fmt.Sprintf("%#v", this.OutputFilename)+",\n")
-	s = append(s, "}")
-	return strings.Join(s, "")
-}
-func (this *ClearNeighborsRequest) GoString() string {
-	if this == nil {
-		return "nil"
-	}
-	s := make([]string, 0, 5)
-	s = append(s, "&gnoi_sonic.ClearNeighborsRequest{")
-	if this.Input != nil {
-		s = append(s, "Input: "+fmt.Sprintf("%#v", this.Input)+",\n")
-	}
-	s = append(s, "}")
-	return strings.Join(s, "")
-}
-func (this *ClearNeighborsRequest_Input) GoString() string {
-	if this == nil {
-		return "nil"
-	}
-	s := make([]string, 0, 8)
-	s = append(s, "&gnoi_sonic.ClearNeighborsRequest_Input{")
-	s = append(s, "Force: "+fmt.Sprintf("%#v", this.Force)+",\n")
-	s = append(s, "Family: "+fmt.Sprintf("%#v", this.Family)+",\n")
-	s = append(s, "Ip: "+fmt.Sprintf("%#v", this.Ip)+",\n")
-	s = append(s, "Ifname: "+fmt.Sprintf("%#v", this.Ifname)+",\n")
-	s = append(s, "}")
-	return strings.Join(s, "")
-}
-func (this *ClearNeighborsResponse) GoString() string {
-	if this == nil {
-		return "nil"
-	}
-	s := make([]string, 0, 5)
-	s = append(s, "&gnoi_sonic.ClearNeighborsResponse{")
-	if this.Output != nil {
-		s = append(s, "Output: "+fmt.Sprintf("%#v", this.Output)+",\n")
-	}
-	s = append(s, "}")
-	return strings.Join(s, "")
-}
-func (this *ClearNeighborsResponse_Output) GoString() string {
-	if this == nil {
-		return "nil"
-	}
-	s := make([]string, 0, 5)
-	s = append(s, "&gnoi_sonic.ClearNeighborsResponse_Output{")
-	s = append(s, "Response: "+fmt.Sprintf("%#v", this.Response)+",\n")
-	s = append(s, "}")
-	return strings.Join(s, "")
-}
-func (this *SumRequest) GoString() string {
-	if this == nil {
-		return "nil"
-	}
-	s := make([]string, 0, 5)
-	s = append(s, "&gnoi_sonic.SumRequest{")
-	if this.Input != nil {
-		s = append(s, "Input: "+fmt.Sprintf("%#v", this.Input)+",\n")
-	}
-	s = append(s, "}")
-	return strings.Join(s, "")
-}
-func (this *SumRequest_Input) GoString() string {
-	if this == nil {
-		return "nil"
-	}
-	s := make([]string, 0, 6)
-	s = append(s, "&gnoi_sonic.SumRequest_Input{")
-	s = append(s, "Left: "+fmt.Sprintf("%#v", this.Left)+",\n")
-	s = append(s, "Right: "+fmt.Sprintf("%#v", this.Right)+",\n")
-	s = append(s, "}")
-	return strings.Join(s, "")
-}
-func (this *SumResponse) GoString() string {
-	if this == nil {
-		return "nil"
-	}
-	s := make([]string, 0, 5)
-	s = append(s, "&gnoi_sonic.SumResponse{")
-	if this.Output != nil {
-		s = append(s, "Output: "+fmt.Sprintf("%#v", this.Output)+",\n")
-	}
-	s = append(s, "}")
-	return strings.Join(s, "")
-}
-func (this *SumResponse_Output) GoString() string {
-	if this == nil {
-		return "nil"
-	}
-	s := make([]string, 0, 5)
-	s = append(s, "&gnoi_sonic.SumResponse_Output{")
-	s = append(s, "Result: "+fmt.Sprintf("%#v", this.Result)+",\n")
-	s = append(s, "}")
-	return strings.Join(s, "")
-}
-func (this *CopyConfigRequest) GoString() string {
-	if this == nil {
-		return "nil"
-	}
-	s := make([]string, 0, 5)
-	s = append(s, "&gnoi_sonic.CopyConfigRequest{")
-	if this.Input != nil {
-		s = append(s, "Input: "+fmt.Sprintf("%#v", this.Input)+",\n")
-	}
-	s = append(s, "}")
-	return strings.Join(s, "")
-}
-func (this *CopyConfigRequest_Input) GoString() string {
-	if this == nil {
-		return "nil"
-	}
-	s := make([]string, 0, 7)
-	s = append(s, "&gnoi_sonic.CopyConfigRequest_Input{")
-	s = append(s, "Source: "+fmt.Sprintf("%#v", this.Source)+",\n")
-	s = append(s, "Overwrite: "+fmt.Sprintf("%#v", this.Overwrite)+",\n")
-	s = append(s, "Destination: "+fmt.Sprintf("%#v", this.Destination)+",\n")
-	s = append(s, "}")
-	return strings.Join(s, "")
-}
-func (this *CopyConfigResponse) GoString() string {
-	if this == nil {
-		return "nil"
-	}
-	s := make([]string, 0, 5)
-	s = append(s, "&gnoi_sonic.CopyConfigResponse{")
-	if this.Output != nil {
-		s = append(s, "Output: "+fmt.Sprintf("%#v", this.Output)+",\n")
-	}
-	s = append(s, "}")
-	return strings.Join(s, "")
-}
-func (this *ImageInstallRequest) GoString() string {
-	if this == nil {
-		return "nil"
-	}
-	s := make([]string, 0, 5)
-	s = append(s, "&gnoi_sonic.ImageInstallRequest{")
-	if this.Input != nil {
-		s = append(s, "Input: "+fmt.Sprintf("%#v", this.Input)+",\n")
-	}
-	s = append(s, "}")
-	return strings.Join(s, "")
-}
-func (this *ImageInstallRequest_Input) GoString() string {
-	if this == nil {
-		return "nil"
-	}
-	s := make([]string, 0, 5)
-	s = append(s, "&gnoi_sonic.ImageInstallRequest_Input{")
-	s = append(s, "Imagename: "+fmt.Sprintf("%#v", this.Imagename)+",\n")
-	s = append(s, "}")
-	return strings.Join(s, "")
-}
-func (this *ImageInstallResponse) GoString() string {
-	if this == nil {
-		return "nil"
-	}
-	s := make([]string, 0, 5)
-	s = append(s, "&gnoi_sonic.ImageInstallResponse{")
-	if this.Output != nil {
-		s = append(s, "Output: "+fmt.Sprintf("%#v", this.Output)+",\n")
-	}
-	s = append(s, "}")
-	return strings.Join(s, "")
-}
-func (this *ImageRemoveRequest) GoString() string {
-	if this == nil {
-		return "nil"
-	}
-	s := make([]string, 0, 5)
-	s = append(s, "&gnoi_sonic.ImageRemoveRequest{")
-	if this.Input != nil {
-		s = append(s, "Input: "+fmt.Sprintf("%#v", this.Input)+",\n")
-	}
-	s = append(s, "}")
-	return strings.Join(s, "")
-}
-func (this *ImageRemoveRequest_Input) GoString() string {
-	if this == nil {
-		return "nil"
-	}
-	s := make([]string, 0, 5)
-	s = append(s, "&gnoi_sonic.ImageRemoveRequest_Input{")
-	s = append(s, "Imagename: "+fmt.Sprintf("%#v", this.Imagename)+",\n")
-	s = append(s, "}")
-	return strings.Join(s, "")
-}
-func (this *ImageRemoveResponse) GoString() string {
-	if this == nil {
-		return "nil"
-	}
-	s := make([]string, 0, 5)
-	s = append(s, "&gnoi_sonic.ImageRemoveResponse{")
-	if this.Output != nil {
-		s = append(s, "Output: "+fmt.Sprintf("%#v", this.Output)+",\n")
-	}
-	s = append(s, "}")
-	return strings.Join(s, "")
-}
-func (this *ImageDefaultRequest) GoString() string {
-	if this == nil {
-		return "nil"
-	}
-	s := make([]string, 0, 5)
-	s = append(s, "&gnoi_sonic.ImageDefaultRequest{")
-	if this.Input != nil {
-		s = append(s, "Input: "+fmt.Sprintf("%#v", this.Input)+",\n")
-	}
-	s = append(s, "}")
-	return strings.Join(s, "")
-}
-func (this *ImageDefaultRequest_Input) GoString() string {
-	if this == nil {
-		return "nil"
-	}
-	s := make([]string, 0, 5)
-	s = append(s, "&gnoi_sonic.ImageDefaultRequest_Input{")
-	s = append(s, "Imagename: "+fmt.Sprintf("%#v", this.Imagename)+",\n")
-	s = append(s, "}")
-	return strings.Join(s, "")
-}
-func (this *ImageDefaultResponse) GoString() string {
-	if this == nil {
-		return "nil"
-	}
-	s := make([]string, 0, 5)
-	s = append(s, "&gnoi_sonic.ImageDefaultResponse{")
-	if this.Output != nil {
-		s = append(s, "Output: "+fmt.Sprintf("%#v", this.Output)+",\n")
-	}
-	s = append(s, "}")
-	return strings.Join(s, "")
-}
-func (this *JwtToken) GoString() string {
-	if this == nil {
-		return "nil"
-	}
-	s := make([]string, 0, 7)
-	s = append(s, "&gnoi_sonic.JwtToken{")
-	s = append(s, "AccessToken: "+fmt.Sprintf("%#v", this.AccessToken)+",\n")
-	s = append(s, "Type: "+fmt.Sprintf("%#v", this.Type)+",\n")
-	s = append(s, "ExpiresIn: "+fmt.Sprintf("%#v", this.ExpiresIn)+",\n")
-	s = append(s, "}")
-	return strings.Join(s, "")
-}
-func (this *AuthenticateRequest) GoString() string {
-	if this == nil {
-		return "nil"
-	}
-	s := make([]string, 0, 6)
-	s = append(s, "&gnoi_sonic.AuthenticateRequest{")
-	s = append(s, "Username: "+fmt.Sprintf("%#v", this.Username)+",\n")
-	s = append(s, "Password: "+fmt.Sprintf("%#v", this.Password)+",\n")
-	s = append(s, "}")
-	return strings.Join(s, "")
-}
-func (this *AuthenticateResponse) GoString() string {
-	if this == nil {
-		return "nil"
-	}
-	s := make([]string, 0, 5)
-	s = append(s, "&gnoi_sonic.AuthenticateResponse{")
-	if this.Token != nil {
-		s = append(s, "Token: "+fmt.Sprintf("%#v", this.Token)+",\n")
-	}
-	s = append(s, "}")
-	return strings.Join(s, "")
-}
-func (this *RefreshRequest) GoString() string {
-	if this == nil {
-		return "nil"
-	}
-	s := make([]string, 0, 4)
-	s = append(s, "&gnoi_sonic.RefreshRequest{")
-	s = append(s, "}")
-	return strings.Join(s, "")
-}
-func (this *RefreshResponse) GoString() string {
-	if this == nil {
-		return "nil"
-	}
-	s := make([]string, 0, 5)
-	s = append(s, "&gnoi_sonic.RefreshResponse{")
-	if this.Token != nil {
-		s = append(s, "Token: "+fmt.Sprintf("%#v", this.Token)+",\n")
-	}
-	s = append(s, "}")
-	return strings.Join(s, "")
-}
-func valueToGoStringSonic(v interface{}, typ string) string {
-	rv := reflect.ValueOf(v)
-	if rv.IsNil() {
-		return "nil"
-	}
-	pv := reflect.Indirect(rv).Interface()
-	return fmt.Sprintf("func(v %v) *%v { return &v } ( %#v )", typ, typ, pv)
+	// 1300 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xbc, 0x58, 0x4f, 0x73, 0xdb, 0x44,
+	0x14, 0x8f, 0x9a, 0x3a, 0x8d, 0x9f, 0xd3, 0xb4, 0xdd, 0xba, 0x69, 0x50, 0x53, 0xcb, 0xdd, 0xb6,
+	0xb4, 0xb4, 0xd8, 0x9d, 0xa6, 0x17, 0xa6, 0x33, 0x1c, 0xea, 0x94, 0x3f, 0x61, 0x68, 0x61, 0xe4,
+	0x0c, 0x7f, 0x86, 0x61, 0x5c, 0xc5, 0x5e, 0xcb, 0x1a, 0x2c, 0xad, 0x90, 0x56, 0x4d, 0x33, 0xe5,
+	0x0b, 0x70, 0xe4, 0xc6, 0x81, 0x0b, 0x67, 0x06, 0x3e, 0x07, 0x07, 0x0e, 0x7c, 0x02, 0x0d, 0x14,
+	0x4e, 0x3a, 0xf2, 0x09, 0x18, 0xed, 0xae, 0x64, 0xc9, 0x92, 0xa3, 0x70, 0x20, 0x37, 0xbd, 0xf7,
+	0x7e, 0x7a, 0x7f, 0x7e, 0xef, 0xf9, 0xed, 0xca, 0xd0, 0xf0, 0xa9, 0x63, 0x0d, 0xbb, 0xae, 0x47,
+	0x19, 0x45, 0x60, 0x3a, 0xd4, 0xea, 0x72, 0x8d, 0xda, 0x31, 0x2d, 0x36, 0x09, 0xf6, 0xbb, 0x43,
+	0x6a, 0xdf, 0x33, 0xa9, 0x49, 0xef, 0x71, 0xc8, 0x7e, 0x30, 0xe6, 0x12, 0x17, 0xf8, 0x93, 0x78,
+	0x15, 0x53, 0x68, 0xf4, 0xe3, 0xf7, 0x3e, 0x0a, 0x98, 0x1b, 0x30, 0xb4, 0x01, 0x2b, 0x3e, 0x33,
+	0x58, 0xe0, 0x6f, 0x2a, 0x6d, 0xe5, 0x76, 0x4d, 0x97, 0x12, 0x7a, 0x1f, 0xce, 0x8a, 0xa7, 0xc1,
+	0x88, 0x30, 0xc3, 0x9a, 0x6e, 0x9e, 0x6a, 0x2b, 0xb7, 0xeb, 0xbd, 0xeb, 0x51, 0xa8, 0x49, 0x43,
+	0x47, 0x18, 0xfe, 0x09, 0xb5, 0xf5, 0x17, 0xf6, 0xf4, 0x21, 0x7e, 0x73, 0x48, 0x6d, 0x9b, 0x38,
+	0x0c, 0xeb, 0x6b, 0x02, 0xf0, 0x98, 0xdb, 0xf1, 0x8f, 0x0a, 0xa0, 0x3d, 0x32, 0x9c, 0xf8, 0x81,
+	0xeb, 0x52, 0x8f, 0xe9, 0xe4, 0xeb, 0x80, 0xf8, 0x0c, 0x39, 0x50, 0xb3, 0x1c, 0x37, 0x60, 0x3c,
+	0x6e, 0x63, 0xfb, 0x46, 0x77, 0x56, 0x52, 0xb7, 0x08, 0xef, 0xee, 0xc6, 0xd8, 0xde, 0x76, 0x14,
+	0x6a, 0x5b, 0x1c, 0xd3, 0xf1, 0x27, 0xf4, 0xa0, 0xc3, 0x66, 0xc0, 0x87, 0xdc, 0x5b, 0x49, 0x36,
+	0x22, 0x8c, 0x7a, 0x05, 0x6a, 0xdc, 0x07, 0x42, 0x70, 0x7a, 0x64, 0x30, 0xc2, 0xe3, 0xd6, 0x75,
+	0xfe, 0x8c, 0xff, 0x56, 0xe0, 0x62, 0x2e, 0xa8, 0xef, 0x52, 0xc7, 0x27, 0xc8, 0x87, 0x15, 0xca,
+	0x79, 0x92, 0x59, 0xbe, 0xbe, 0x30, 0x4b, 0xf1, 0x42, 0x57, 0xb0, 0xda, 0x7b, 0x10, 0x85, 0xda,
+	0xd5, 0x05, 0x79, 0x0a, 0x87, 0x25, 0x89, 0xca, 0x50, 0xea, 0x67, 0xb0, 0x22, 0x9b, 0xf3, 0x14,
+	0xce, 0x09, 0xdd, 0x60, 0x6c, 0x4d, 0x89, 0x63, 0xd8, 0x32, 0xeb, 0xde, 0xcd, 0x28, 0xd4, 0xa4,
+	0xa9, 0x93, 0x98, 0x4a, 0x3c, 0xae, 0x0b, 0xc8, 0xbb, 0x12, 0x81, 0xff, 0x54, 0xe0, 0xd2, 0xce,
+	0x94, 0x18, 0xde, 0x53, 0x62, 0x99, 0x93, 0x7d, 0xea, 0xf9, 0x49, 0x37, 0xac, 0x7c, 0x37, 0x6e,
+	0x65, 0xeb, 0x2c, 0x7d, 0x43, 0x36, 0xe4, 0x4e, 0x14, 0x6a, 0x4d, 0x51, 0xa8, 0x23, 0x11, 0x55,
+	0x8d, 0xf8, 0x32, 0x69, 0x44, 0x13, 0x6a, 0x63, 0xea, 0x0d, 0x45, 0x4d, 0xab, 0xba, 0x10, 0xe2,
+	0x81, 0x1c, 0x1b, 0xb6, 0x35, 0x3d, 0x14, 0x13, 0xa7, 0x4b, 0x09, 0xad, 0xc3, 0x29, 0xcb, 0xdd,
+	0x5c, 0xe6, 0xba, 0x53, 0x96, 0x1b, 0xe3, 0xac, 0x31, 0xa7, 0xe4, 0xb4, 0xc0, 0x09, 0x09, 0xff,
+	0xa2, 0xc0, 0xc6, 0x7c, 0xc6, 0xb2, 0x9b, 0xce, 0x5c, 0x37, 0xdf, 0x38, 0xaa, 0xca, 0x7c, 0x43,
+	0xef, 0x46, 0xa1, 0x76, 0x69, 0xae, 0xce, 0xca, 0x46, 0xde, 0x48, 0x1b, 0xa9, 0xc2, 0xaa, 0x27,
+	0x3d, 0xca, 0xb9, 0x4b, 0x65, 0xfc, 0x83, 0x02, 0xd0, 0x0f, 0xec, 0xa4, 0x13, 0x5f, 0xe4, 0x3b,
+	0xb1, 0x95, 0xcd, 0x71, 0x06, 0x93, 0xf4, 0xdf, 0x8a, 0x42, 0xed, 0x82, 0x48, 0x8b, 0x11, 0x9f,
+	0xf9, 0x55, 0xdc, 0xdf, 0xcf, 0xfc, 0x08, 0xa6, 0x64, 0xcc, 0xe4, 0x8f, 0x9e, 0x3f, 0xc7, 0xfd,
+	0xf0, 0x2c, 0x73, 0xc2, 0x38, 0xf1, 0x35, 0x5d, 0x08, 0xf8, 0x3b, 0x05, 0x1a, 0x3c, 0xae, 0x24,
+	0xf1, 0xd9, 0x1c, 0x89, 0xad, 0x42, 0x82, 0x79, 0xe6, 0x6e, 0x47, 0xa1, 0x86, 0xb2, 0x29, 0x56,
+	0xd2, 0xd6, 0x4e, 0x69, 0xdb, 0x80, 0x15, 0x8f, 0xf8, 0xc1, 0x34, 0xc9, 0x53, 0x4a, 0x38, 0x54,
+	0xe0, 0xc2, 0x0e, 0x75, 0x0f, 0x77, 0xa8, 0x33, 0xb6, 0xcc, 0x84, 0xb9, 0x49, 0x9e, 0xb9, 0xeb,
+	0xb9, 0xee, 0xce, 0xa3, 0x25, 0x81, 0x9d, 0x28, 0xd4, 0x2e, 0x8b, 0xec, 0x86, 0xdc, 0xdc, 0xb1,
+	0x4d, 0xbb, 0x72, 0x97, 0x0c, 0x12, 0x1a, 0xe3, 0xed, 0x49, 0x83, 0x64, 0x86, 0xeb, 0xba, 0x94,
+	0xd0, 0x16, 0xd4, 0xe9, 0x73, 0xe2, 0x1d, 0x78, 0x16, 0x23, 0x9c, 0xce, 0x55, 0x7d, 0xa6, 0x40,
+	0x6d, 0x68, 0x8c, 0x88, 0xcf, 0x2c, 0xc7, 0x60, 0x16, 0x75, 0xe4, 0x4c, 0x67, 0x55, 0x38, 0x00,
+	0x94, 0xcd, 0x58, 0x52, 0x3f, 0x98, 0xa3, 0xfe, 0x72, 0x8e, 0xfa, 0xd9, 0x52, 0xef, 0x75, 0xa3,
+	0x50, 0xdb, 0x2c, 0x56, 0x55, 0xc5, 0x3c, 0xfe, 0x59, 0x81, 0x8b, 0xbb, 0xb6, 0x61, 0x92, 0x5d,
+	0xc7, 0x67, 0xc6, 0x74, 0x9a, 0x30, 0x4b, 0xf3, 0xcc, 0xde, 0xcc, 0xc6, 0x2d, 0xc1, 0x17, 0x97,
+	0xb5, 0x15, 0x83, 0x3a, 0xb6, 0xe1, 0x18, 0x26, 0x89, 0x43, 0x56, 0x11, 0x7c, 0x33, 0x21, 0x78,
+	0x0b, 0xea, 0xfc, 0x5d, 0xfe, 0x43, 0x17, 0x0b, 0x61, 0xa6, 0xc0, 0xdf, 0x40, 0x33, 0x1f, 0x5e,
+	0x12, 0x35, 0x3a, 0x2e, 0x51, 0x99, 0x3d, 0x5d, 0x48, 0xb1, 0x92, 0xad, 0x9f, 0x14, 0x40, 0x3c,
+	0xbc, 0x4e, 0x6c, 0xfa, 0x9c, 0x1c, 0xe7, 0x60, 0x2b, 0xc2, 0xff, 0x2f, 0xae, 0x94, 0x79, 0xae,
+	0x5e, 0xca, 0xd6, 0x26, 0xd1, 0x4f, 0x94, 0xaa, 0x74, 0xb0, 0x1e, 0x93, 0xb1, 0x11, 0x4c, 0xd9,
+	0xb1, 0x07, 0x2b, 0x8f, 0x3f, 0x31, 0xb2, 0x92, 0xc1, 0x4a, 0xc3, 0x9f, 0x28, 0x5b, 0xbf, 0x29,
+	0x80, 0xde, 0x23, 0xec, 0x51, 0x30, 0xb2, 0xd8, 0x87, 0x34, 0xdd, 0x6f, 0xe3, 0x23, 0x06, 0xab,
+	0x08, 0x2f, 0x1e, 0xd0, 0x46, 0x0c, 0x98, 0x52, 0xb3, 0x8a, 0xa3, 0xa7, 0x09, 0x47, 0xef, 0xc0,
+	0xda, 0x90, 0x3a, 0x8c, 0x38, 0x6c, 0xc0, 0x0e, 0xdd, 0xe4, 0xee, 0x81, 0xa3, 0x50, 0x4b, 0xf4,
+	0x9d, 0x58, 0x5f, 0xe2, 0xa9, 0x21, 0xed, 0x7b, 0x87, 0xae, 0xb8, 0x5c, 0xe5, 0xf2, 0x93, 0x64,
+	0xb2, 0x39, 0x32, 0xef, 0x2e, 0x2c, 0x48, 0x9e, 0x28, 0x5c, 0x21, 0x09, 0xbe, 0x17, 0x85, 0xda,
+	0x6b, 0xa2, 0x2e, 0x93, 0xb0, 0x59, 0x6d, 0x95, 0xa7, 0xcb, 0xa7, 0xd0, 0xc8, 0xf8, 0x89, 0xef,
+	0xb9, 0xfc, 0xdd, 0x81, 0xcc, 0x78, 0x53, 0x69, 0x2f, 0x27, 0xf7, 0x5c, 0x6e, 0xe8, 0x48, 0x43,
+	0xd9, 0x3d, 0x97, 0x03, 0x76, 0x84, 0x1d, 0x6f, 0x40, 0x93, 0xdf, 0x21, 0xe6, 0xfa, 0x80, 0x5f,
+	0xca, 0x3b, 0x57, 0xa1, 0xfe, 0xfd, 0xe3, 0x0e, 0xd3, 0xfd, 0x28, 0xd4, 0xae, 0xc8, 0x75, 0x1e,
+	0x7b, 0x3a, 0x7e, 0xb5, 0xf8, 0x19, 0xac, 0x7e, 0x70, 0xc0, 0xf6, 0xe8, 0x57, 0xc4, 0x41, 0xd7,
+	0x60, 0xcd, 0x18, 0x0e, 0x89, 0xef, 0x0f, 0x58, 0x2c, 0xcb, 0xa9, 0x6f, 0x08, 0x9d, 0x80, 0x20,
+	0x38, 0xcd, 0x3b, 0x2d, 0x36, 0x2d, 0x7f, 0x46, 0x57, 0x01, 0xc8, 0x0b, 0xd7, 0xf2, 0x88, 0x3f,
+	0xb0, 0xc4, 0x61, 0xb5, 0xac, 0xd7, 0xa5, 0x66, 0xd7, 0xc1, 0x4f, 0xe0, 0xe2, 0xa3, 0x80, 0x4d,
+	0x88, 0xc3, 0xac, 0xa1, 0xc1, 0xd2, 0x2d, 0xa8, 0xc2, 0x6a, 0xe0, 0x13, 0x2f, 0xf3, 0xf3, 0x4a,
+	0xe5, 0xd8, 0xe6, 0x1a, 0xbe, 0x7f, 0x40, 0xbd, 0x91, 0x8c, 0x94, 0xca, 0xb8, 0x07, 0xcd, 0xbc,
+	0x3b, 0x49, 0xd6, 0x1d, 0xa8, 0xed, 0xa5, 0x59, 0x37, 0xb6, 0x9b, 0x59, 0xae, 0x92, 0x0a, 0x75,
+	0x01, 0xc1, 0xe7, 0x61, 0x5d, 0x27, 0x63, 0x8f, 0xf8, 0x93, 0xa4, 0x07, 0x6f, 0xc3, 0xb9, 0x54,
+	0xf3, 0xdf, 0x1d, 0x6e, 0x7f, 0x7b, 0x06, 0xd6, 0x78, 0x43, 0xfa, 0xc4, 0x7b, 0x6e, 0x0d, 0x09,
+	0xda, 0x83, 0x73, 0xfd, 0x09, 0x3d, 0xc8, 0x7c, 0x01, 0xa0, 0xd6, 0xd1, 0x1f, 0x30, 0xaa, 0x56,
+	0xf1, 0xe9, 0x80, 0x97, 0xd0, 0x5b, 0xb0, 0xdc, 0x0f, 0x6c, 0xb4, 0x51, 0x7e, 0xe5, 0x53, 0x2f,
+	0x2f, 0xb8, 0x69, 0xe1, 0x25, 0xf4, 0x04, 0x60, 0x76, 0x5f, 0x40, 0x57, 0x8f, 0xbc, 0xf9, 0xa8,
+	0xad, 0x45, 0xe6, 0xd4, 0x5d, 0x1f, 0xd6, 0xb2, 0xe7, 0x2a, 0xd2, 0x2a, 0x0e, 0x7c, 0xb5, 0xbd,
+	0x18, 0x90, 0x3a, 0xfd, 0x18, 0x1a, 0x99, 0x03, 0x28, 0xcf, 0x57, 0xf1, 0x5c, 0x54, 0xb5, 0x85,
+	0xf6, 0x42, 0x9a, 0x72, 0x4b, 0x97, 0xa4, 0x99, 0x3f, 0x3e, 0x4a, 0xd2, 0x9c, 0x5b, 0xf0, 0xc2,
+	0x69, 0x76, 0x00, 0xf3, 0x4e, 0x4b, 0x26, 0x3d, 0xef, 0xb4, 0x6c, 0x76, 0xf1, 0x12, 0x7a, 0x0c,
+	0x67, 0xe4, 0xfc, 0x21, 0x35, 0x0b, 0xcf, 0x8f, 0xa9, 0x7a, 0xa5, 0xd4, 0x96, 0x7a, 0xf9, 0x1c,
+	0xd6, 0xf3, 0x5f, 0x29, 0xe8, 0x5a, 0xe5, 0x77, 0x9a, 0x8a, 0xab, 0x3f, 0x72, 0x44, 0x73, 0x32,
+	0x1b, 0x37, 0xdf, 0x9c, 0xe2, 0xd9, 0x92, 0x6f, 0x4e, 0xc9, 0xaa, 0xc6, 0x4b, 0xe8, 0x13, 0x38,
+	0x9b, 0x5b, 0x7b, 0xa8, 0x5d, 0x48, 0x64, 0xde, 0xeb, 0xb5, 0x23, 0x10, 0x89, 0xdf, 0xde, 0xf9,
+	0x5f, 0x5f, 0xb5, 0x94, 0xdf, 0x5f, 0xb5, 0x94, 0x3f, 0x5e, 0xb5, 0x94, 0xef, 0xff, 0x6a, 0x2d,
+	0xed, 0xaf, 0xf0, 0x3f, 0x36, 0x1e, 0xfc, 0x1b, 0x00, 0x00, 0xff, 0xff, 0x91, 0x7d, 0x83, 0x86,
+	0x22, 0x11, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -2620,6 +1931,8 @@ type SonicServiceClient interface {
 	Authenticate(ctx context.Context, in *AuthenticateRequest, opts ...grpc.CallOption) (*AuthenticateResponse, error)
 	Refresh(ctx context.Context, in *RefreshRequest, opts ...grpc.CallOption) (*RefreshResponse, error)
 	ClearNeighbors(ctx context.Context, in *ClearNeighborsRequest, opts ...grpc.CallOption) (*ClearNeighborsResponse, error)
+	GetAuditLog(ctx context.Context, in *GetAuditLogRequest, opts ...grpc.CallOption) (*GetAuditLogResponse, error)
+	ClearAuditLog(ctx context.Context, in *ClearAuditLogRequest, opts ...grpc.CallOption) (*ClearAuditLogResponse, error)
 }
 
 type sonicServiceClient struct {
@@ -2711,6 +2024,24 @@ func (c *sonicServiceClient) ClearNeighbors(ctx context.Context, in *ClearNeighb
 	return out, nil
 }
 
+func (c *sonicServiceClient) GetAuditLog(ctx context.Context, in *GetAuditLogRequest, opts ...grpc.CallOption) (*GetAuditLogResponse, error) {
+	out := new(GetAuditLogResponse)
+	err := c.cc.Invoke(ctx, "/gnoi.sonic.SonicService/GetAuditLog", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *sonicServiceClient) ClearAuditLog(ctx context.Context, in *ClearAuditLogRequest, opts ...grpc.CallOption) (*ClearAuditLogResponse, error) {
+	out := new(ClearAuditLogResponse)
+	err := c.cc.Invoke(ctx, "/gnoi.sonic.SonicService/ClearAuditLog", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // SonicServiceServer is the server API for SonicService service.
 type SonicServiceServer interface {
 	ShowTechsupport(context.Context, *TechsupportRequest) (*TechsupportResponse, error)
@@ -2722,6 +2053,8 @@ type SonicServiceServer interface {
 	Authenticate(context.Context, *AuthenticateRequest) (*AuthenticateResponse, error)
 	Refresh(context.Context, *RefreshRequest) (*RefreshResponse, error)
 	ClearNeighbors(context.Context, *ClearNeighborsRequest) (*ClearNeighborsResponse, error)
+	GetAuditLog(context.Context, *GetAuditLogRequest) (*GetAuditLogResponse, error)
+	ClearAuditLog(context.Context, *ClearAuditLogRequest) (*ClearAuditLogResponse, error)
 }
 
 // UnimplementedSonicServiceServer can be embedded to have forward compatible implementations.
@@ -2754,6 +2087,12 @@ func (*UnimplementedSonicServiceServer) Refresh(ctx context.Context, req *Refres
 }
 func (*UnimplementedSonicServiceServer) ClearNeighbors(ctx context.Context, req *ClearNeighborsRequest) (*ClearNeighborsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ClearNeighbors not implemented")
+}
+func (*UnimplementedSonicServiceServer) GetAuditLog(ctx context.Context, req *GetAuditLogRequest) (*GetAuditLogResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetAuditLog not implemented")
+}
+func (*UnimplementedSonicServiceServer) ClearAuditLog(ctx context.Context, req *ClearAuditLogRequest) (*ClearAuditLogResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ClearAuditLog not implemented")
 }
 
 func RegisterSonicServiceServer(s *grpc.Server, srv SonicServiceServer) {
@@ -2922,6 +2261,42 @@ func _SonicService_ClearNeighbors_Handler(srv interface{}, ctx context.Context, 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _SonicService_GetAuditLog_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetAuditLogRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SonicServiceServer).GetAuditLog(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/gnoi.sonic.SonicService/GetAuditLog",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SonicServiceServer).GetAuditLog(ctx, req.(*GetAuditLogRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _SonicService_ClearAuditLog_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ClearAuditLogRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SonicServiceServer).ClearAuditLog(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/gnoi.sonic.SonicService/ClearAuditLog",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SonicServiceServer).ClearAuditLog(ctx, req.(*ClearAuditLogRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 var _SonicService_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "gnoi.sonic.SonicService",
 	HandlerType: (*SonicServiceServer)(nil),
@@ -2962,6 +2337,14 @@ var _SonicService_serviceDesc = grpc.ServiceDesc{
 			MethodName: "ClearNeighbors",
 			Handler:    _SonicService_ClearNeighbors_Handler,
 		},
+		{
+			MethodName: "GetAuditLog",
+			Handler:    _SonicService_GetAuditLog_Handler,
+		},
+		{
+			MethodName: "ClearAuditLog",
+			Handler:    _SonicService_ClearAuditLog_Handler,
+		},
 	},
 	Streams:  []grpc.StreamDesc{},
 	Metadata: "sonic.proto",
@@ -2987,6 +2370,10 @@ func (m *SonicOutput) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
+	if m.XXX_unrecognized != nil {
+		i -= len(m.XXX_unrecognized)
+		copy(dAtA[i:], m.XXX_unrecognized)
+	}
 	if len(m.StatusDetail) > 0 {
 		i -= len(m.StatusDetail)
 		copy(dAtA[i:], m.StatusDetail)
@@ -3022,6 +2409,10 @@ func (m *TechsupportRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
+	if m.XXX_unrecognized != nil {
+		i -= len(m.XXX_unrecognized)
+		copy(dAtA[i:], m.XXX_unrecognized)
+	}
 	if m.Input != nil {
 		{
 			size, err := m.Input.MarshalToSizedBuffer(dAtA[:i])
@@ -3057,6 +2448,10 @@ func (m *TechsupportRequest_Input) MarshalToSizedBuffer(dAtA []byte) (int, error
 	_ = i
 	var l int
 	_ = l
+	if m.XXX_unrecognized != nil {
+		i -= len(m.XXX_unrecognized)
+		copy(dAtA[i:], m.XXX_unrecognized)
+	}
 	if len(m.Date) > 0 {
 		i -= len(m.Date)
 		copy(dAtA[i:], m.Date)
@@ -3087,6 +2482,10 @@ func (m *TechsupportResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
+	if m.XXX_unrecognized != nil {
+		i -= len(m.XXX_unrecognized)
+		copy(dAtA[i:], m.XXX_unrecognized)
+	}
 	if m.Output != nil {
 		{
 			size, err := m.Output.MarshalToSizedBuffer(dAtA[:i])
@@ -3122,6 +2521,10 @@ func (m *TechsupportResponse_Output) MarshalToSizedBuffer(dAtA []byte) (int, err
 	_ = i
 	var l int
 	_ = l
+	if m.XXX_unrecognized != nil {
+		i -= len(m.XXX_unrecognized)
+		copy(dAtA[i:], m.XXX_unrecognized)
+	}
 	if len(m.OutputFilename) > 0 {
 		i -= len(m.OutputFilename)
 		copy(dAtA[i:], m.OutputFilename)
@@ -3152,6 +2555,10 @@ func (m *ClearNeighborsRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
+	if m.XXX_unrecognized != nil {
+		i -= len(m.XXX_unrecognized)
+		copy(dAtA[i:], m.XXX_unrecognized)
+	}
 	if m.Input != nil {
 		{
 			size, err := m.Input.MarshalToSizedBuffer(dAtA[:i])
@@ -3187,6 +2594,10 @@ func (m *ClearNeighborsRequest_Input) MarshalToSizedBuffer(dAtA []byte) (int, er
 	_ = i
 	var l int
 	_ = l
+	if m.XXX_unrecognized != nil {
+		i -= len(m.XXX_unrecognized)
+		copy(dAtA[i:], m.XXX_unrecognized)
+	}
 	if len(m.Ifname) > 0 {
 		i -= len(m.Ifname)
 		copy(dAtA[i:], m.Ifname)
@@ -3241,6 +2652,10 @@ func (m *ClearNeighborsResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) 
 	_ = i
 	var l int
 	_ = l
+	if m.XXX_unrecognized != nil {
+		i -= len(m.XXX_unrecognized)
+		copy(dAtA[i:], m.XXX_unrecognized)
+	}
 	if m.Output != nil {
 		{
 			size, err := m.Output.MarshalToSizedBuffer(dAtA[:i])
@@ -3276,6 +2691,10 @@ func (m *ClearNeighborsResponse_Output) MarshalToSizedBuffer(dAtA []byte) (int, 
 	_ = i
 	var l int
 	_ = l
+	if m.XXX_unrecognized != nil {
+		i -= len(m.XXX_unrecognized)
+		copy(dAtA[i:], m.XXX_unrecognized)
+	}
 	if len(m.Response) > 0 {
 		i -= len(m.Response)
 		copy(dAtA[i:], m.Response)
@@ -3306,6 +2725,10 @@ func (m *SumRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
+	if m.XXX_unrecognized != nil {
+		i -= len(m.XXX_unrecognized)
+		copy(dAtA[i:], m.XXX_unrecognized)
+	}
 	if m.Input != nil {
 		{
 			size, err := m.Input.MarshalToSizedBuffer(dAtA[:i])
@@ -3341,6 +2764,10 @@ func (m *SumRequest_Input) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
+	if m.XXX_unrecognized != nil {
+		i -= len(m.XXX_unrecognized)
+		copy(dAtA[i:], m.XXX_unrecognized)
+	}
 	if m.Right != 0 {
 		i = encodeVarintSonic(dAtA, i, uint64(m.Right))
 		i--
@@ -3374,6 +2801,10 @@ func (m *SumResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
+	if m.XXX_unrecognized != nil {
+		i -= len(m.XXX_unrecognized)
+		copy(dAtA[i:], m.XXX_unrecognized)
+	}
 	if m.Output != nil {
 		{
 			size, err := m.Output.MarshalToSizedBuffer(dAtA[:i])
@@ -3409,6 +2840,10 @@ func (m *SumResponse_Output) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
+	if m.XXX_unrecognized != nil {
+		i -= len(m.XXX_unrecognized)
+		copy(dAtA[i:], m.XXX_unrecognized)
+	}
 	if m.Result != 0 {
 		i = encodeVarintSonic(dAtA, i, uint64(m.Result))
 		i--
@@ -3437,6 +2872,10 @@ func (m *CopyConfigRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
+	if m.XXX_unrecognized != nil {
+		i -= len(m.XXX_unrecognized)
+		copy(dAtA[i:], m.XXX_unrecognized)
+	}
 	if m.Input != nil {
 		{
 			size, err := m.Input.MarshalToSizedBuffer(dAtA[:i])
@@ -3472,6 +2911,10 @@ func (m *CopyConfigRequest_Input) MarshalToSizedBuffer(dAtA []byte) (int, error)
 	_ = i
 	var l int
 	_ = l
+	if m.XXX_unrecognized != nil {
+		i -= len(m.XXX_unrecognized)
+		copy(dAtA[i:], m.XXX_unrecognized)
+	}
 	if len(m.Destination) > 0 {
 		i -= len(m.Destination)
 		copy(dAtA[i:], m.Destination)
@@ -3519,6 +2962,10 @@ func (m *CopyConfigResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
+	if m.XXX_unrecognized != nil {
+		i -= len(m.XXX_unrecognized)
+		copy(dAtA[i:], m.XXX_unrecognized)
+	}
 	if m.Output != nil {
 		{
 			size, err := m.Output.MarshalToSizedBuffer(dAtA[:i])
@@ -3554,6 +3001,10 @@ func (m *ImageInstallRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
+	if m.XXX_unrecognized != nil {
+		i -= len(m.XXX_unrecognized)
+		copy(dAtA[i:], m.XXX_unrecognized)
+	}
 	if m.Input != nil {
 		{
 			size, err := m.Input.MarshalToSizedBuffer(dAtA[:i])
@@ -3589,6 +3040,10 @@ func (m *ImageInstallRequest_Input) MarshalToSizedBuffer(dAtA []byte) (int, erro
 	_ = i
 	var l int
 	_ = l
+	if m.XXX_unrecognized != nil {
+		i -= len(m.XXX_unrecognized)
+		copy(dAtA[i:], m.XXX_unrecognized)
+	}
 	if len(m.Imagename) > 0 {
 		i -= len(m.Imagename)
 		copy(dAtA[i:], m.Imagename)
@@ -3619,6 +3074,10 @@ func (m *ImageInstallResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
+	if m.XXX_unrecognized != nil {
+		i -= len(m.XXX_unrecognized)
+		copy(dAtA[i:], m.XXX_unrecognized)
+	}
 	if m.Output != nil {
 		{
 			size, err := m.Output.MarshalToSizedBuffer(dAtA[:i])
@@ -3654,6 +3113,10 @@ func (m *ImageRemoveRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
+	if m.XXX_unrecognized != nil {
+		i -= len(m.XXX_unrecognized)
+		copy(dAtA[i:], m.XXX_unrecognized)
+	}
 	if m.Input != nil {
 		{
 			size, err := m.Input.MarshalToSizedBuffer(dAtA[:i])
@@ -3689,6 +3152,10 @@ func (m *ImageRemoveRequest_Input) MarshalToSizedBuffer(dAtA []byte) (int, error
 	_ = i
 	var l int
 	_ = l
+	if m.XXX_unrecognized != nil {
+		i -= len(m.XXX_unrecognized)
+		copy(dAtA[i:], m.XXX_unrecognized)
+	}
 	if len(m.Imagename) > 0 {
 		i -= len(m.Imagename)
 		copy(dAtA[i:], m.Imagename)
@@ -3719,6 +3186,10 @@ func (m *ImageRemoveResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
+	if m.XXX_unrecognized != nil {
+		i -= len(m.XXX_unrecognized)
+		copy(dAtA[i:], m.XXX_unrecognized)
+	}
 	if m.Output != nil {
 		{
 			size, err := m.Output.MarshalToSizedBuffer(dAtA[:i])
@@ -3754,6 +3225,10 @@ func (m *ImageDefaultRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
+	if m.XXX_unrecognized != nil {
+		i -= len(m.XXX_unrecognized)
+		copy(dAtA[i:], m.XXX_unrecognized)
+	}
 	if m.Input != nil {
 		{
 			size, err := m.Input.MarshalToSizedBuffer(dAtA[:i])
@@ -3789,6 +3264,10 @@ func (m *ImageDefaultRequest_Input) MarshalToSizedBuffer(dAtA []byte) (int, erro
 	_ = i
 	var l int
 	_ = l
+	if m.XXX_unrecognized != nil {
+		i -= len(m.XXX_unrecognized)
+		copy(dAtA[i:], m.XXX_unrecognized)
+	}
 	if len(m.Imagename) > 0 {
 		i -= len(m.Imagename)
 		copy(dAtA[i:], m.Imagename)
@@ -3819,6 +3298,224 @@ func (m *ImageDefaultResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
+	if m.XXX_unrecognized != nil {
+		i -= len(m.XXX_unrecognized)
+		copy(dAtA[i:], m.XXX_unrecognized)
+	}
+	if m.Output != nil {
+		{
+			size, err := m.Output.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintSonic(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *GetAuditLogRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *GetAuditLogRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *GetAuditLogRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.XXX_unrecognized != nil {
+		i -= len(m.XXX_unrecognized)
+		copy(dAtA[i:], m.XXX_unrecognized)
+	}
+	if m.Input != nil {
+		{
+			size, err := m.Input.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintSonic(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *GetAuditLogRequest_Input) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *GetAuditLogRequest_Input) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *GetAuditLogRequest_Input) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.XXX_unrecognized != nil {
+		i -= len(m.XXX_unrecognized)
+		copy(dAtA[i:], m.XXX_unrecognized)
+	}
+	if len(m.ContentType) > 0 {
+		i -= len(m.ContentType)
+		copy(dAtA[i:], m.ContentType)
+		i = encodeVarintSonic(dAtA, i, uint64(len(m.ContentType)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *GetAuditLogResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *GetAuditLogResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *GetAuditLogResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.XXX_unrecognized != nil {
+		i -= len(m.XXX_unrecognized)
+		copy(dAtA[i:], m.XXX_unrecognized)
+	}
+	if m.Output != nil {
+		{
+			size, err := m.Output.MarshalToSizedBuffer(dAtA[:i])
+			if err != nil {
+				return 0, err
+			}
+			i -= size
+			i = encodeVarintSonic(dAtA, i, uint64(size))
+		}
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *GetAuditLogResponse_AuditOutput) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *GetAuditLogResponse_AuditOutput) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *GetAuditLogResponse_AuditOutput) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.XXX_unrecognized != nil {
+		i -= len(m.XXX_unrecognized)
+		copy(dAtA[i:], m.XXX_unrecognized)
+	}
+	if len(m.AuditContent) > 0 {
+		for iNdEx := len(m.AuditContent) - 1; iNdEx >= 0; iNdEx-- {
+			i -= len(m.AuditContent[iNdEx])
+			copy(dAtA[i:], m.AuditContent[iNdEx])
+			i = encodeVarintSonic(dAtA, i, uint64(len(m.AuditContent[iNdEx])))
+			i--
+			dAtA[i] = 0xa
+		}
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *ClearAuditLogRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *ClearAuditLogRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *ClearAuditLogRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.XXX_unrecognized != nil {
+		i -= len(m.XXX_unrecognized)
+		copy(dAtA[i:], m.XXX_unrecognized)
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *ClearAuditLogResponse) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *ClearAuditLogResponse) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *ClearAuditLogResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.XXX_unrecognized != nil {
+		i -= len(m.XXX_unrecognized)
+		copy(dAtA[i:], m.XXX_unrecognized)
+	}
 	if m.Output != nil {
 		{
 			size, err := m.Output.MarshalToSizedBuffer(dAtA[:i])
@@ -3854,6 +3551,10 @@ func (m *JwtToken) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
+	if m.XXX_unrecognized != nil {
+		i -= len(m.XXX_unrecognized)
+		copy(dAtA[i:], m.XXX_unrecognized)
+	}
 	if m.ExpiresIn != 0 {
 		i = encodeVarintSonic(dAtA, i, uint64(m.ExpiresIn))
 		i--
@@ -3896,6 +3597,10 @@ func (m *AuthenticateRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
+	if m.XXX_unrecognized != nil {
+		i -= len(m.XXX_unrecognized)
+		copy(dAtA[i:], m.XXX_unrecognized)
+	}
 	if len(m.Password) > 0 {
 		i -= len(m.Password)
 		copy(dAtA[i:], m.Password)
@@ -3933,6 +3638,10 @@ func (m *AuthenticateResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
+	if m.XXX_unrecognized != nil {
+		i -= len(m.XXX_unrecognized)
+		copy(dAtA[i:], m.XXX_unrecognized)
+	}
 	if m.Token != nil {
 		{
 			size, err := m.Token.MarshalToSizedBuffer(dAtA[:i])
@@ -3968,6 +3677,10 @@ func (m *RefreshRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
+	if m.XXX_unrecognized != nil {
+		i -= len(m.XXX_unrecognized)
+		copy(dAtA[i:], m.XXX_unrecognized)
+	}
 	return len(dAtA) - i, nil
 }
 
@@ -3991,6 +3704,10 @@ func (m *RefreshResponse) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	_ = i
 	var l int
 	_ = l
+	if m.XXX_unrecognized != nil {
+		i -= len(m.XXX_unrecognized)
+		copy(dAtA[i:], m.XXX_unrecognized)
+	}
 	if m.Token != nil {
 		{
 			size, err := m.Token.MarshalToSizedBuffer(dAtA[:i])
@@ -4030,6 +3747,9 @@ func (m *SonicOutput) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovSonic(uint64(l))
 	}
+	if m.XXX_unrecognized != nil {
+		n += len(m.XXX_unrecognized)
+	}
 	return n
 }
 
@@ -4042,6 +3762,9 @@ func (m *TechsupportRequest) Size() (n int) {
 	if m.Input != nil {
 		l = m.Input.Size()
 		n += 1 + l + sovSonic(uint64(l))
+	}
+	if m.XXX_unrecognized != nil {
+		n += len(m.XXX_unrecognized)
 	}
 	return n
 }
@@ -4056,6 +3779,9 @@ func (m *TechsupportRequest_Input) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovSonic(uint64(l))
 	}
+	if m.XXX_unrecognized != nil {
+		n += len(m.XXX_unrecognized)
+	}
 	return n
 }
 
@@ -4068,6 +3794,9 @@ func (m *TechsupportResponse) Size() (n int) {
 	if m.Output != nil {
 		l = m.Output.Size()
 		n += 1 + l + sovSonic(uint64(l))
+	}
+	if m.XXX_unrecognized != nil {
+		n += len(m.XXX_unrecognized)
 	}
 	return n
 }
@@ -4082,6 +3811,9 @@ func (m *TechsupportResponse_Output) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovSonic(uint64(l))
 	}
+	if m.XXX_unrecognized != nil {
+		n += len(m.XXX_unrecognized)
+	}
 	return n
 }
 
@@ -4094,6 +3826,9 @@ func (m *ClearNeighborsRequest) Size() (n int) {
 	if m.Input != nil {
 		l = m.Input.Size()
 		n += 1 + l + sovSonic(uint64(l))
+	}
+	if m.XXX_unrecognized != nil {
+		n += len(m.XXX_unrecognized)
 	}
 	return n
 }
@@ -4119,6 +3854,9 @@ func (m *ClearNeighborsRequest_Input) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovSonic(uint64(l))
 	}
+	if m.XXX_unrecognized != nil {
+		n += len(m.XXX_unrecognized)
+	}
 	return n
 }
 
@@ -4131,6 +3869,9 @@ func (m *ClearNeighborsResponse) Size() (n int) {
 	if m.Output != nil {
 		l = m.Output.Size()
 		n += 1 + l + sovSonic(uint64(l))
+	}
+	if m.XXX_unrecognized != nil {
+		n += len(m.XXX_unrecognized)
 	}
 	return n
 }
@@ -4145,6 +3886,9 @@ func (m *ClearNeighborsResponse_Output) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovSonic(uint64(l))
 	}
+	if m.XXX_unrecognized != nil {
+		n += len(m.XXX_unrecognized)
+	}
 	return n
 }
 
@@ -4157,6 +3901,9 @@ func (m *SumRequest) Size() (n int) {
 	if m.Input != nil {
 		l = m.Input.Size()
 		n += 1 + l + sovSonic(uint64(l))
+	}
+	if m.XXX_unrecognized != nil {
+		n += len(m.XXX_unrecognized)
 	}
 	return n
 }
@@ -4173,6 +3920,9 @@ func (m *SumRequest_Input) Size() (n int) {
 	if m.Right != 0 {
 		n += 1 + sovSonic(uint64(m.Right))
 	}
+	if m.XXX_unrecognized != nil {
+		n += len(m.XXX_unrecognized)
+	}
 	return n
 }
 
@@ -4186,6 +3936,9 @@ func (m *SumResponse) Size() (n int) {
 		l = m.Output.Size()
 		n += 1 + l + sovSonic(uint64(l))
 	}
+	if m.XXX_unrecognized != nil {
+		n += len(m.XXX_unrecognized)
+	}
 	return n
 }
 
@@ -4197,6 +3950,9 @@ func (m *SumResponse_Output) Size() (n int) {
 	_ = l
 	if m.Result != 0 {
 		n += 1 + sovSonic(uint64(m.Result))
+	}
+	if m.XXX_unrecognized != nil {
+		n += len(m.XXX_unrecognized)
 	}
 	return n
 }
@@ -4210,6 +3966,9 @@ func (m *CopyConfigRequest) Size() (n int) {
 	if m.Input != nil {
 		l = m.Input.Size()
 		n += 1 + l + sovSonic(uint64(l))
+	}
+	if m.XXX_unrecognized != nil {
+		n += len(m.XXX_unrecognized)
 	}
 	return n
 }
@@ -4231,6 +3990,9 @@ func (m *CopyConfigRequest_Input) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovSonic(uint64(l))
 	}
+	if m.XXX_unrecognized != nil {
+		n += len(m.XXX_unrecognized)
+	}
 	return n
 }
 
@@ -4243,6 +4005,9 @@ func (m *CopyConfigResponse) Size() (n int) {
 	if m.Output != nil {
 		l = m.Output.Size()
 		n += 1 + l + sovSonic(uint64(l))
+	}
+	if m.XXX_unrecognized != nil {
+		n += len(m.XXX_unrecognized)
 	}
 	return n
 }
@@ -4257,6 +4022,9 @@ func (m *ImageInstallRequest) Size() (n int) {
 		l = m.Input.Size()
 		n += 1 + l + sovSonic(uint64(l))
 	}
+	if m.XXX_unrecognized != nil {
+		n += len(m.XXX_unrecognized)
+	}
 	return n
 }
 
@@ -4269,6 +4037,9 @@ func (m *ImageInstallRequest_Input) Size() (n int) {
 	l = len(m.Imagename)
 	if l > 0 {
 		n += 1 + l + sovSonic(uint64(l))
+	}
+	if m.XXX_unrecognized != nil {
+		n += len(m.XXX_unrecognized)
 	}
 	return n
 }
@@ -4283,6 +4054,9 @@ func (m *ImageInstallResponse) Size() (n int) {
 		l = m.Output.Size()
 		n += 1 + l + sovSonic(uint64(l))
 	}
+	if m.XXX_unrecognized != nil {
+		n += len(m.XXX_unrecognized)
+	}
 	return n
 }
 
@@ -4295,6 +4069,9 @@ func (m *ImageRemoveRequest) Size() (n int) {
 	if m.Input != nil {
 		l = m.Input.Size()
 		n += 1 + l + sovSonic(uint64(l))
+	}
+	if m.XXX_unrecognized != nil {
+		n += len(m.XXX_unrecognized)
 	}
 	return n
 }
@@ -4309,6 +4086,9 @@ func (m *ImageRemoveRequest_Input) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovSonic(uint64(l))
 	}
+	if m.XXX_unrecognized != nil {
+		n += len(m.XXX_unrecognized)
+	}
 	return n
 }
 
@@ -4321,6 +4101,9 @@ func (m *ImageRemoveResponse) Size() (n int) {
 	if m.Output != nil {
 		l = m.Output.Size()
 		n += 1 + l + sovSonic(uint64(l))
+	}
+	if m.XXX_unrecognized != nil {
+		n += len(m.XXX_unrecognized)
 	}
 	return n
 }
@@ -4335,6 +4118,9 @@ func (m *ImageDefaultRequest) Size() (n int) {
 		l = m.Input.Size()
 		n += 1 + l + sovSonic(uint64(l))
 	}
+	if m.XXX_unrecognized != nil {
+		n += len(m.XXX_unrecognized)
+	}
 	return n
 }
 
@@ -4348,6 +4134,9 @@ func (m *ImageDefaultRequest_Input) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovSonic(uint64(l))
 	}
+	if m.XXX_unrecognized != nil {
+		n += len(m.XXX_unrecognized)
+	}
 	return n
 }
 
@@ -4360,6 +4149,103 @@ func (m *ImageDefaultResponse) Size() (n int) {
 	if m.Output != nil {
 		l = m.Output.Size()
 		n += 1 + l + sovSonic(uint64(l))
+	}
+	if m.XXX_unrecognized != nil {
+		n += len(m.XXX_unrecognized)
+	}
+	return n
+}
+
+func (m *GetAuditLogRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Input != nil {
+		l = m.Input.Size()
+		n += 1 + l + sovSonic(uint64(l))
+	}
+	if m.XXX_unrecognized != nil {
+		n += len(m.XXX_unrecognized)
+	}
+	return n
+}
+
+func (m *GetAuditLogRequest_Input) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.ContentType)
+	if l > 0 {
+		n += 1 + l + sovSonic(uint64(l))
+	}
+	if m.XXX_unrecognized != nil {
+		n += len(m.XXX_unrecognized)
+	}
+	return n
+}
+
+func (m *GetAuditLogResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Output != nil {
+		l = m.Output.Size()
+		n += 1 + l + sovSonic(uint64(l))
+	}
+	if m.XXX_unrecognized != nil {
+		n += len(m.XXX_unrecognized)
+	}
+	return n
+}
+
+func (m *GetAuditLogResponse_AuditOutput) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if len(m.AuditContent) > 0 {
+		for _, s := range m.AuditContent {
+			l = len(s)
+			n += 1 + l + sovSonic(uint64(l))
+		}
+	}
+	if m.XXX_unrecognized != nil {
+		n += len(m.XXX_unrecognized)
+	}
+	return n
+}
+
+func (m *ClearAuditLogRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.XXX_unrecognized != nil {
+		n += len(m.XXX_unrecognized)
+	}
+	return n
+}
+
+func (m *ClearAuditLogResponse) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Output != nil {
+		l = m.Output.Size()
+		n += 1 + l + sovSonic(uint64(l))
+	}
+	if m.XXX_unrecognized != nil {
+		n += len(m.XXX_unrecognized)
 	}
 	return n
 }
@@ -4381,6 +4267,9 @@ func (m *JwtToken) Size() (n int) {
 	if m.ExpiresIn != 0 {
 		n += 1 + sovSonic(uint64(m.ExpiresIn))
 	}
+	if m.XXX_unrecognized != nil {
+		n += len(m.XXX_unrecognized)
+	}
 	return n
 }
 
@@ -4398,6 +4287,9 @@ func (m *AuthenticateRequest) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovSonic(uint64(l))
 	}
+	if m.XXX_unrecognized != nil {
+		n += len(m.XXX_unrecognized)
+	}
 	return n
 }
 
@@ -4411,6 +4303,9 @@ func (m *AuthenticateResponse) Size() (n int) {
 		l = m.Token.Size()
 		n += 1 + l + sovSonic(uint64(l))
 	}
+	if m.XXX_unrecognized != nil {
+		n += len(m.XXX_unrecognized)
+	}
 	return n
 }
 
@@ -4420,6 +4315,9 @@ func (m *RefreshRequest) Size() (n int) {
 	}
 	var l int
 	_ = l
+	if m.XXX_unrecognized != nil {
+		n += len(m.XXX_unrecognized)
+	}
 	return n
 }
 
@@ -4433,6 +4331,9 @@ func (m *RefreshResponse) Size() (n int) {
 		l = m.Token.Size()
 		n += 1 + l + sovSonic(uint64(l))
 	}
+	if m.XXX_unrecognized != nil {
+		n += len(m.XXX_unrecognized)
+	}
 	return n
 }
 
@@ -4441,323 +4342,6 @@ func sovSonic(x uint64) (n int) {
 }
 func sozSonic(x uint64) (n int) {
 	return sovSonic(uint64((x << 1) ^ uint64((int64(x) >> 63))))
-}
-func (this *SonicOutput) String() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&SonicOutput{`,
-		`Status:` + fmt.Sprintf("%v", this.Status) + `,`,
-		`StatusDetail:` + fmt.Sprintf("%v", this.StatusDetail) + `,`,
-		`}`,
-	}, "")
-	return s
-}
-func (this *TechsupportRequest) String() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&TechsupportRequest{`,
-		`Input:` + strings.Replace(fmt.Sprintf("%v", this.Input), "TechsupportRequest_Input", "TechsupportRequest_Input", 1) + `,`,
-		`}`,
-	}, "")
-	return s
-}
-func (this *TechsupportRequest_Input) String() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&TechsupportRequest_Input{`,
-		`Date:` + fmt.Sprintf("%v", this.Date) + `,`,
-		`}`,
-	}, "")
-	return s
-}
-func (this *TechsupportResponse) String() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&TechsupportResponse{`,
-		`Output:` + strings.Replace(fmt.Sprintf("%v", this.Output), "TechsupportResponse_Output", "TechsupportResponse_Output", 1) + `,`,
-		`}`,
-	}, "")
-	return s
-}
-func (this *TechsupportResponse_Output) String() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&TechsupportResponse_Output{`,
-		`OutputFilename:` + fmt.Sprintf("%v", this.OutputFilename) + `,`,
-		`}`,
-	}, "")
-	return s
-}
-func (this *ClearNeighborsRequest) String() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&ClearNeighborsRequest{`,
-		`Input:` + strings.Replace(fmt.Sprintf("%v", this.Input), "ClearNeighborsRequest_Input", "ClearNeighborsRequest_Input", 1) + `,`,
-		`}`,
-	}, "")
-	return s
-}
-func (this *ClearNeighborsRequest_Input) String() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&ClearNeighborsRequest_Input{`,
-		`Force:` + fmt.Sprintf("%v", this.Force) + `,`,
-		`Family:` + fmt.Sprintf("%v", this.Family) + `,`,
-		`Ip:` + fmt.Sprintf("%v", this.Ip) + `,`,
-		`Ifname:` + fmt.Sprintf("%v", this.Ifname) + `,`,
-		`}`,
-	}, "")
-	return s
-}
-func (this *ClearNeighborsResponse) String() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&ClearNeighborsResponse{`,
-		`Output:` + strings.Replace(fmt.Sprintf("%v", this.Output), "ClearNeighborsResponse_Output", "ClearNeighborsResponse_Output", 1) + `,`,
-		`}`,
-	}, "")
-	return s
-}
-func (this *ClearNeighborsResponse_Output) String() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&ClearNeighborsResponse_Output{`,
-		`Response:` + fmt.Sprintf("%v", this.Response) + `,`,
-		`}`,
-	}, "")
-	return s
-}
-func (this *SumRequest) String() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&SumRequest{`,
-		`Input:` + strings.Replace(fmt.Sprintf("%v", this.Input), "SumRequest_Input", "SumRequest_Input", 1) + `,`,
-		`}`,
-	}, "")
-	return s
-}
-func (this *SumRequest_Input) String() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&SumRequest_Input{`,
-		`Left:` + fmt.Sprintf("%v", this.Left) + `,`,
-		`Right:` + fmt.Sprintf("%v", this.Right) + `,`,
-		`}`,
-	}, "")
-	return s
-}
-func (this *SumResponse) String() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&SumResponse{`,
-		`Output:` + strings.Replace(fmt.Sprintf("%v", this.Output), "SumResponse_Output", "SumResponse_Output", 1) + `,`,
-		`}`,
-	}, "")
-	return s
-}
-func (this *SumResponse_Output) String() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&SumResponse_Output{`,
-		`Result:` + fmt.Sprintf("%v", this.Result) + `,`,
-		`}`,
-	}, "")
-	return s
-}
-func (this *CopyConfigRequest) String() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&CopyConfigRequest{`,
-		`Input:` + strings.Replace(fmt.Sprintf("%v", this.Input), "CopyConfigRequest_Input", "CopyConfigRequest_Input", 1) + `,`,
-		`}`,
-	}, "")
-	return s
-}
-func (this *CopyConfigRequest_Input) String() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&CopyConfigRequest_Input{`,
-		`Source:` + fmt.Sprintf("%v", this.Source) + `,`,
-		`Overwrite:` + fmt.Sprintf("%v", this.Overwrite) + `,`,
-		`Destination:` + fmt.Sprintf("%v", this.Destination) + `,`,
-		`}`,
-	}, "")
-	return s
-}
-func (this *CopyConfigResponse) String() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&CopyConfigResponse{`,
-		`Output:` + strings.Replace(this.Output.String(), "SonicOutput", "SonicOutput", 1) + `,`,
-		`}`,
-	}, "")
-	return s
-}
-func (this *ImageInstallRequest) String() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&ImageInstallRequest{`,
-		`Input:` + strings.Replace(fmt.Sprintf("%v", this.Input), "ImageInstallRequest_Input", "ImageInstallRequest_Input", 1) + `,`,
-		`}`,
-	}, "")
-	return s
-}
-func (this *ImageInstallRequest_Input) String() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&ImageInstallRequest_Input{`,
-		`Imagename:` + fmt.Sprintf("%v", this.Imagename) + `,`,
-		`}`,
-	}, "")
-	return s
-}
-func (this *ImageInstallResponse) String() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&ImageInstallResponse{`,
-		`Output:` + strings.Replace(this.Output.String(), "SonicOutput", "SonicOutput", 1) + `,`,
-		`}`,
-	}, "")
-	return s
-}
-func (this *ImageRemoveRequest) String() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&ImageRemoveRequest{`,
-		`Input:` + strings.Replace(fmt.Sprintf("%v", this.Input), "ImageRemoveRequest_Input", "ImageRemoveRequest_Input", 1) + `,`,
-		`}`,
-	}, "")
-	return s
-}
-func (this *ImageRemoveRequest_Input) String() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&ImageRemoveRequest_Input{`,
-		`Imagename:` + fmt.Sprintf("%v", this.Imagename) + `,`,
-		`}`,
-	}, "")
-	return s
-}
-func (this *ImageRemoveResponse) String() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&ImageRemoveResponse{`,
-		`Output:` + strings.Replace(this.Output.String(), "SonicOutput", "SonicOutput", 1) + `,`,
-		`}`,
-	}, "")
-	return s
-}
-func (this *ImageDefaultRequest) String() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&ImageDefaultRequest{`,
-		`Input:` + strings.Replace(fmt.Sprintf("%v", this.Input), "ImageDefaultRequest_Input", "ImageDefaultRequest_Input", 1) + `,`,
-		`}`,
-	}, "")
-	return s
-}
-func (this *ImageDefaultRequest_Input) String() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&ImageDefaultRequest_Input{`,
-		`Imagename:` + fmt.Sprintf("%v", this.Imagename) + `,`,
-		`}`,
-	}, "")
-	return s
-}
-func (this *ImageDefaultResponse) String() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&ImageDefaultResponse{`,
-		`Output:` + strings.Replace(this.Output.String(), "SonicOutput", "SonicOutput", 1) + `,`,
-		`}`,
-	}, "")
-	return s
-}
-func (this *JwtToken) String() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&JwtToken{`,
-		`AccessToken:` + fmt.Sprintf("%v", this.AccessToken) + `,`,
-		`Type:` + fmt.Sprintf("%v", this.Type) + `,`,
-		`ExpiresIn:` + fmt.Sprintf("%v", this.ExpiresIn) + `,`,
-		`}`,
-	}, "")
-	return s
-}
-func (this *AuthenticateRequest) String() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&AuthenticateRequest{`,
-		`Username:` + fmt.Sprintf("%v", this.Username) + `,`,
-		`Password:` + fmt.Sprintf("%v", this.Password) + `,`,
-		`}`,
-	}, "")
-	return s
-}
-func (this *AuthenticateResponse) String() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&AuthenticateResponse{`,
-		`Token:` + strings.Replace(this.Token.String(), "JwtToken", "JwtToken", 1) + `,`,
-		`}`,
-	}, "")
-	return s
-}
-func (this *RefreshRequest) String() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&RefreshRequest{`,
-		`}`,
-	}, "")
-	return s
-}
-func (this *RefreshResponse) String() string {
-	if this == nil {
-		return "nil"
-	}
-	s := strings.Join([]string{`&RefreshResponse{`,
-		`Token:` + strings.Replace(this.Token.String(), "JwtToken", "JwtToken", 1) + `,`,
-		`}`,
-	}, "")
-	return s
-}
-func valueToStringSonic(v interface{}) string {
-	rv := reflect.ValueOf(v)
-	if rv.IsNil() {
-		return "nil"
-	}
-	pv := reflect.Indirect(rv).Interface()
-	return fmt.Sprintf("*%v", pv)
 }
 func (m *SonicOutput) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
@@ -4854,6 +4438,7 @@ func (m *SonicOutput) Unmarshal(dAtA []byte) error {
 			if (iNdEx + skippy) > l {
 				return io.ErrUnexpectedEOF
 			}
+			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
 			iNdEx += skippy
 		}
 	}
@@ -4943,6 +4528,7 @@ func (m *TechsupportRequest) Unmarshal(dAtA []byte) error {
 			if (iNdEx + skippy) > l {
 				return io.ErrUnexpectedEOF
 			}
+			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
 			iNdEx += skippy
 		}
 	}
@@ -5028,6 +4614,7 @@ func (m *TechsupportRequest_Input) Unmarshal(dAtA []byte) error {
 			if (iNdEx + skippy) > l {
 				return io.ErrUnexpectedEOF
 			}
+			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
 			iNdEx += skippy
 		}
 	}
@@ -5117,6 +4704,7 @@ func (m *TechsupportResponse) Unmarshal(dAtA []byte) error {
 			if (iNdEx + skippy) > l {
 				return io.ErrUnexpectedEOF
 			}
+			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
 			iNdEx += skippy
 		}
 	}
@@ -5202,6 +4790,7 @@ func (m *TechsupportResponse_Output) Unmarshal(dAtA []byte) error {
 			if (iNdEx + skippy) > l {
 				return io.ErrUnexpectedEOF
 			}
+			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
 			iNdEx += skippy
 		}
 	}
@@ -5291,6 +4880,7 @@ func (m *ClearNeighborsRequest) Unmarshal(dAtA []byte) error {
 			if (iNdEx + skippy) > l {
 				return io.ErrUnexpectedEOF
 			}
+			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
 			iNdEx += skippy
 		}
 	}
@@ -5460,6 +5050,7 @@ func (m *ClearNeighborsRequest_Input) Unmarshal(dAtA []byte) error {
 			if (iNdEx + skippy) > l {
 				return io.ErrUnexpectedEOF
 			}
+			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
 			iNdEx += skippy
 		}
 	}
@@ -5549,6 +5140,7 @@ func (m *ClearNeighborsResponse) Unmarshal(dAtA []byte) error {
 			if (iNdEx + skippy) > l {
 				return io.ErrUnexpectedEOF
 			}
+			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
 			iNdEx += skippy
 		}
 	}
@@ -5634,6 +5226,7 @@ func (m *ClearNeighborsResponse_Output) Unmarshal(dAtA []byte) error {
 			if (iNdEx + skippy) > l {
 				return io.ErrUnexpectedEOF
 			}
+			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
 			iNdEx += skippy
 		}
 	}
@@ -5723,6 +5316,7 @@ func (m *SumRequest) Unmarshal(dAtA []byte) error {
 			if (iNdEx + skippy) > l {
 				return io.ErrUnexpectedEOF
 			}
+			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
 			iNdEx += skippy
 		}
 	}
@@ -5814,6 +5408,7 @@ func (m *SumRequest_Input) Unmarshal(dAtA []byte) error {
 			if (iNdEx + skippy) > l {
 				return io.ErrUnexpectedEOF
 			}
+			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
 			iNdEx += skippy
 		}
 	}
@@ -5903,6 +5498,7 @@ func (m *SumResponse) Unmarshal(dAtA []byte) error {
 			if (iNdEx + skippy) > l {
 				return io.ErrUnexpectedEOF
 			}
+			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
 			iNdEx += skippy
 		}
 	}
@@ -5975,6 +5571,7 @@ func (m *SumResponse_Output) Unmarshal(dAtA []byte) error {
 			if (iNdEx + skippy) > l {
 				return io.ErrUnexpectedEOF
 			}
+			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
 			iNdEx += skippy
 		}
 	}
@@ -6064,6 +5661,7 @@ func (m *CopyConfigRequest) Unmarshal(dAtA []byte) error {
 			if (iNdEx + skippy) > l {
 				return io.ErrUnexpectedEOF
 			}
+			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
 			iNdEx += skippy
 		}
 	}
@@ -6201,6 +5799,7 @@ func (m *CopyConfigRequest_Input) Unmarshal(dAtA []byte) error {
 			if (iNdEx + skippy) > l {
 				return io.ErrUnexpectedEOF
 			}
+			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
 			iNdEx += skippy
 		}
 	}
@@ -6290,6 +5889,7 @@ func (m *CopyConfigResponse) Unmarshal(dAtA []byte) error {
 			if (iNdEx + skippy) > l {
 				return io.ErrUnexpectedEOF
 			}
+			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
 			iNdEx += skippy
 		}
 	}
@@ -6379,6 +5979,7 @@ func (m *ImageInstallRequest) Unmarshal(dAtA []byte) error {
 			if (iNdEx + skippy) > l {
 				return io.ErrUnexpectedEOF
 			}
+			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
 			iNdEx += skippy
 		}
 	}
@@ -6464,6 +6065,7 @@ func (m *ImageInstallRequest_Input) Unmarshal(dAtA []byte) error {
 			if (iNdEx + skippy) > l {
 				return io.ErrUnexpectedEOF
 			}
+			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
 			iNdEx += skippy
 		}
 	}
@@ -6553,6 +6155,7 @@ func (m *ImageInstallResponse) Unmarshal(dAtA []byte) error {
 			if (iNdEx + skippy) > l {
 				return io.ErrUnexpectedEOF
 			}
+			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
 			iNdEx += skippy
 		}
 	}
@@ -6642,6 +6245,7 @@ func (m *ImageRemoveRequest) Unmarshal(dAtA []byte) error {
 			if (iNdEx + skippy) > l {
 				return io.ErrUnexpectedEOF
 			}
+			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
 			iNdEx += skippy
 		}
 	}
@@ -6727,6 +6331,7 @@ func (m *ImageRemoveRequest_Input) Unmarshal(dAtA []byte) error {
 			if (iNdEx + skippy) > l {
 				return io.ErrUnexpectedEOF
 			}
+			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
 			iNdEx += skippy
 		}
 	}
@@ -6816,6 +6421,7 @@ func (m *ImageRemoveResponse) Unmarshal(dAtA []byte) error {
 			if (iNdEx + skippy) > l {
 				return io.ErrUnexpectedEOF
 			}
+			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
 			iNdEx += skippy
 		}
 	}
@@ -6905,6 +6511,7 @@ func (m *ImageDefaultRequest) Unmarshal(dAtA []byte) error {
 			if (iNdEx + skippy) > l {
 				return io.ErrUnexpectedEOF
 			}
+			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
 			iNdEx += skippy
 		}
 	}
@@ -6990,6 +6597,7 @@ func (m *ImageDefaultRequest_Input) Unmarshal(dAtA []byte) error {
 			if (iNdEx + skippy) > l {
 				return io.ErrUnexpectedEOF
 			}
+			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
 			iNdEx += skippy
 		}
 	}
@@ -7079,6 +6687,503 @@ func (m *ImageDefaultResponse) Unmarshal(dAtA []byte) error {
 			if (iNdEx + skippy) > l {
 				return io.ErrUnexpectedEOF
 			}
+			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *GetAuditLogRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowSonic
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: GetAuditLogRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: GetAuditLogRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Input", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowSonic
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthSonic
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthSonic
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Input == nil {
+				m.Input = &GetAuditLogRequest_Input{}
+			}
+			if err := m.Input.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipSonic(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthSonic
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthSonic
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *GetAuditLogRequest_Input) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowSonic
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: Input: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: Input: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field ContentType", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowSonic
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthSonic
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthSonic
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.ContentType = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipSonic(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthSonic
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthSonic
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *GetAuditLogResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowSonic
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: GetAuditLogResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: GetAuditLogResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Output", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowSonic
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthSonic
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthSonic
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Output == nil {
+				m.Output = &GetAuditLogResponse_AuditOutput{}
+			}
+			if err := m.Output.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipSonic(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthSonic
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthSonic
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *GetAuditLogResponse_AuditOutput) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowSonic
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: AuditOutput: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: AuditOutput: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field AuditContent", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowSonic
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthSonic
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthSonic
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.AuditContent = append(m.AuditContent, string(dAtA[iNdEx:postIndex]))
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipSonic(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthSonic
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthSonic
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *ClearAuditLogRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowSonic
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: ClearAuditLogRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: ClearAuditLogRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		default:
+			iNdEx = preIndex
+			skippy, err := skipSonic(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthSonic
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthSonic
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *ClearAuditLogResponse) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowSonic
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: ClearAuditLogResponse: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: ClearAuditLogResponse: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Output", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowSonic
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthSonic
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthSonic
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			if m.Output == nil {
+				m.Output = &SonicOutput{}
+			}
+			if err := m.Output.Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipSonic(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthSonic
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthSonic
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
 			iNdEx += skippy
 		}
 	}
@@ -7215,6 +7320,7 @@ func (m *JwtToken) Unmarshal(dAtA []byte) error {
 			if (iNdEx + skippy) > l {
 				return io.ErrUnexpectedEOF
 			}
+			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
 			iNdEx += skippy
 		}
 	}
@@ -7332,6 +7438,7 @@ func (m *AuthenticateRequest) Unmarshal(dAtA []byte) error {
 			if (iNdEx + skippy) > l {
 				return io.ErrUnexpectedEOF
 			}
+			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
 			iNdEx += skippy
 		}
 	}
@@ -7421,6 +7528,7 @@ func (m *AuthenticateResponse) Unmarshal(dAtA []byte) error {
 			if (iNdEx + skippy) > l {
 				return io.ErrUnexpectedEOF
 			}
+			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
 			iNdEx += skippy
 		}
 	}
@@ -7474,6 +7582,7 @@ func (m *RefreshRequest) Unmarshal(dAtA []byte) error {
 			if (iNdEx + skippy) > l {
 				return io.ErrUnexpectedEOF
 			}
+			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
 			iNdEx += skippy
 		}
 	}
@@ -7563,6 +7672,7 @@ func (m *RefreshResponse) Unmarshal(dAtA []byte) error {
 			if (iNdEx + skippy) > l {
 				return io.ErrUnexpectedEOF
 			}
+			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
 			iNdEx += skippy
 		}
 	}
