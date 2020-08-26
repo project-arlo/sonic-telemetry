@@ -362,3 +362,61 @@ func (srv *Server) ClearNeighbors(ctx context.Context, req *spb.ClearNeighborsRe
 
     return resp, nil
 }
+
+func (srv *Server) GetAuditLog(ctx context.Context, req *spb.GetAuditLogRequest) (*spb.GetAuditLogResponse, error) {
+    ctx,err := authenticate(srv.config.UserAuth, ctx)
+    if err != nil {
+        return nil, err
+    }
+    log.V(1).Info("gNOI: Sonic GetAuditLog")
+
+    resp := &spb.GetAuditLogResponse{Output: &spb.GetAuditLogResponse_AuditOutput{AuditContent: []string{}}}
+
+    reqstr, err := json.Marshal(req)
+    if err != nil {
+        return nil, status.Error(codes.Unknown, err.Error())
+    }
+    jsresp, err:= transutil.TranslProcessAction("/sonic-auditlog:get-auditlog", []byte(reqstr), ctx)
+
+    if err != nil {
+        return nil, status.Error(codes.Unknown, err.Error())
+    }
+
+    err = json.Unmarshal(jsresp, resp)
+    if err != nil {
+        return nil, status.Error(codes.Unknown, err.Error())
+    }
+
+    return resp, nil
+}
+
+func (srv *Server) ClearAuditLog(ctx context.Context, req *spb.ClearAuditLogRequest) (*spb.ClearAuditLogResponse, error) {
+    ctx,err := authenticate(srv.config.UserAuth, ctx)
+    if err != nil {
+        return nil, err
+    }
+    log.V(1).Info("gNOI: Sonic ClearAuditLog")
+
+    resp := &spb.ClearAuditLogResponse{
+        Output: &spb.SonicOutput {
+
+        },
+    }
+
+    var reqstr []byte
+    jsresp, err := transutil.TranslProcessAction("/sonic-auditlog:clear-auditlog", []byte(reqstr), ctx)
+
+    if err != nil {
+        return nil, status.Error(codes.Unknown, err.Error())
+    }
+
+    if len(jsresp) > 0 {
+        err = json.Unmarshal(jsresp, resp)
+        if err != nil {
+            return nil, status.Error(codes.Unknown, err.Error())
+        }
+    }
+    return resp, nil
+}
+
+
