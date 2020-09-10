@@ -53,3 +53,11 @@ func GetContext(ctx context.Context) (*RequestContext, context.Context) {
 	ctx = context.WithValue(ctx, requestContextKey, rc)
 	return rc, ctx
 }
+
+func GetUsername(ctx context.Context, username *string) {
+        rc, ctx := GetContext(ctx)
+        if rc != nil {
+            *username = rc.Auth.User
+        }
+}
+
