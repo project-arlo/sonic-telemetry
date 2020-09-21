@@ -20,6 +20,7 @@ import (
 	"github.com/Azure/sonic-telemetry/common_utils"
 	"google.golang.org/grpc/status"
 	"google.golang.org/grpc/codes"
+	"github.com/Azure/sonic-mgmt-common/translib/tlerr"
 )
 
 const (
@@ -246,18 +247,26 @@ func (c *TranslClient) StreamRun(q *LimitedQueue, stop chan struct{}, w *sync.Wa
 				//Send initial data now so we can send sync response, unless updates_only is set.
 				val, err := transutil.TranslProcessGet(c.path2URI[sub.Path], nil, c.ctx)
 				if err != nil {
-					enqueFatalMsgTranslib(c, fmt.Sprintf("Subscribe operation failed with error =%v", err.Error()))
-					return
+					switch err.(type) {
+					case tlerr.NotFoundError:
+						log.V(1).Infof("Subscribe Path Resource Not Found, ignoring: %v", c.path2URI[sub.Path])
+					default:
+						enqueFatalMsgTranslib(c, fmt.Sprintf("Subscribe operation failed with error =%v", err.Error()))
+						return
+					}
+					
 				}
-				spbv := &spb.Value{
-					Prefix:       c.prefix,
-					Path:         sub.Path,
-					Timestamp:    time.Now().UnixNano(),
-					SyncResponse: false,
-					Val:          val,
+				if val != nil {
+					spbv := &spb.Value{
+						Prefix:       c.prefix,
+						Path:         sub.Path,
+						Timestamp:    time.Now().UnixNano(),
+						SyncResponse: false,
+						Val:          val,
+					}
+					c.q.EnqueueItem(Value{spbv})
+					valueCache[c.path2URI[sub.Path]] = string(val.GetJsonIetfVal())
 				}
-				c.q.EnqueueItem(Value{spbv})
-				valueCache[c.path2URI[sub.Path]] = string(val.GetJsonIetfVal())
 			}
 			
 			addTimer(c, ticker_map, &cases, cases_map, interval, sub, false)
@@ -311,23 +320,32 @@ func (c *TranslClient) StreamRun(q *LimitedQueue, stop chan struct{}, w *sync.Wa
 			log.V(6).Infof("tick, heartbeat: %t, path: %s\n", tick.heartbeat, c.path2URI[tick.sub.Path])
 			val, err := transutil.TranslProcessGet(c.path2URI[tick.sub.Path], nil, c.ctx)
 			if err != nil {
-				return
+				switch err.(type) {
+				case tlerr.NotFoundError:
+					log.V(1).Infof("Subscribe Path Resource Not Found, ignoring: %v", c.path2URI[tick.sub.Path])
+				default:
+					enqueFatalMsgTranslib(c, fmt.Sprintf("Subscribe operation failed with error =%v", err.Error()))
+					return
+				}
+				
 			}
-			spbv := &spb.Value{
-				Prefix:       c.prefix,
-				Path:         tick.sub.Path,
-				Timestamp:    time.Now().UnixNano(),
-				SyncResponse: false,
-				Val:          val,
-			}
-			
+			if val != nil {
+				spbv := &spb.Value{
+					Prefix:       c.prefix,
+					Path:         tick.sub.Path,
+					Timestamp:    time.Now().UnixNano(),
+					SyncResponse: false,
+					Val:          val,
+				}
+				
 
-			if (tick.sub.SuppressRedundant) && (!tick.heartbeat) && (string(val.GetJsonIetfVal()) == valueCache[c.path2URI[tick.sub.Path]]) {
-				log.V(6).Infof("Redundant Message Suppressed #%v", string(val.GetJsonIetfVal()))
-			} else {
-				c.q.EnqueueItem(Value{spbv})
-				valueCache[c.path2URI[tick.sub.Path]] = string(val.GetJsonIetfVal())
-				log.V(6).Infof("Added spbv #%v", spbv)
+				if (tick.sub.SuppressRedundant) && (!tick.heartbeat) && (string(val.GetJsonIetfVal()) == valueCache[c.path2URI[tick.sub.Path]]) {
+					log.V(6).Infof("Redundant Message Suppressed #%v", string(val.GetJsonIetfVal()))
+				} else {
+					c.q.EnqueueItem(Value{spbv})
+					valueCache[c.path2URI[tick.sub.Path]] = string(val.GetJsonIetfVal())
+					log.V(6).Infof("Added spbv #%v", spbv)
+				}
 			}
 			
 			
@@ -471,20 +489,27 @@ func (c *TranslClient) PollRun(q *LimitedQueue, poll chan struct{}, w *sync.Wait
 
 				val, err := transutil.TranslProcessGet(URIPath, nil, c.ctx)
 				if err != nil {
-					enqueFatalMsgTranslib(c, fmt.Sprintf("Subscribe operation failed with error =%v", err.Error()))
-					return
+					switch err.(type) {
+					case tlerr.NotFoundError:
+						log.V(1).Infof("Subscribe Path Resource Not Found, ignoring: %v", URIPath)
+					default:
+						enqueFatalMsgTranslib(c, fmt.Sprintf("Subscribe operation failed with error =%v", err.Error()))
+						return
+					}
+					
 				}
+				if val != nil {
+					spbv := &spb.Value{
+						Prefix:       c.prefix,
+						Path:         gnmiPath,
+						Timestamp:    time.Now().UnixNano(),
+						SyncResponse: false,
+						Val:          val,
+					}
 
-				spbv := &spb.Value{
-					Prefix:       c.prefix,
-					Path:         gnmiPath,
-					Timestamp:    time.Now().UnixNano(),
-					SyncResponse: false,
-					Val:          val,
+					c.q.EnqueueItem(Value{spbv})
+					log.V(6).Infof("Added spbv #%v", spbv)
 				}
-
-				c.q.EnqueueItem(Value{spbv})
-				log.V(6).Infof("Added spbv #%v", spbv)
 			}
 		}
 
@@ -529,10 +554,15 @@ func (c *TranslClient) OnceRun(q *LimitedQueue, once chan struct{}, w *sync.Wait
 		
 		val, err := transutil.TranslProcessGet(URIPath, nil, c.ctx)
 		if err != nil {
-			enqueFatalMsgTranslib(c, fmt.Sprintf("Subscribe operation failed with error =%v", err.Error()))
-			return
+			switch err.(type) {
+			case tlerr.NotFoundError:
+				log.V(1).Infof("Subscribe Path Resource Not Found, ignoring: %v", URIPath)
+			default:
+				enqueFatalMsgTranslib(c, fmt.Sprintf("Subscribe operation failed with error =%v", err.Error()))
+				return
+			}
 		}
-		if !subscribe.UpdatesOnly {
+		if !subscribe.UpdatesOnly && val != nil {
 			spbv := &spb.Value{
 				Prefix:       c.prefix,
 				Path:         gnmiPath,
