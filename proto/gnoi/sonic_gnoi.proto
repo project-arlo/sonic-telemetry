@@ -21,6 +21,9 @@ service SonicService {
   rpc Authenticate(AuthenticateRequest) returns (AuthenticateResponse) {}
   rpc Refresh(RefreshRequest) returns (RefreshResponse) {}
   rpc ClearNeighbors(ClearNeighborsRequest) returns (ClearNeighborsResponse) {}
+
+  rpc GetAuditLog (GetAuditLogRequest) returns (GetAuditLogResponse) {}
+  rpc ClearAuditLog (ClearAuditLogRequest) returns (ClearAuditLogResponse) {}
 }
 
 message SonicOutput {
@@ -113,7 +116,26 @@ message ImageDefaultResponse {
     SonicOutput output = 1 [(gogoproto.jsontag) = "sonic-image-management:output", (gogoproto.moretags) = "xml:\",comment\""];
 }
 
+message GetAuditLogRequest {
+    message Input {
+        string content_type = 1 [(gogoproto.jsontag) = "content-type", (gogoproto.moretags) = "xml:\",comment\""];
+    }
+    Input input = 1 [(gogoproto.jsontag) = "sonic-auditlog:input", (gogoproto.moretags) = "xml:\",comment\""];
+}
 
+message GetAuditLogResponse {
+    message AuditOutput { 
+        repeated string audit_content = 1 [(gogoproto.jsontag) = "audit-content", (gogoproto.moretags) = "xml:\",comment\""];
+    }
+    AuditOutput output = 1 [(gogoproto.jsontag) = "sonic-get-auditlog:output", (gogoproto.moretags) = "xml:\",comment\""];
+}
+
+message ClearAuditLogRequest {
+}
+
+message ClearAuditLogResponse {
+    SonicOutput output = 1 [(gogoproto.jsontag) = "sonic-clear-auditlog:output", (gogoproto.moretags) = "xml:\",comment\""];
+}
 
 message JwtToken {
     string access_token = 1;
