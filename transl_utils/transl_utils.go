@@ -10,8 +10,36 @@ import (
 	"github.com/Azure/sonic-mgmt-common/translib"
 	"github.com/Azure/sonic-telemetry/common_utils"
 	"context"
+        "log/syslog"
 	"github.com/Azure/sonic-mgmt-common/translib/tlerr"
 )
+
+var (
+    Writer *syslog.Writer
+)
+
+func __log_audit_msg(ctx context.Context, reqType string, uriPath string, err error) {
+    var err1 error
+    username := "invalid"
+    statusMsg := "failure"
+    if (err == nil) {
+        statusMsg = "success"
+    }
+
+    if Writer == nil {
+        Writer, err1 = syslog.Dial("", "", (syslog.LOG_LOCAL4), "")
+        if (err1 != nil) {
+            log.V(2).Infof("Could not open connection to syslog with error =%v", err1.Error())
+            return
+        }
+    }
+
+    common_utils.GetUsername(ctx, &username)
+
+    auditMsg := fmt.Sprintf("User \"%s\" request \"%s %s\" status - %s",
+                            username, reqType, uriPath, statusMsg)
+    Writer.Info(auditMsg)
+}
 
 func GnmiTranslFullPath(prefix, path *gnmipb.Path) *gnmipb.Path {
 
@@ -96,12 +124,13 @@ func TranslProcessGet(uriPath string, op *string, ctx context.Context) (*gnmipb.
 		req.AuthEnabled = true
 	}
 	resp, err1 := translib.Get(req)
+        __log_audit_msg(ctx, "GET", uriPath, err1)
 
 	if isTranslibSuccess(err1) {
 		data = resp.Payload
 	} else {
 		log.V(2).Infof("GET operation failed with error =%v, %v", resp.ErrSrc, err1.Error())
-		return nil, fmt.Errorf("GET failed for this message: %v", err1.Error())
+		return nil, err1
 	}
 
 	dst := new(bytes.Buffer)
@@ -135,9 +164,10 @@ func TranslProcessDelete(uri string, ctx context.Context) error {
 		req.AuthEnabled = true
 	}
 	resp, err := translib.Delete(req)
+        __log_audit_msg(ctx, "DELETE", uri, err)
 	if err != nil{
 		log.V(2).Infof("DELETE operation failed with error =%v, %v", resp.ErrSrc, err.Error())
-		return fmt.Errorf("DELETE failed for this message: %v", err.Error())
+		return err
 	}
 
 	return nil
@@ -165,10 +195,11 @@ func TranslProcessReplace(uri string, t *gnmipb.TypedValue, ctx context.Context)
 		req.AuthEnabled = true
 	}
 	resp, err1 := translib.Replace(req)
-	
+        __log_audit_msg(ctx, "REPLACE", uri, err1)
+
 	if err1 != nil{
 		log.V(2).Infof("REPLACE operation failed with error =%v, %v", resp.ErrSrc, err1.Error())
-		return fmt.Errorf("REPLACE failed for this message: %v", err1.Error())
+		return err1
 	}
 
 
@@ -204,12 +235,13 @@ func TranslProcessUpdate(uri string, t *gnmipb.TypedValue, ctx context.Context) 
 			resp, err = translib.Replace(req)
 		default:
 			log.V(2).Infof("UPDATE operation failed with error =%v, %v", resp.ErrSrc, err.Error())
-			return fmt.Errorf("UPDATE failed for this message: %v", err.Error())
+			return err
 		}
 	}
+        __log_audit_msg(ctx, "UPDATE", uri, err)
 	if err != nil{
 		log.V(2).Infof("UPDATE operation failed with error =%v, %v", resp.ErrSrc, err.Error())
-		return fmt.Errorf("UPDATE failed for this message: %v", err.Error())
+		return err
 	}
 	return nil
 }
@@ -217,6 +249,11 @@ func TranslProcessUpdate(uri string, t *gnmipb.TypedValue, ctx context.Context) 
 func TranslProcessBulk(delete []*gnmipb.Path, replace []*gnmipb.Update, update []*gnmipb.Update, prefix *gnmipb.Path, ctx context.Context) error {
 	var br translib.BulkRequest
 	var uri string
+
+        var deleteUri []string
+        var replaceUri []string
+        var updateUri []string
+
 	rc, ctx := common_utils.GetContext(ctx)
 	log.V(2).Info("TranslProcessBulk Called")
 	for _,d := range delete {
@@ -232,6 +269,7 @@ func TranslProcessBulk(delete []*gnmipb.Path, replace []*gnmipb.Update, update [
 			req.AuthEnabled = true
 		}
 		br.DeleteRequest = append(br.DeleteRequest, req)
+                deleteUri = append(deleteUri, uri)
 	}
 	for _,r := range replace {
 		ConvertToURI(prefix, r.GetPath(), &uri)
@@ -248,6 +286,7 @@ func TranslProcessBulk(delete []*gnmipb.Path, replace []*gnmipb.Update, update [
 			req.AuthEnabled = true
 		}
 		br.ReplaceRequest = append(br.ReplaceRequest, req)
+                replaceUri = append(replaceUri, uri)
 	}
 	for _,u := range update {
 		ConvertToURI(prefix, u.GetPath(), &uri)
@@ -264,9 +303,27 @@ func TranslProcessBulk(delete []*gnmipb.Path, replace []*gnmipb.Update, update [
 			req.AuthEnabled = true
 		}
 		br.UpdateRequest = append(br.UpdateRequest, req)
+                updateUri = append(updateUri, uri)
 	}
 
 	resp,err := translib.Bulk(br)
+
+        i := 0
+	for _,d := range resp.DeleteResponse {
+            __log_audit_msg(ctx, "DELETE", deleteUri[i], d.Err)
+            i++
+        }
+        i = 0
+	for _,r := range resp.ReplaceResponse {
+            __log_audit_msg(ctx, "REPLACE", replaceUri[i], r.Err)
+            i++
+        }
+        i = 0
+	for _,u := range resp.UpdateResponse {
+            __log_audit_msg(ctx, "UPDATE", replaceUri[i], u.Err)
+            i++
+        }
+
 	var errors []string
 	if err != nil{
 		log.V(2).Infof("BULK SET operation failed with error(s):")
@@ -312,10 +369,11 @@ func TranslProcessAction(uri string, payload []byte, ctx context.Context) ([]byt
 	req.Payload = payload
 
 	resp, err := translib.Action(req)
+        __log_audit_msg(ctx, "ACTION", uri, err)
 
 	if err != nil{
 		log.V(2).Infof("Action operation failed with error =%v, %v", resp.ErrSrc, err.Error())
-		return nil, fmt.Errorf("Action failed for this message: %v", err.Error())
+		return nil, err
 	}
 	return resp.Payload, nil
 }

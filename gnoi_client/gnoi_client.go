@@ -72,6 +72,10 @@ func main() {
 			imageRemove(sc, ctx)
 		case "refresh":
 			refresh(sc, ctx)
+		case "getAuditLog":
+			sonicGetAuditLog(sc, ctx)
+		case "clearAuditLog":
+			sonicClearAuditLog(sc, ctx)
         case "clearNeighbors":
             clearNeighbors(sc, ctx)
 		default:
@@ -272,3 +276,37 @@ func clearNeighbors(sc spb.SonicServiceClient, ctx context.Context) {
     }
     fmt.Println(string(respstr))
 }
+
+func sonicGetAuditLog(sc spb.SonicServiceClient, ctx context.Context) {
+    fmt.Println("Sonic GetAuditLog")
+    ctx = setUserCreds(ctx)
+    req := &spb.GetAuditLogRequest {
+        Input: &spb.GetAuditLogRequest_Input{
+        },
+    }
+
+    json.Unmarshal([]byte(*args), req)
+
+    resp,err := sc.GetAuditLog(ctx, req)
+    if err != nil {
+        panic(err.Error())
+    }
+    respstr, err := json.Marshal(resp)
+    if err != nil {
+        panic(err.Error())
+    }
+    fmt.Println(string(respstr))
+}
+
+func sonicClearAuditLog(sc spb.SonicServiceClient, ctx context.Context) {
+    fmt.Println("Sonic ClearAuditLog")
+    ctx = setUserCreds(ctx)
+    req := &spb.ClearAuditLogRequest {
+    }
+    _,err := sc.ClearAuditLog(ctx, req)
+    if err != nil {
+        panic(err.Error())
+    }
+}
+
+
