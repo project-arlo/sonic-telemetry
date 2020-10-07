@@ -179,6 +179,10 @@ func (c *Client) Close() {
 		if c.q.Q.Disposed() {
 			return
 		}
+		//Subtract queue items from global output queue length
+		for !c.q.Q.Empty() {
+			c.q.DequeueItem()
+		}
 		c.q.Q.Dispose()
 	}
 	if c.stop != nil {
