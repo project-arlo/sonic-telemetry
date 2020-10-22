@@ -320,7 +320,7 @@ func TranslProcessBulk(delete []*gnmipb.Path, replace []*gnmipb.Update, update [
         }
         i = 0
 	for _,u := range resp.UpdateResponse {
-            __log_audit_msg(ctx, "UPDATE", replaceUri[i], u.Err)
+            __log_audit_msg(ctx, "UPDATE", updateUri[i], u.Err)
             i++
         }
 
