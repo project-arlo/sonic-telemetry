@@ -160,6 +160,9 @@ func runTestGet(t *testing.T, ctx context.Context, gClient pb.GNMIClient, st *Op
         }
     }
 
+	if len(JsonIetfVal) == 0 {
+		JsonIetfVal = "{}"
+	}
     docLoader := gojsonschema.NewStringLoader(JsonIetfVal)
     result, err := gojsonschema.Validate(st.schema, docLoader)
     if err != nil {
@@ -169,6 +172,7 @@ func runTestGet(t *testing.T, ctx context.Context, gClient pb.GNMIClient, st *Op
         for _, desc := range result.Errors() {
             t.Logf("- %s\n", desc)
         }
+		fmt.Printf("\nInvalid JSON Response:\n%v\n\n", JsonIetfVal)
         t.Fatalf("The response JSON is not valid.")
     }
 }
@@ -1650,7 +1654,7 @@ func TestBulkSet(t *testing.T) {
     ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
     defer cancel()
     t.Run("Set Multiple mtu", func(t *testing.T) {
-        pbPath1, _ := xpath.ToGNMIPath("openconfig-interfaces:interfaces/interface[name=Ethernet3]/config/mtu")
+        pbPath1, _ := xpath.ToGNMIPath("openconfig-interfaces:interfaces/interface[name=Ethernet0]/config/mtu")
         v := &pb.TypedValue{
             Value: &pb.TypedValue_JsonIetfVal{JsonIetfVal: []byte("{\"mtu\": 9104}")}}
         update1 := &pb.Update {
