@@ -12,6 +12,8 @@ sonic-submodule:
   tags:
     - sonic
   script:
+    - git grep '^<<<<<<< ' && echo "Conflicts exist--cannot build" && exit 1
+    - echo ${CI_COMMIT_REF_NAME} | grep -q -e '^merge-[0-9][0-9][0-9][0-9]-' -e '^feature/MERGE-[0-9][0-9][0-9][0-9]-' && echo 'This is a sync--no build to do' && exit 0
     - env
     - du -hs .
     - rm -rf *
