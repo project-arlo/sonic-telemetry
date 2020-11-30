@@ -4,6 +4,7 @@ package dbconfig
 import (
     "encoding/json"
     "fmt"
+	"os"
     "strconv"
     io "io/ioutil"
 )
@@ -118,7 +119,12 @@ func DbInit() {
     if sonic_db_init {
         return
     }
-    data, err := io.ReadFile(SONIC_DB_CONFIG_FILE)
+
+	dbConfigFile := SONIC_DB_CONFIG_FILE
+	if customFile, ok := os.LookupEnv("DB_CONFIG_PATH"); ok {
+		dbConfigFile = customFile
+	}
+    data, err := io.ReadFile(dbConfigFile)
     if err != nil {
         panic(err)
     } else {
