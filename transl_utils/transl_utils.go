@@ -265,6 +265,14 @@ func TranslProcessBulk(delete []*gnmipb.Path, replace []*gnmipb.Update, update [
 			Payload: payload,
 			User: translib.UserRoles{Name: rc.Auth.User, Roles: rc.Auth.Roles},
 		}
+		if rc.BundleVersion != nil {
+			nver, err := translib.NewVersion(*rc.BundleVersion)
+			if err != nil {
+				log.V(2).Infof("Action operation failed with error =%v", err.Error())
+				return err
+			}
+			req.ClientVersion = nver
+		}
 		if rc.Auth.AuthEnabled {
 			req.AuthEnabled = true
 		}
@@ -282,6 +290,14 @@ func TranslProcessBulk(delete []*gnmipb.Path, replace []*gnmipb.Update, update [
 			Payload: payload,
 			User: translib.UserRoles{Name: rc.Auth.User, Roles: rc.Auth.Roles},
 		}
+		if rc.BundleVersion != nil {
+			nver, err := translib.NewVersion(*rc.BundleVersion)
+			if err != nil {
+				log.V(2).Infof("Action operation failed with error =%v", err.Error())
+				return err
+			}
+			req.ClientVersion = nver
+		}
 		if rc.Auth.AuthEnabled {
 			req.AuthEnabled = true
 		}
@@ -298,6 +314,14 @@ func TranslProcessBulk(delete []*gnmipb.Path, replace []*gnmipb.Update, update [
 			Path: uri,
 			Payload: payload,
 			User: translib.UserRoles{Name: rc.Auth.User, Roles: rc.Auth.Roles},
+		}
+		if rc.BundleVersion != nil {
+			nver, err := translib.NewVersion(*rc.BundleVersion)
+			if err != nil {
+				log.V(2).Infof("Action operation failed with error =%v", err.Error())
+				return err
+			}
+			req.ClientVersion = nver
 		}
 		if rc.Auth.AuthEnabled {
 			req.AuthEnabled = true
