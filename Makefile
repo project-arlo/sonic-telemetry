@@ -24,7 +24,7 @@ TELEMETRY_TEST_BIN = $(TELEMETRY_TEST_DIR)/server.test
 GO_DEPS := vendor/.done
 PATCHES := $(wildcard patches/*.patch)
 
-all: sonic-telemetry $(TELEMETRY_TEST_BIN)
+all: sonic-telemetry clients $(TELEMETRY_TEST_BIN)
 
 go.mod:
 	$(GO) mod init github.com/Azure/sonic-telemetry
@@ -47,11 +47,20 @@ go-deps-clean:
 
 sonic-telemetry: $(MAKEFILE_LIST) $(GO_DEPS)
 	$(GO) install -mod=vendor github.com/Azure/sonic-telemetry/telemetry
+
+clients:
 	$(GO) install -mod=vendor github.com/Azure/sonic-telemetry/dialout/dialout_client_cli
 	$(GO) install -mod=vendor github.com/Azure/sonic-telemetry/gnoi_client
 	$(GO) install -mod=vendor github.com/jipanyang/gnxi/gnmi_get
 	$(GO) install -mod=vendor github.com/jipanyang/gnxi/gnmi_set
 	$(GO) install -mod=vendor github.com/openconfig/gnmi/cmd/gnmi_cli
+
+# telemetry is a special target to recompile the gNMI telemetry server after telemetry or
+# mgmt-common code changes. Useful for quick testing locally on the build environment.
+telemetry: go-deps-clean
+	$(MAKE) -C $(MGMT_COMMON_DIR)
+	$(MAKE) sonic-telemetry
+	[[ -e $(GOBIN)/gnmi_cli ]] || $(MAKE) clients
 
 check:
 	sudo mkdir -p ${DBDIR}
