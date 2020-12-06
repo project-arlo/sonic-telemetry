@@ -35,10 +35,9 @@ $(BUILD_DIR)/.deps: $(MAKEFILE_LIST)
 	GOPATH=$(GO_DEP_PATH) $(GO) get -u github.com/openconfig/goyang
 	GOPATH=$(GO_DEP_PATH) $(GO) get -d github.com/openconfig/ygot/ygot
 	GOPATH=$(GO_DEP_PATH) $(GO) get -u github.com/golang/glog
-	GOPATH=$(GO_DEP_PATH) $(GO) get -d go.opentelemetry.io/otel
-	cd $(GO_DEP_PATH)/src/go.opentelemetry.io/otel && \
-		git clean -fd && git checkout -fq 1f2eba2cdb0fb7e92ce199c6c06167d4080a55ff
 	GOPATH=$(GO_DEP_PATH) $(GO) get -d github.com/go-redis/redis
+	cd $(GO_DEP_PATH)/src/github.com/go-redis/redis && \
+		git clean -fd && git checkout -fq d19aba07b47683ef19378c4a4d43959672b7cec8 
 	GOPATH=$(GO_DEP_PATH) $(GO) get -u  github.com/c9s/goprocinfo/linux
 	GOPATH=$(GO_DEP_PATH) $(GO) get -u  github.com/golang/protobuf/proto
 	GOPATH=$(GO_DEP_PATH) $(GO) get -d  github.com/openconfig/gnmi/proto/gnmi
