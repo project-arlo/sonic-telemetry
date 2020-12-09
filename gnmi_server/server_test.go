@@ -53,6 +53,20 @@ type UnitTest struct {
     operations      []Operation
 }
 
+// jsonFilter is a callbak hook for customizing json data
+type jsonFilter func(map[string]interface{})
+
+// onSonicSwitch indicates if tests are being run on a sonic switch
+var onSonicSwitch bool
+
+func TestMain(m *testing.M) {
+	if _, err := os.Stat("/etc/sonic/sonic_version.yml"); err == nil {
+		onSonicSwitch = true
+	}
+
+	os.Exit(m.Run())
+}
+
 func loadConfig(t *testing.T, key string, in []byte) map[string]interface{} {
     var fvp map[string]interface{}
 
@@ -265,7 +279,7 @@ func getConfigDbClient(t *testing.T) *redis.Client {
         Network:     "tcp",
         Addr:        sdcfg.GetDbTcpAddr("CONFIG_DB"),
         Password:    "", // no password set
-        DB:          sdcfg.GetDbId("COUNTERS_DB"),
+        DB:          sdcfg.GetDbId("CONFIG_DB"),
         DialTimeout: 0,
     })
     _, err := rclient.Ping().Result()
@@ -275,40 +289,21 @@ func getConfigDbClient(t *testing.T) *redis.Client {
     return rclient
 }
 
-func loadConfigDB(t *testing.T, rclient *redis.Client, mpi map[string]interface{}) {
-    for key, fv := range mpi {
-        switch fv.(type) {
-        case map[string]interface{}:
-            _, err := rclient.HMSet(key, fv.(map[string]interface{})).Result()
-            if err != nil {
-                t.Errorf("Invalid data for db: %v : %v %v", key, fv, err)
-            }
-        default:
-            t.Errorf("Invalid data for db: %v : %v", key, fv)
-        }
-    }
-}
+func prepareConfigDb(t *testing.T, files ...string) {
+	rclient := getConfigDbClient(t)
+	defer rclient.Close()
+	rclient.FlushDB()
 
-func prepareConfigDb(t *testing.T) {
-    rclient := getConfigDbClient(t)
-    defer rclient.Close()
-    rclient.FlushDB()
+	for _, f := range files {
+		data, err := ioutil.ReadFile(f)
+		if err != nil {
+			t.Fatalf("Failed to read file '%s'; err=%v", f, err)
+		}
 
-    fileName := "testdata/COUNTERS_PORT_ALIAS_MAP.txt"
-    countersPortAliasMapByte, err := ioutil.ReadFile(fileName)
-    if err != nil {
-        t.Fatalf("read file %v err: %v", fileName, err)
-    }
-    mpi_alias_map := loadConfig(t, "", countersPortAliasMapByte)
-    loadConfigDB(t, rclient, mpi_alias_map)
-
-    fileName = "testdata/CONFIG_PFCWD_PORTS.txt"
-    configPfcwdByte, err := ioutil.ReadFile(fileName)
-    if err != nil {
-        t.Fatalf("read file %v err: %v", fileName, err)
-    }
-    mpi_pfcwd_map := loadConfig(t, "", configPfcwdByte)
-    loadConfigDB(t, rclient, mpi_pfcwd_map)
+		t.Logf("Loading config_db from '%s'...", f)
+		dataMap := loadConfig(t, "", data)
+		loadDB(t, rclient, dataMap)
+	}
 }
 
 func prepareDb(t *testing.T) {
@@ -395,10 +390,13 @@ func prepareDb(t *testing.T) {
     loadDB(t, rclient, mpi_counter)
 
     // Load CONFIG_DB for alias translation
-    prepareConfigDb(t)
+	prepareConfigDb(t,
+		"testdata/COUNTERS_PORT_ALIAS_MAP.txt",
+		"testdata/CONFIG_PFCWD_PORTS.txt",
+	)
 }
 
-func unitTestFromFile(filename string) (UnitTest, error) {
+func unitTestFromFile(filename string, hook jsonFilter) (UnitTest, error) {
     var st UnitTest
     schema := gojsonschema.NewReferenceLoader("file://./" + filename)
     schemaJsonIf,err := schema.LoadJSON()
@@ -417,6 +415,10 @@ func unitTestFromFile(filename string) (UnitTest, error) {
             
             var new_op Operation
             op := opp.(map[string]interface{})
+			if hook != nil {
+				hook(op)
+			}
+
             switch op["operation"].(string) {
             case "replace":
                 new_op.operation = Replace
@@ -454,12 +456,41 @@ func unitTestFromFile(filename string) (UnitTest, error) {
         }
     }
 
-    
-    
     return st, nil
 }
 
+// markStateNotRequired removes 'state' container from the required field
+// list in json test schema. Useful when running tests outside switch.
+func markStateNotRequired(schema map[string]interface{}) {
+	if fields, ok := schema["required"].([]interface{}); ok {
+		schema["required"] = removeArrayEntry(fields, "state")
+	}
+	for _, v := range schema {
+		if p, ok := v.(map[string]interface{}); ok {
+			markStateNotRequired(p)
+		}
+	}
+}
+
+func removeArrayEntry(arr []interface{}, entry interface{}) []interface{} {
+	for i, v := range arr {
+		if v == entry {
+			return append(arr[:i], arr[i+1:]...)
+		}
+	}
+	return arr
+}
+
 func TestGnmiGetSet(t *testing.T) {
+	var hook jsonFilter
+
+	// Initialize config_db if not running tests on a sonic switch.
+	// Flushes all existing data in config_db.
+	if !onSonicSwitch {
+		prepareConfigDb(t, "testdata/json_tests/config_db.txt")
+		hook = markStateNotRequired
+	}
+
     //t.Log("Start sevrer")
     s := createServer(t, 8081)
     go runServer(t, s)
@@ -486,7 +517,7 @@ func TestGnmiGetSet(t *testing.T) {
         t.Fatal("Error opening test files")
     }
     for _, f := range files {
-        tst, err := unitTestFromFile(f)
+        tst, err := unitTestFromFile(f, hook)
         if err != nil {
             t.Fatal(err)
         }
@@ -1483,6 +1514,10 @@ func TestCapabilities(t *testing.T) {
 }
 
 func TestGNOI(t *testing.T) {
+	if !onSonicSwitch {
+		t.Skipf("Not running on switch")
+	}
+
     s := createServer(t, 8083)
     go runServer(t, s)
     defer s.s.Stop()

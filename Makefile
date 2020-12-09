@@ -17,7 +17,7 @@ export CVL_SCHEMA_PATH := $(MGMT_COMMON_DIR)/cvl/schema
 export GOBIN := $(abspath $(BUILD_DIR))
 
 SRC_FILES=$(shell find . -name '*.go' | grep -v '_test.go' | grep -v '/tests/')
-TEST_FILES=$(wildcard *_test.go)
+TEST_FILES=$(wildcard gnmi_server/*_test.go)
 TELEMETRY_TEST_DIR = build/tests/gnmi_server
 TELEMETRY_TEST_BIN = $(TELEMETRY_TEST_DIR)/server.test
 
@@ -72,7 +72,7 @@ clean:
 	$(RM) -r build
 	$(RM) -r vendor
 
-$(TELEMETRY_TEST_BIN): $(TEST_FILES) $(SRC_FILES)
+$(TELEMETRY_TEST_BIN): $(TEST_FILES) $(SRC_FILES) $(GO_DEPS)
 	mkdir -p $(@D)
 	cp -r testdata $(@D)/
 	$(GO) test -mod=vendor -c -cover github.com/Azure/sonic-telemetry/gnmi_server -o $@
