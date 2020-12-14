@@ -26,6 +26,12 @@ BINDIR=${TOPDIR}/build/bin
 BUILD_DIR=${TOPDIR}/build
 MGMT_COMMON_DIR=$(realpath ${TOPDIR}/../sonic-mgmt-common)
 
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+    -s|--silent) SILENT=1 ;;
+    esac
+    shift
+done
 
 # Setup database config file path
 if [[ -z ${DB_CONFIG_PATH} ]]; then
@@ -91,8 +97,10 @@ if [[ -z ${YANG_MODELS_PATH} ]]; then
     popd > /dev/null
 fi
 
-echo "CVL_SCHEMA_PATH  = ${CVL_SCHEMA_PATH}"
-echo "CVL_CFG_FILE     = ${CVL_CFG_FILE}"
-echo "DB_CONFIG_PATH   = ${DB_CONFIG_PATH}"
-echo "YANG_MODELS_PATH = ${YANG_MODELS_PATH}"
+if [[ -z ${SILENT} ]]; then
+    echo "CVL_SCHEMA_PATH  = ${CVL_SCHEMA_PATH}"
+    echo "CVL_CFG_FILE     = ${CVL_CFG_FILE}"
+    echo "DB_CONFIG_PATH   = ${DB_CONFIG_PATH}"
+    echo "YANG_MODELS_PATH = ${YANG_MODELS_PATH}"
+fi
 
