@@ -22,38 +22,61 @@
 set -e
 
 TOPDIR=$(git rev-parse --show-toplevel || echo ${PWD})
-GO=${GO:-go}
+BINDIR=${TOPDIR}/build/bin
+GNMCLI=$(realpath --relative-to ${PWD} ${BINDIR}/gnmi_cli)
 
-TESTPKG=github.com/Azure/sonic-telemetry/gnmi_server
-TESTBIN=build/tests/gnmi_server/server.test
-TESTDIR=${TOPDIR}/$(dirname ${TESTBIN})
-TESTARGS=()
+if [[ ! -f ${GNMCLI} ]]; then
+    >&2 echo "error: gNMI tools were not compiled"
+    >&2 echo "Please run 'make telemetry' and try again"
+    exit 1
+fi
+
+HOST=localhost
+PORT=8080
+ARGS=()
+PATHS=()
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
     -h|-help|--help)
-        echo "usage: $(basename $0) [-json] [-run NAME]"
-        exit 0 ;;
-    -json) JSON=1; SFLAG="-s"; shift ;;
-    -run)  TESTCASE="$2"; shift 2 ;;
-    *)     TESTARGS+=("$1"); shift;;
+        echo "usage: $(basename $0) [-H HOST] [-p PORT] [-pass] [-once|-onchange|-poll SECS|-sample SECS] PATH*"
+        echo ""
+        exit 0;;
+    -once)
+        ARGS+=( -query_type once )
+        shift;;
+    -onchange|-on-change|-on_change)
+        ARGS+=( -query_type streaming )
+        ARGS+=( -streaming_type ON_CHANGE )
+        shift;;
+    -sample)
+        ARGS+=( -query_type streaming )
+        ARGS+=( -streaming_type SAMPLE )
+        ARGS+=( -streaming_sample_interval $2 )
+        shift 2;;
+    -poll)
+        ARGS+=( -query_type polling )
+        ARGS+=( -polling_interval $2s )
+        shift 2;;
+    -pass)
+        ARGS+=( -with_user_pass )
+        shift;;
+    -H|-host) HOST=$2; shift 2;;
+    -p|-port) PORT=$2; shift 2;;
+    *) PATHS+=("$1"); shift;;
     esac
 done
 
-# Build test binary if required
-cd ${TOPDIR}
-make -sq ${TESTBIN} || make ${SFLAG} ${TESTBIN}
+if [[ -z ${PATHS} ]]; then
+    echo "error: At least one path required"
+    exit 1
+fi
 
-# Prepare test command
-CMD=( ./$(basename ${TESTBIN}) -test.v )
-[[ -z ${JSON} ]] || CMD=( ${GO} tool test2json -p "${TESTPKG}" -t "${CMD[@]}" )
-[[ -z ${TESTCASE} ]] || CMD+=( -test.run "${TESTCASE}" )
-[[ "${TESTARGS[@]}" =~ -log* ]] || CMD+=( -log_dir log )
+ARGS+=( -insecure )
+ARGS+=( -logtostderr )
+ARGS+=( -address ${HOST}:${PORT} )
+ARGS+=( -target OC_YANG )
+ARGS+=( -query $(IFS=,; echo "${PATHS[*]}") )
 
-mkdir -p "${TESTDIR}/log"
-source ${TOPDIR}/tools/test/env.sh ${SFLAG}
-
-[[ -z ${SFLAG} ]] && set -x
-cd "${TESTDIR}"
-"${CMD[@]}" "${TESTARGS[@]}"
-
+set -x
+${GNMCLI} "${ARGS[@]}"
