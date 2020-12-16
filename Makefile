@@ -60,7 +60,7 @@ clients:
 telemetry: go-deps-clean
 	$(MAKE) -C $(MGMT_COMMON_DIR)
 	$(MAKE) sonic-telemetry
-	[[ -e $(GOBIN)/gnmi_cli ]] || $(MAKE) clients
+	test -e $(GOBIN)/gnmi_cli || $(MAKE) clients
 
 check:
 	sudo mkdir -p ${DBDIR}
