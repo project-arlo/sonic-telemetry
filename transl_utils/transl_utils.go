@@ -12,6 +12,7 @@ import (
 	"context"
         "log/syslog"
 	"github.com/Azure/sonic-mgmt-common/translib/tlerr"
+	"github.com/openconfig/ygot/ygot"
 )
 
 var (
@@ -106,17 +107,22 @@ func ConvertToURI(prefix *gnmipb.Path, path *gnmipb.Path, req *string) error {
 }
 
 /* Fill the values from TransLib. */
-func TranslProcessGet(uriPath string, op *string, ctx context.Context) (*gnmipb.TypedValue, error) {
+func TranslProcessGet(uriPath string, op *string, ctx context.Context, encoding gnmipb.Encoding) (*gnmipb.TypedValue, *ygot.ValidatedGoStruct, error) {
 	var jv []byte
 	var data []byte
 	rc, ctx := common_utils.GetContext(ctx)
 
-	req := translib.GetRequest{Path:uriPath, User: translib.UserRoles{Name: rc.Auth.User, Roles: rc.Auth.Roles}}
+	req := translib.GetRequest{
+		Path:          uriPath,
+		FillValueTree: encoding == gnmipb.Encoding_PROTO,
+		User:          translib.UserRoles{Name: rc.Auth.User, Roles: rc.Auth.Roles}}
+
+
 	if rc.BundleVersion != nil {
 		nver, err := translib.NewVersion(*rc.BundleVersion)
 		if err != nil {
 			log.V(2).Infof("GET operation failed with error =%v", err.Error())
-			return nil, err
+			return nil, nil, err
 		}
 		req.ClientVersion = nver
 	}
@@ -130,7 +136,12 @@ func TranslProcessGet(uriPath string, op *string, ctx context.Context) (*gnmipb.
 		data = resp.Payload
 	} else {
 		log.V(2).Infof("GET operation failed with error =%v, %v", resp.ErrSrc, err1.Error())
-		return nil, err1
+		return nil, nil, fmt.Errorf("GET failed for this message: %v", err1.Error())
+	}
+
+	/* When Proto is requested we use ValueTree to generate scalar values in the data_client.*/
+	if encoding == gnmipb.Encoding_PROTO {
+		return nil, resp.ValueTree, nil
 	}
 
 	dst := new(bytes.Buffer)
@@ -142,7 +153,7 @@ func TranslProcessGet(uriPath string, op *string, ctx context.Context) (*gnmipb.
 	return &gnmipb.TypedValue{
 		Value: &gnmipb.TypedValue_JsonIetfVal{
 		JsonIetfVal: jv,
-		}}, nil
+		}}, nil, nil
 
 }
 

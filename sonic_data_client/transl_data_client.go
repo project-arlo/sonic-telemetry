@@ -18,6 +18,7 @@ import (
 	"encoding/json"
 	"context"
 	"github.com/Azure/sonic-telemetry/common_utils"
+	"github.com/openconfig/ygot/ygot"
 	"google.golang.org/grpc/status"
 	"google.golang.org/grpc/codes"
 	"github.com/Azure/sonic-mgmt-common/translib/tlerr"
@@ -33,6 +34,7 @@ type TranslClient struct {
 	prefix *gnmipb.Path
 	/* GNMI Path to REST URL Mapping */
 	path2URI map[*gnmipb.Path]string
+        encoding gnmipb.Encoding
 	channel  chan struct{}
 	q *LimitedQueue
 
@@ -73,22 +75,23 @@ func (c *TranslClient) Get(w *sync.WaitGroup) ([]*spb.Value, error) {
 		rc.BundleVersion = version
 	}
 	/* Iterate through all GNMI paths. */
+
 	for gnmiPath, URIPath := range c.path2URI {
 		/* Fill values for each GNMI path. */
-		val, err := transutil.TranslProcessGet(URIPath, nil, c.ctx)
+		val, valTree, err := transutil.TranslProcessGet(URIPath, nil, c.ctx, c.encoding)
 
 		if err != nil {
 			return nil, err
 		}
 
+		v, err := buildValue(c.prefix, gnmiPath, c.encoding, val, valTree)
+		if err != nil {
+			return nil, err
+		}
 		/* Value of each path is added to spb value structure. */
-		values = append(values, &spb.Value{
-			Prefix:    c.prefix,
-			Path:      gnmiPath,
-			Timestamp: ts.UnixNano(),
-			Val:       val,
-		})
+		values = append(values, v)
 	}
+
 
 	/* The values structure at the end is returned and then updates in notitications as
 	specified in the proto file in the server.go */
@@ -245,7 +248,7 @@ func (c *TranslClient) StreamRun(q *LimitedQueue, stop chan struct{}, w *sync.Wa
 			
 			if !subscribe.UpdatesOnly {
 				//Send initial data now so we can send sync response, unless updates_only is set.
-				val, err := transutil.TranslProcessGet(c.path2URI[sub.Path], nil, c.ctx)
+				val, valTree, err := transutil.TranslProcessGet(c.path2URI[sub.Path], nil, c.ctx, c.encoding)
 				if err != nil {
 					switch err.(type) {
 					case tlerr.NotFoundError:
@@ -256,17 +259,15 @@ func (c *TranslClient) StreamRun(q *LimitedQueue, stop chan struct{}, w *sync.Wa
 					}
 					
 				}
-				if val != nil {
-					spbv := &spb.Value{
-						Prefix:       c.prefix,
-						Path:         sub.Path,
-						Timestamp:    time.Now().UnixNano(),
-						SyncResponse: false,
-						Val:          val,
-					}
-					c.q.EnqueueItem(Value{spbv})
-					valueCache[c.path2URI[sub.Path]] = string(val.GetJsonIetfVal())
+				v, err := buildValue(c.prefix, sub.Path, c.encoding, val, valTree)
+				if err != nil {
+					enqueFatalMsgTranslib(c, fmt.Sprintf("Subscribe value failed to build =%v", err.Error()))
+					return
 				}
+				c.q.EnqueueItem(Value{v})
+				log.V(6).Infof("Added spbv #%v", v)
+				filterValues(valueCache, v, c.path2URI[sub.Path], c.encoding)
+	
 			}
 			
 			addTimer(c, ticker_map, &cases, cases_map, interval, sub, false)
@@ -318,7 +319,7 @@ func (c *TranslClient) StreamRun(q *LimitedQueue, stop chan struct{}, w *sync.Wa
 
 		for _,tick := range ticker_map[cases_map[chosen]] {
 			log.V(6).Infof("tick, heartbeat: %t, path: %s\n", tick.heartbeat, c.path2URI[tick.sub.Path])
-			val, err := transutil.TranslProcessGet(c.path2URI[tick.sub.Path], nil, c.ctx)
+			val, valTree, err := transutil.TranslProcessGet(c.path2URI[tick.sub.Path], nil, c.ctx, c.encoding)
 			if err != nil {
 				switch err.(type) {
 				case tlerr.NotFoundError:
@@ -329,27 +330,72 @@ func (c *TranslClient) StreamRun(q *LimitedQueue, stop chan struct{}, w *sync.Wa
 				}
 				
 			}
-			if val != nil {
-				spbv := &spb.Value{
-					Prefix:       c.prefix,
-					Path:         tick.sub.Path,
-					Timestamp:    time.Now().UnixNano(),
-					SyncResponse: false,
-					Val:          val,
-				}
-				
-
-				if (tick.sub.SuppressRedundant) && (!tick.heartbeat) && (string(val.GetJsonIetfVal()) == valueCache[c.path2URI[tick.sub.Path]]) {
-					log.V(6).Infof("Redundant Message Suppressed #%v", string(val.GetJsonIetfVal()))
-				} else {
-					c.q.EnqueueItem(Value{spbv})
-					valueCache[c.path2URI[tick.sub.Path]] = string(val.GetJsonIetfVal())
-					log.V(6).Infof("Added spbv #%v", spbv)
-				}
+			v, err := buildValue(c.prefix, tick.sub.Path, c.encoding, val, valTree)
+			if err != nil {
+				enqueFatalMsgTranslib(c, fmt.Sprintf("Subscribe value failed to build =%v", err.Error()))
+				return
 			}
-			
-			
+
+			if tick.sub.SuppressRedundant && !filterValues(valueCache, v, c.path2URI[tick.sub.Path], c.encoding) && !tick.heartbeat {
+				log.V(6).Infof("Redundant Message Suppressed #%v", string(val.GetJsonIetfVal()))
+			} else {
+				c.q.EnqueueItem(Value{v})
+				log.V(6).Infof("Added spbv #%v", v)
+			}
 		}
+	}
+}
+
+//Compares val to cache, removes any duplicates from val,
+//updates cache. Returns true if there are new values.
+func filterValues(cache map[string]string, val *spb.Value, URI string, enc gnmipb.Encoding) bool {
+	switch enc {
+	case gnmipb.Encoding_JSON:
+		fallthrough
+	case gnmipb.Encoding_JSON_IETF:
+		if v := string(val.GetVal().GetJsonIetfVal()); v != cache[URI] {
+			cache[URI] = v
+			return true
+		}
+		return false
+	case gnmipb.Encoding_PROTO:
+		prefix, err := ygot.PathToString(val.Notification.GetPrefix())
+		if err != nil {
+			log.V(4).Infof("Failed to stringify prefix: #%v", err)
+		}
+
+		//Remove delete messages from cache.
+		for _, d := range val.Notification.GetDelete() {
+			path, err := ygot.PathToString(d)
+			if err != nil {
+				log.V(4).Infof("Failed to stringify delete path: #%v", err)
+				continue
+			}
+			delete(cache, prefix+path)
+		}
+
+		//Only forward values that have changed from the cache.
+		var filteredUpdates []*gnmipb.Update
+		for _, u := range val.Notification.GetUpdate() {
+			path, err := ygot.PathToString(u.GetPath())
+			if err != nil {
+				log.V(4).Infof("Failed to stringify update path: #%v", err)
+				continue
+			}
+			leaf := proto.MarshalTextString(u.GetVal())
+			if cache[prefix+path] != leaf {
+				cache[prefix+path] = leaf
+				filteredUpdates = append(filteredUpdates, u)
+			}
+
+		}
+		if len(filteredUpdates) == 0 && len(val.Notification.GetDelete()) == 0 {
+			return false
+		}
+		val.GetNotification().Update = filteredUpdates
+		return true
+	default:
+		return false
 	}
 }
 
@@ -487,7 +533,7 @@ func (c *TranslClient) PollRun(q *LimitedQueue, poll chan struct{}, w *sync.Wait
 		for gnmiPath, URIPath := range c.path2URI {
 			if synced || !subscribe.UpdatesOnly {
 
-				val, err := transutil.TranslProcessGet(URIPath, nil, c.ctx)
+				val, valTree, err := transutil.TranslProcessGet(URIPath, nil, c.ctx, c.encoding)
 				if err != nil {
 					switch err.(type) {
 					case tlerr.NotFoundError:
@@ -498,18 +544,16 @@ func (c *TranslClient) PollRun(q *LimitedQueue, poll chan struct{}, w *sync.Wait
 					}
 					
 				}
-				if val != nil {
-					spbv := &spb.Value{
-						Prefix:       c.prefix,
-						Path:         gnmiPath,
-						Timestamp:    time.Now().UnixNano(),
-						SyncResponse: false,
-						Val:          val,
-					}
-
-					c.q.EnqueueItem(Value{spbv})
-					log.V(6).Infof("Added spbv #%v", spbv)
+				v, err := buildValue(c.prefix, gnmiPath, c.encoding, val, valTree)
+				if err != nil {
+					enqueFatalMsgTranslib(c, fmt.Sprintf("Subscribe value failed to build =%v", err.Error()))
+					return
 				}
+				if v != nil {
+					c.q.EnqueueItem(Value{v})
+					log.V(6).Infof("Added spbv #%v", v)
+				}
+
 			}
 		}
 
@@ -523,6 +567,7 @@ func (c *TranslClient) PollRun(q *LimitedQueue, poll chan struct{}, w *sync.Wait
 		log.V(4).Infof("Sync done, poll time taken: %v ms", int64(time.Since(t1)/time.Millisecond))
 	}
 }
+
 func (c *TranslClient) OnceRun(q *LimitedQueue, once chan struct{}, w *sync.WaitGroup, subscribe *gnmipb.SubscriptionList) {
 	rc, ctx := common_utils.GetContext(c.ctx)
 	c.ctx = ctx
@@ -552,7 +597,7 @@ func (c *TranslClient) OnceRun(q *LimitedQueue, once chan struct{}, w *sync.Wait
 	t1 := time.Now()
 	for gnmiPath, URIPath := range c.path2URI {
 		
-		val, err := transutil.TranslProcessGet(URIPath, nil, c.ctx)
+		val, valTree, err := transutil.TranslProcessGet(URIPath, nil, c.ctx, c.encoding)
 		if err != nil {
 			switch err.(type) {
 			case tlerr.NotFoundError:
@@ -562,18 +607,19 @@ func (c *TranslClient) OnceRun(q *LimitedQueue, once chan struct{}, w *sync.Wait
 				return
 			}
 		}
-		if !subscribe.UpdatesOnly && val != nil {
-			spbv := &spb.Value{
-				Prefix:       c.prefix,
-				Path:         gnmiPath,
-				Timestamp:    time.Now().UnixNano(),
-				SyncResponse: false,
-				Val:          val,
+		if !subscribe.UpdatesOnly {
+			v, err := buildValue(c.prefix, gnmiPath, c.encoding, val, valTree)
+			if err != nil {
+				enqueFatalMsgTranslib(c, fmt.Sprintf("Subscribe value failed to build =%v", err.Error()))
+				return
 			}
-
-			c.q.EnqueueItem(Value{spbv})
-			log.V(6).Infof("Added spbv #%v", spbv)
+			if v != nil {
+				c.q.EnqueueItem(Value{v})
+				log.V(6).Infof("Added spbv #%v", v)
+			}
 		}
+
+
 	}
 
 	c.q.EnqueueItem(Value{
@@ -584,6 +630,47 @@ func (c *TranslClient) OnceRun(q *LimitedQueue, once chan struct{}, w *sync.Wait
 	})
 	log.V(4).Infof("Sync done, once time taken: %v ms", int64(time.Since(t1)/time.Millisecond))
 	
+}
+
+//Creates a spb.Value out of data from the translib according to the requested encoding.
+func buildValue(prefix *gnmipb.Path, path *gnmipb.Path, enc gnmipb.Encoding,
+	typedVal *gnmipb.TypedValue, valueTree *ygot.ValidatedGoStruct) (*spb.Value, error) {
+
+	switch enc {
+	case gnmipb.Encoding_JSON:
+		fallthrough
+	case gnmipb.Encoding_JSON_IETF:
+		if typedVal == nil {
+			return nil, nil
+		}
+		return &spb.Value{
+			Prefix:       prefix,
+			Path:         path,
+			Timestamp:    time.Now().UnixNano(),
+			SyncResponse: false,
+			Val:          typedVal,
+		}, nil
+
+	case gnmipb.Encoding_PROTO:
+		if valueTree == nil {
+			return nil, nil
+		}
+		notifications, err := ygot.TogNMINotifications(*valueTree, time.Now().UnixNano(), ygot.GNMINotificationsConfig{UsePathElem: true, PathElemPrefix: path.GetElem()})
+		if err != nil {
+			return nil, fmt.Errorf("Cannot convert OC Struct to Notifications: %s", err)
+		}
+		if len(notifications) != 1 {
+			return nil, fmt.Errorf("YGOT returned wrong number of notifications")
+		}
+		return &spb.Value{
+			Notification: notifications[0],
+		}, nil
+	default:
+		return nil, fmt.Errorf("Unsupported Encoding %s", enc)
+	}
+
+	
+
 }
 
 func (c *TranslClient) Capabilities() []gnmipb.ModelData {
@@ -615,4 +702,9 @@ func getBundleVersion(extensions []*gnmi_extpb.Extension) *string {
 		}
 	}
 	return nil
+}
+
+// Set the desired encoding for Get and Subcribe responses
+func (c *TranslClient) SetEncoding(enc gnmipb.Encoding) {
+	c.encoding = enc
 }
