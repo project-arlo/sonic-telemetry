@@ -198,6 +198,7 @@ func (cs *clientSubscription) NewInstance(ctx context.Context) error {
 	} else {
 		dc, err = sdc.NewDbClient(cs.paths, cs.prefix)
 	}
+        dc.SetEncoding(gpb.Encoding_JSON_IETF)
 	if err != nil {
 		log.V(1).Infof("Connection to DB for %v failed: %v", *cs, err)
 		return fmt.Errorf("Connection to DB for %v failed: %v", *cs, err)

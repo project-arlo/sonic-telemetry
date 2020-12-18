@@ -77,8 +77,6 @@ func (c *Client) populateDbPathSubscrition(sublist *gnmipb.SubscriptionList) ([]
 func (c *Client) Run(stream gnmipb.GNMI_SubscribeServer) (err error) {
 	defer log.V(1).Infof("Client %s shutdown", c)
 	ctx := stream.Context()
-	
-
 
 	if stream == nil {
 		return grpc.Errorf(codes.FailedPrecondition, "cannot start client: stream is nil")
@@ -126,20 +124,21 @@ func (c *Client) Run(stream gnmipb.GNMI_SubscribeServer) (err error) {
 		return grpc.Errorf(codes.NotFound, "Invalid subscription path: %v %q", err, query)
 	}
 	var dc sdc.Client
-	
-    if target == "OTHERS" {
-            dc, err = sdc.NewNonDbClient(paths, prefix)
-    } else if isTargetDb(target) == true {
-            dc, err = sdc.NewDbClient(paths, prefix)
-    } else {
-            /* For any other target or no target create new Transl Client. */
-            dc, err = sdc.NewTranslClient(prefix, paths, ctx, extensions)
-    }
 
-    if err != nil {
-            return grpc.Errorf(codes.NotFound, "%v", err)
-    }
+	if target == "OTHERS" {
+		dc, err = sdc.NewNonDbClient(paths, prefix)
+	} else if isTargetDb(target) == true {
+		dc, err = sdc.NewDbClient(paths, prefix)
+	} else {
+		/* For any other target or no target create new Transl Client. */
+		dc, err = sdc.NewTranslClient(prefix, paths, ctx, extensions)
+	}
 
+	dc.SetEncoding(c.subscribe.GetEncoding())
+
+	if err != nil {
+		return grpc.Errorf(codes.NotFound, "%v", err)
+	}
 
 	switch mode := c.subscribe.GetMode(); mode {
 	case gnmipb.SubscriptionList_STREAM:
@@ -224,7 +223,6 @@ func (c *Client) recv(stream gnmipb.GNMI_SubscribeServer) {
 		}
 		log.V(1).Infof("Client %s received invalid event: %s", c, event)
 	}
-	log.V(1).Infof("Client %s exit from recv()", c)
 }
 
 // send runs until process Queue returns an error.
@@ -244,7 +242,6 @@ func (c *Client) send(stream gnmipb.GNMI_SubscribeServer) error {
 			c.errors++
 			return err
 		}
-
 
 		c.sendMsg++
 		err = stream.Send(resp)

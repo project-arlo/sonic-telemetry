@@ -29,7 +29,7 @@ import (
 )
 
 var (
-	supportedEncodings = []gnmipb.Encoding{gnmipb.Encoding_JSON, gnmipb.Encoding_JSON_IETF}
+	supportedEncodings = []gnmipb.Encoding{gnmipb.Encoding_JSON, gnmipb.Encoding_JSON_IETF, gnmipb.Encoding_PROTO}
 )
 
 // Server manages a single gNMI Server implementation. Each client that connects
@@ -307,20 +307,28 @@ func (s *Server) Get(ctx context.Context, req *gnmipb.GetRequest) (*gnmipb.GetRe
 		dc, err = sdc.NewTranslClient(prefix, paths, ctx, extensions)
 	}
 
+	dc.SetEncoding(req.GetEncoding())
+
 	if err != nil {
 		return nil, status.Error(codes.NotFound, err.Error())
 	}
 	notifications := make([]*gnmipb.Notification, len(paths))
 	spbValues, err := dc.Get(nil)
+
 	if err != nil {
 		return nil, status.Error(codes.NotFound, err.Error())
 	}
 
 	for index, spbValue := range spbValues {
+		if req.GetEncoding() == gnmipb.Encoding_PROTO {
+			notifications[index] = spbValue.Notification
+			continue
+		}
 		update := &gnmipb.Update{
 			Path: spbValue.GetPath(),
 			Val:  spbValue.GetVal(),
 		}
+
 
 		notifications[index] = &gnmipb.Notification{
 			Timestamp: spbValue.GetTimestamp(),
