@@ -2,26 +2,27 @@
 package client
 
 import (
+	"bytes"
+	"context"
+	"encoding/json"
+	"fmt"
+	"reflect"
+	"sync"
+	"time"
+
+	"github.com/Azure/sonic-mgmt-common/translib"
+	"github.com/Azure/sonic-mgmt-common/translib/tlerr"
+	"github.com/Azure/sonic-telemetry/common_utils"
 	spb "github.com/Azure/sonic-telemetry/proto"
 	transutil "github.com/Azure/sonic-telemetry/transl_utils"
+	"github.com/Workiva/go-datastructures/queue"
 	log "github.com/golang/glog"
 	"github.com/golang/protobuf/proto"
 	gnmipb "github.com/openconfig/gnmi/proto/gnmi"
 	gnmi_extpb "github.com/openconfig/gnmi/proto/gnmi_ext"
-	"github.com/Workiva/go-datastructures/queue"
-	"sync"
-	"time"
-	"fmt"
-	"reflect"
-	"github.com/Azure/sonic-mgmt-common/translib"
-	"bytes"
-	"encoding/json"
-	"context"
-	"github.com/Azure/sonic-telemetry/common_utils"
 	"github.com/openconfig/ygot/ygot"
-	"google.golang.org/grpc/status"
 	"google.golang.org/grpc/codes"
-	"github.com/Azure/sonic-mgmt-common/translib/tlerr"
+	"google.golang.org/grpc/status"
 )
 
 const (
@@ -461,10 +462,23 @@ func TranslSubscribe(gnmiPaths []*gnmipb.Path, stringPaths []string, pathMap map
 				return
 			}
 
+			if v.SyncComplete && !sync_done {
+				log.V(6).Infof("SENDING SYNC")
+				c.synced.Done()
+				sync_done = true
+				break
+			}
+
 			var jv []byte
 			dst := new(bytes.Buffer)
 			json.Compact(dst, v.Payload)
 			jv = dst.Bytes()
+
+			//TODO change SubscribeResponse to return *gnmi.Path itself
+			p := pathMap[v.Path]
+			if p == nil {
+				p, _ = ygot.StringToStructuredPath(v.Path)
+			}
 
 			/* Fill the values into GNMI data structures . */
 			val := &gnmipb.TypedValue{
@@ -474,7 +488,7 @@ func TranslSubscribe(gnmiPaths []*gnmipb.Path, stringPaths []string, pathMap map
 
 			spbv := &spb.Value{
 				Prefix:       c.prefix,
-				Path:         pathMap[v.Path],
+				Path:         p,
 				Timestamp:    v.Timestamp,
 				SyncResponse: false,
 				Val:          val,
@@ -489,11 +503,6 @@ func TranslSubscribe(gnmiPaths []*gnmipb.Path, stringPaths []string, pathMap map
 
 			log.V(6).Infof("Added spbv #%v", spbv)
 			
-			if v.SyncComplete && !sync_done {
-				log.V(6).Infof("SENDING SYNC")
-				c.synced.Done()
-				sync_done = true
-			}
 		default:
 			log.V(1).Infof("Unknown data type %v for %s in queue", items[0], c)
 		}
