@@ -106,15 +106,28 @@ func ConvertToURI(prefix *gnmipb.Path, path *gnmipb.Path, req *string) error {
 	return nil
 }
 
+/* GetTranslibFmtType is a helper that converts gnmi Encoding to supported format types in translib */
+func GetTranslFmtType(encoding gnmipb.Encoding) translib.TranslibFmtType {
+
+	if encoding == gnmipb.Encoding_PROTO {
+		return translib.TRANSLIB_FMT_YGOT
+	}
+	// default to ietf_json as translib supports either Ygot or ietf_json
+	return translib.TRANSLIB_FMT_IETF_JSON
+
+}
+
 /* Fill the values from TransLib. */
 func TranslProcessGet(uriPath string, op *string, ctx context.Context, encoding gnmipb.Encoding) (*gnmipb.TypedValue, *ygot.ValidatedGoStruct, error) {
 	var jv []byte
 	var data []byte
 	rc, ctx := common_utils.GetContext(ctx)
 
+	fmtType := GetTranslFmtType(encoding)
 	req := translib.GetRequest{
 		Path:          uriPath,
-		FillValueTree: encoding == gnmipb.Encoding_PROTO,
+		//FillValueTree: encoding == gnmipb.Encoding_PROTO,
+		FmtType: fmtType,
 		User:          translib.UserRoles{Name: rc.Auth.User, Roles: rc.Auth.Roles}}
 
 
