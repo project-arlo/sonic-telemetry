@@ -30,7 +30,7 @@ if [[ ! -f ${BINDIR}/telemetry ]]; then
     exit 1
 fi
 
-source ${TOPDIR}/tools/test/env.sh
+source ${TOPDIR}/tools/test/env.sh ""
 
 for V in "$@"; do
     case "$V" in
@@ -45,7 +45,7 @@ ARGS=( )
 [[ -z ${HAS_V} ]]    && ARGS+=( -v 2 )
 [[ -z ${HAS_CERT} ]] && ARGS+=( -insecure )
 [[ -z ${HAS_AUTH} ]] && ARGS+=( -client_auth none )
-[[ "$@" =~ -(also)?logtostd* ]] || ARGS+=( -logtostderr )
+[[ "$@" =~ -(also)?log* ]] || ARGS+=( -logtostderr )
 
 set -x
 ${BINDIR}/telemetry "${ARGS[@]}" "$@"
