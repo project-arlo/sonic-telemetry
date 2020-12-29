@@ -306,15 +306,13 @@ func (s *Server) Get(ctx context.Context, req *gnmipb.GetRequest) (*gnmipb.GetRe
 		/* If no prefix target is specified create new Transl Data Client . */
 		dc, err = sdc.NewTranslClient(prefix, paths, ctx, extensions)
 	}
-
-	dc.SetEncoding(req.GetEncoding())
-
 	if err != nil {
 		return nil, status.Error(codes.NotFound, err.Error())
 	}
+	dc.SetEncoding(req.GetEncoding())
+
 	notifications := make([]*gnmipb.Notification, len(paths))
 	spbValues, err := dc.Get(nil)
-
 	if err != nil {
 		return nil, status.Error(codes.NotFound, err.Error())
 	}
@@ -328,7 +326,6 @@ func (s *Server) Get(ctx context.Context, req *gnmipb.GetRequest) (*gnmipb.GetRe
 			Path: spbValue.GetPath(),
 			Val:  spbValue.GetVal(),
 		}
-
 
 		notifications[index] = &gnmipb.Notification{
 			Timestamp: spbValue.GetTimestamp(),

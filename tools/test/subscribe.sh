@@ -35,11 +35,12 @@ HOST=localhost
 PORT=8080
 ARGS=()
 PATHS=()
+DISP=proto
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
     -h|-help|--help)
-        echo "usage: $(basename $0) [-H HOST] [-p PORT] [-pass] [-once|-onchange|-poll SECS|-sample SECS] PATH*"
+        echo "usage: $(basename $0) [-H HOST] [-p PORT] [-pass] [-once|-onchange|-poll SECS|-sample SECS|-target-defined] PATH*"
         echo ""
         exit 0;;
     -once)
@@ -54,6 +55,10 @@ while [[ $# -gt 0 ]]; do
         ARGS+=( -streaming_type SAMPLE )
         ARGS+=( -streaming_sample_interval $2 )
         shift 2;;
+    -target-defined|-target_defined)
+        ARGS+=( -query_type streaming )
+        ARGS+=( -streaming_type TARGET_DEFINED )
+        shift;;
     -poll)
         ARGS+=( -query_type polling )
         ARGS+=( -polling_interval $2s )
@@ -63,6 +68,7 @@ while [[ $# -gt 0 ]]; do
         shift;;
     -H|-host) HOST=$2; shift 2;;
     -p|-port) PORT=$2; shift 2;;
+    -brief)   DISP=single; shift;;
     *) PATHS+=("$1"); shift;;
     esac
 done
@@ -75,6 +81,7 @@ fi
 ARGS+=( -insecure )
 ARGS+=( -logtostderr )
 ARGS+=( -address ${HOST}:${PORT} )
+ARGS+=( -display_type ${DISP} )
 ARGS+=( -target OC_YANG )
 ARGS+=( -query $(IFS=,; echo "${PATHS[*]}") )
 
