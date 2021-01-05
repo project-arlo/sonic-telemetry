@@ -318,7 +318,7 @@ func (s *Server) Get(ctx context.Context, req *gnmipb.GetRequest) (*gnmipb.GetRe
 	}
 
 	for index, spbValue := range spbValues {
-		if req.GetEncoding() == gnmipb.Encoding_PROTO {
+		if spbValue.Notification != nil {
 			notifications[index] = spbValue.Notification
 			continue
 		}
