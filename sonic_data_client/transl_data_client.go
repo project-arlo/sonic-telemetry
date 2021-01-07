@@ -431,12 +431,7 @@ func TranslSubscribe(gnmiPaths []*gnmipb.Path, stringPaths []string, pathMap map
 	q := queue.NewPriorityQueue(1, false)
 	var sync_done bool
 
-	fmt.Println("Received Encoding:", c.encoding)
-	var fmtType translib.TranslibFmtType
-	fmtType = translib.TRANSLIB_FMT_IETF_JSON
-	if c.encoding == gnmipb.Encoding_PROTO {
-		fmtType = translib.TRANSLIB_FMT_YGOT
-	}
+	log.V(6).Infof("Received Encoding:", c.encoding)
 	req := translib.SubscribeRequest{Paths: stringPaths, Q: q, Stop: c.channel}
 	if rc.BundleVersion != nil {
 		nver, err := translib.NewVersion(*rc.BundleVersion)
@@ -488,7 +483,7 @@ func TranslSubscribe(gnmiPaths []*gnmipb.Path, stringPaths []string, pathMap map
 				Timestamp: v.Timestamp,
 			}
 
-			if fmtType == translib.TRANSLIB_FMT_YGOT {
+			if c.encoding == gnmipb.Encoding_PROTO {
 				if v.Update != nil {
 					ju, err := ygot.TogNMINotifications(v.Update, time.Now().UnixNano(),
 						ygot.GNMINotificationsConfig{UsePathElem:true, PathElemPrefix:p.GetElem()})
