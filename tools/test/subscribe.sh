@@ -40,7 +40,21 @@ DISP=proto
 while [[ $# -gt 0 ]]; do
     case "$1" in
     -h|-help|--help)
-        echo "usage: $(basename $0) [-H HOST] [-p PORT] [-pass] [-once|-onchange|-poll SECS|-sample SECS|-target-defined] PATH*"
+        echo "usage: $(basename $0) [OPTIONS] [MODE] PATH*"
+        echo ""
+        echo "MODE (one of):"
+        echo "  -onchange       ON_CHANGE subscription"
+        echo "  -sample SECS    SAMPLE subscription with sample interval seconds"
+        echo "  -target-defined TARGET_DEFINED subscription"
+        echo "  -once           ONCE subscription (default mode)"
+        echo "  -poll SECS      POLL subscription with poll interval seconds"
+        echo ""
+        echo "OPTIONS:"
+        echo "  -host HOST      Server IP address (default 127.0.0.1)"
+        echo "  -port PORT      Server port (default 8080)"
+        echo "  -pass           Prompt for username and password"
+        echo "  -proto          Request PROTO encoded notifications"
+        echo "  -brief          Display compact output -- {path, value} lines"
         echo ""
         exit 0;;
     -once)
@@ -55,7 +69,7 @@ while [[ $# -gt 0 ]]; do
         ARGS+=( -streaming_type SAMPLE )
         ARGS+=( -streaming_sample_interval $2 )
         shift 2;;
-    -target-defined|-target_defined)
+    -td|-target-defined|-target_defined)
         ARGS+=( -query_type streaming )
         ARGS+=( -streaming_type TARGET_DEFINED )
         shift;;
@@ -65,6 +79,9 @@ while [[ $# -gt 0 ]]; do
         shift 2;;
     -pass)
         ARGS+=( -with_user_pass )
+        shift;;
+    -proto)
+        ARGS+=( -encoding PROTO )
         shift;;
     -H|-host) HOST=$2; shift 2;;
     -p|-port) PORT=$2; shift 2;;
