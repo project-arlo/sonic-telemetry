@@ -638,13 +638,14 @@ func processTelemetryClientConfig(ctx context.Context, redisDb *redis.Client, ke
 func DialOutRun(ctx context.Context, ccfg *ClientConfig) error {
 	clientCfg = ccfg
 	dbn := sdcfg.GetDbId("CONFIG_DB")
+	password := sdcfg.GetDbPassword("CONFIG_DB")
 
 	var redisDb *redis.Client
 	if sdc.UseRedisLocalTcpPort == false {
 		redisDb = redis.NewClient(&redis.Options{
 			Network:     "unix",
 			Addr:        sdcfg.GetDbSock("CONFIG_DB"),
-			Password:    "", // no password set
+			Password:    password, 
 			DB:          dbn,
 			DialTimeout: 0,
 		})
@@ -652,7 +653,7 @@ func DialOutRun(ctx context.Context, ccfg *ClientConfig) error {
 		redisDb = redis.NewClient(&redis.Options{
 			Network:     "tcp",
 			Addr:        sdcfg.GetDbTcpAddr("CONFIG_DB"),
-			Password:    "", // no password set
+			Password:    password,
 			DB:          dbn,
 			DialTimeout: 0,
 		})
