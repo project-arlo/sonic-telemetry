@@ -98,7 +98,7 @@ func getRedisClient(t *testing.T) *redis.Client {
 	rclient := redis.NewClient(&redis.Options{
 		Network:     "tcp",
 		Addr:        sdcfg.GetDbTcpAddr("COUNTERS_DB"),
-		Password:    "", // no password set
+		Password:    sdcfg.GetDbPassword("COUNTERS_DB"),
 		DB:          sdcfg.GetDbId("COUNTERS_DB"),
 		DialTimeout: 0,
 	})
@@ -127,7 +127,7 @@ func getConfigDbClient(t *testing.T) *redis.Client {
 	rclient := redis.NewClient(&redis.Options{
 		Network:     "tcp",
 		Addr:        sdcfg.GetDbTcpAddr("CONFIG_DB"),
-		Password:    "", // no password set
+		Password:    sdcfg.GetDbPassword("CONFIG_DB"),
 		DB:          sdcfg.GetDbId("CONFIG_DB"),
 		DialTimeout: 0,
 	})

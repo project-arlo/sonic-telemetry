@@ -413,7 +413,7 @@ func useRedisTcpClient() {
 				redisDb = redis.NewClient(&redis.Options{
 					Network:     "tcp",
 					Addr:        sdcfg.GetDbTcpAddr(dbName),
-					Password:    "", // no password set
+					Password:    sdcfg.GetDbPassword(dbName),
 					DB:          int(dbn),
 					DialTimeout: 0,
 				})
@@ -433,7 +433,7 @@ func init() {
 			redisDb = redis.NewClient(&redis.Options{
 				Network:     "unix",
 				Addr:        sdcfg.GetDbSock(dbName),
-				Password:    "", // no password set
+				Password:    sdcfg.GetDbPassword(dbName),
 				DB:          int(dbn),
 				DialTimeout: 0,
 			})

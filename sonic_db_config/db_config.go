@@ -115,6 +115,22 @@ func GetDbTcpAddr(db_name string)(string) {
     return hostname + ":" + strconv.Itoa(port)
 }
 
+func GetDbPassword(db_name string)(string) {
+    inst := GetDbInst(db_name)
+    password :=""
+    password_path, ok := inst["password_path"]
+    if !ok {
+        return password
+    }
+    data,er := io.ReadFile(password_path.(string))
+    if er != nil {
+        //
+    } else {
+          password =(string(data))
+    }
+    return password
+}
+
 func DbInit() {
     if sonic_db_init {
         return
