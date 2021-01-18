@@ -117,7 +117,7 @@ func main() {
 		log.Errorf("Failed to create gNMI server: %v", err)
 		return
 	}
-	log.V(1).Infof("Auth Modes: ", userAuth)
+	log.V(1).Info("Auth Modes: ", userAuth)
 
 	log.V(1).Infof("Starting RPC server on address: %s", s.Address())
 	s.Serve() // blocks until close

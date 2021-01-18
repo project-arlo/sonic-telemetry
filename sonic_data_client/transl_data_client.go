@@ -419,17 +419,23 @@ func addTimer(c *TranslClient, ticker_map map[int][]*ticker_info, cases *[]refle
 }
 
 func TranslSubscribe(gnmiPaths []*gnmipb.Path, stringPaths []string, pathMap map[string]*gnmipb.Path, c *TranslClient, updates_only bool) {
+	var sync_done bool
 	defer func() {
 		if r := recover(); r != nil {
 			err := status.Errorf(codes.Internal, "%v", r)
 			enqueFatalMsgTranslib(c, fmt.Sprintf("Subscribe operation failed with error =%v", err.Error()))
+		}
+		if !sync_done {
+			// We reach here (without sync_done) only on error. RPC stream
+			// would have been notified through enqueFatalMsgTranslib call.
+			// But StreamRun would still be waiting on c.synced!! Wake him up.
+			c.synced.Done()
 		}
 	}()
 	defer c.w.Done()
 	rc, ctx := common_utils.GetContext(c.ctx)
 	c.ctx = ctx
 	q := queue.NewPriorityQueue(1, false)
-	var sync_done bool
 
 	log.V(6).Infof("Received Encoding:", c.encoding)
 	req := translib.SubscribeRequest{Paths: stringPaths, Q: q, Stop: c.channel}
@@ -442,7 +448,13 @@ func TranslSubscribe(gnmiPaths []*gnmipb.Path, stringPaths []string, pathMap map
 		}
 		req.ClientVersion = nver
 	}
-	translib.Subscribe(req)
+
+	_, err := translib.Subscribe(req)
+	if err != nil {
+		enqueFatalMsgTranslib(c, "Subscribe operation failed with error: "+err.Error())
+		return
+	}
+
 	for {
 		items, err := q.Get(1)
 		if err != nil {
