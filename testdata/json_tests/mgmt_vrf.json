@@ -54,7 +54,7 @@
     },
     {
       "operation": "get",
-      "returnCode": 0,
+      "returnCode": 5,
       "xpath": "openconfig-network-instance:network-instances/network-instance[name=mgmt]/config",
       "target": "OC_YANG",
 

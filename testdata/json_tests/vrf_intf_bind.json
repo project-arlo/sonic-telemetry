@@ -113,33 +113,25 @@
     {
       "operation": "replace",
       "returnCode": 0,
-      "xpath": "openconfig-interfaces:interfaces/interface[name=Loopback10]/config",
+      "xpath": "openconfig-interfaces:interfaces/interface[name=Loopback10]",
       "target": "OC_YANG",
-      "attributeData": "{\"openconfig-interfaces:config\": {\"name\": \"Loopback10\"}}",
+      "attributeData": "{\"openconfig-interfaces:interface\": [{\"name\": \"Loopback10\", \"config\": {\"name\": \"Loopback10\"}}]}",
       "title": "add loopback interface lo10"
     },
     {
       "operation": "replace",
       "returnCode": 0,
-      "xpath": "openconfig-interfaces:interfaces/interface[name=Loopback10]/config",
+      "xpath": "openconfig-interfaces:interfaces/interface[name=PortChannel10]",
       "target": "OC_YANG",
-      "attributeData": "{\"openconfig-interfaces:config\": {\"name\": \"Loopback10\"}}",
-      "title": "add loopback interface lo10"
-    },
-    {
-      "operation": "replace",
-      "returnCode": 0,
-      "xpath": "openconfig-interfaces:interfaces/interface[name=PortChannel10]/config",
-      "target": "OC_YANG",
-      "attributeData": "{\"openconfig-interfaces:config\": {\"name\": \"PortChannel10\"}}",
+      "attributeData": "{\"openconfig-interfaces:interface\": [{\"name\": \"PortChannel10\", \"config\": {\"name\": \"PortChannel10\"}}]}",
       "title": "add loopback interface PortChannel10"
     },
     {
       "operation": "update",
       "returnCode": 0,
-      "xpath": "openconfig-interfaces:interfaces/interface[name=Vlan100]/config",
+      "xpath": "openconfig-interfaces:interfaces/interface[name=Vlan100]",
       "target": "OC_YANG",
-      "attributeData": "{\"openconfig-interfaces:config\": {\"name\": \"Vlan100\"}}",
+      "attributeData": "{\"openconfig-interfaces:interface\": [{\"name\": \"Vlan100\", \"config\": {\"name\": \"Vlan100\"}}]}",
       "title": "add loopback interface Vlan100"
     },
     {

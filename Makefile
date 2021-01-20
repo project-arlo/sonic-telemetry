@@ -33,7 +33,7 @@ $(GO_DEPS): go.mod $(PATCHES)
 	$(GO) mod vendor
 	$(MGMT_COMMON_DIR)/patches/apply.sh vendor
 	cp -r $(GOPATH)/pkg/mod/github.com/jipanyang/gnxi@v0.0.0-20181221084354-f0a90cca6fd0/* vendor/github.com/jipanyang/gnxi/
-	cp -r $(GOPATH)/pkg/mod/golang.org/x/crypto@v0.0.0-20200302210943-78000ba7a073/* vendor/golang.org/x/crypto/
+	cp -r $(GOPATH)/pkg/mod/golang.org/x/crypto@v0.0.0-20200622213623-75b288015ac9/* vendor/golang.org/x/crypto/
 	chmod -R u+w vendor
 	patch -d vendor -p0 < patches/gnmi_cli.all.patch
 	patch -d vendor -p0 < patches/gnmi_set.patch

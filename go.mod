@@ -23,8 +23,8 @@ require (
 	github.com/openconfig/gnoi v0.0.0-20191206155121-b4d663a26026
 	github.com/openconfig/ygot v0.7.1
 	github.com/xeipuuv/gojsonschema v1.2.0
-	golang.org/x/crypto v0.0.0-20200302210943-78000ba7a073
-	golang.org/x/net v0.0.0-20200301022130-244492dfa37a
+	golang.org/x/crypto v0.0.0-20200622213623-75b288015ac9
+	golang.org/x/net v0.0.0-20200813134508-3edf25e44fcc
 	google.golang.org/grpc v1.28.0
 )
 
