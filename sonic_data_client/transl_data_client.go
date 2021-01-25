@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"reflect"
+	"strings"
 	"sync"
 	"time"
 
@@ -483,11 +484,10 @@ func TranslSubscribe(gnmiPaths []*gnmipb.Path, stringPaths []string, pathMap map
 			p := pathMap[v.Path]
 			if p == nil {
 				p, _ = ygot.StringToStructuredPath(v.Path)
-
-				// Newly constructed path will not include the target and origin.
-				// Copy them from the request!!
 				p.Target = c.prefix.Target
 				p.Origin = c.prefix.Origin
+			} else {
+				p = copyPath(p)
 			}
 
 			n := gnmipb.Notification{
@@ -495,19 +495,30 @@ func TranslSubscribe(gnmiPaths []*gnmipb.Path, stringPaths []string, pathMap map
 				Timestamp: v.Timestamp,
 			}
 
+			var extraPrefix *gnmipb.PathElem
+
 			if c.encoding == gnmipb.Encoding_PROTO {
+				if strSliceContains(v.Delete, "") {
+					extraPrefix = removeLastPathElem(p)
+				}
 				if v.Update != nil {
-					ju, err := ygot.TogNMINotifications(v.Update, time.Now().UnixNano(),
-						ygot.GNMINotificationsConfig{UsePathElem:true, PathElemPrefix:p.GetElem()})
+					ju, err := ygot.TogNMINotifications(v.Update, v.Timestamp,
+						ygot.GNMINotificationsConfig{UsePathElem: true, PathElemPrefix: p.GetElem()})
 					if err != nil {
 						log.Error(err)
 						break
 					}
-					n.Update = append(n.Update, ju[0].Update...)
+					n.Update = ju[0].Update
+					if extraPrefix != nil {
+						for _, u := range n.Update {
+							insertFirstPathElem(u.Path, extraPrefix)
+						}
+					}
 				}
-			}else {
+			} else {
+				extraPrefix = removeLastPathElem(p)
 				if v.Update != nil {
-					ju, err := translToIetfJsonValue(v.Update)
+					ju, err := translToIetfJsonValue(extraPrefix, v.Update)
 					if err != nil {
 						log.Error(err)
 						break
@@ -522,6 +533,7 @@ func TranslSubscribe(gnmiPaths []*gnmipb.Path, stringPaths []string, pathMap map
 					log.Errorf("Invalid path \"%s\"; err=%v", del, err)
 					break
 				}
+				insertFirstPathElem(p, extraPrefix)
 				n.Delete = append(n.Delete, p)
 			}
 
@@ -544,7 +556,7 @@ func TranslSubscribe(gnmiPaths []*gnmipb.Path, stringPaths []string, pathMap map
 	}
 }
 
-func translToIetfJsonValue(yval ygot.ValidatedGoStruct) (*gnmipb.Update, error) {
+func translToIetfJsonValue(targetElem *gnmipb.PathElem, yval ygot.ValidatedGoStruct) (*gnmipb.Update, error) {
 	jv, err := ygot.EmitJSON(yval, &ygot.EmitJSONConfig{
 		Format:         ygot.RFC7951,
 		SkipValidation: true,
@@ -553,14 +565,76 @@ func translToIetfJsonValue(yval ygot.ValidatedGoStruct) (*gnmipb.Update, error) 
 		return nil, fmt.Errorf("EmitJSON failed; err=%v", err)
 	}
 
+	p := &gnmipb.Path{}
+
+	if targetElem != nil {
+		p.Elem = append(p.Elem, targetElem)
+		// Translib always returns ygot struct for the SubscribeResponse.Path.
+		// IETF JSON payload should being with the target container/list name of
+		// this path; i.e, payload for /a/b should be {"b":{***}}. But ygot.EmitJSON
+		// dumps only the subtree data. Adding the top node here.
+		buff := new(strings.Builder)
+		fmt.Fprintf(buff, "{\"%s\":", targetElem.Name)
+		if len(targetElem.Key) != 0 {
+			buff.WriteByte('[')
+			buff.WriteString(jv)
+			buff.WriteByte(']')
+		} else {
+			buff.WriteString(jv)
+		}
+		buff.WriteByte('}')
+		jv = buff.String()
+	}
+
 	return &gnmipb.Update{
-		// Path: nil, //TODO revisit
-		Path:new(gnmipb.Path),
+		Path: p,
 		Val: &gnmipb.TypedValue{
 			Value: &gnmipb.TypedValue_JsonIetfVal{
 				JsonIetfVal: []byte(jv),
 			}},
 	}, nil
+}
+
+// copyPath creates a copy of p whose elements can be added/removed
+// without affecting p. Returne value is not a full clone.
+func copyPath(p *gnmipb.Path) *gnmipb.Path {
+	elems := make([]*gnmipb.PathElem, len(p.Elem))
+	copy(elems, p.Elem)
+	return &gnmipb.Path{
+		Elem: elems,
+		Target: p.Target,
+		Origin: p.Origin,
+	}
+}
+
+// insertFirstPathElem inserts newElem at the beginning of path p.
+func insertFirstPathElem(p *gnmipb.Path, newElem *gnmipb.PathElem) {
+	if newElem != nil {
+		ne := make([]*gnmipb.PathElem, 0, len(p.Elem)+1)
+		ne = append(ne, newElem)
+		p.Elem = append(ne, p.Elem...)
+	}
+}
+
+// removeLastPathElem removes the last PathElem from the path p.
+// Returns the removed element.
+func removeLastPathElem(p *gnmipb.Path) *gnmipb.PathElem {
+	k := len(p.Elem) - 1
+	if k < 0 {
+		return nil
+	}
+	last := p.Elem[k]
+	p.Elem = p.Elem[:k]
+	return last
+}
+
+func strSliceContains(ss []string, v string) bool {
+	for _, s := range ss {
+		if s == v {
+			return true
+		}
+	}
+	return false
 }
 
 func (c *TranslClient) PollRun(q *LimitedQueue, poll chan struct{}, w *sync.WaitGroup, subscribe *gnmipb.SubscriptionList) {
