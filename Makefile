@@ -1,7 +1,3 @@
-ifeq ($(GOPATH),)
-	export GOPATH=/tmp/go
-endif
-export PATH := $(PATH):$(GOPATH)/bin
 
 INSTALL := /usr/bin/install
 DBDIR := /var/run/redis/sonic-db/
@@ -9,6 +5,13 @@ ifeq ($(GO),)
 	GO := /usr/local/go/bin/go 
 	export GO
 endif
+export GOPATH ?= /tmp/go
+# GOPATH is overriten by Version Cache framework
+export GOPATH := $(shell GOPATH=$(GOPATH) ${GO} env GOPATH)
+ifeq ($(GOPATH),)
+	export GOPATH=/tmp/go
+endif
+export PATH := $(PATH):$(GOPATH)/bin
 
 TOP_DIR := $(abspath ..)
 MGMT_COMMON_DIR := $(TOP_DIR)/sonic-mgmt-common
