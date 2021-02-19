@@ -3,12 +3,16 @@ package client
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"sync"
+	"time"
+
+	"gopkg.in/yaml.v2"
+
 	spb "github.com/Azure/sonic-telemetry/proto"
 	linuxproc "github.com/c9s/goprocinfo/linux"
 	log "github.com/golang/glog"
 	gnmipb "github.com/openconfig/gnmi/proto/gnmi"
-	"sync"
-	"time"
 	"google.golang.org/grpc/status"
 	"google.golang.org/grpc/codes"
 )
@@ -18,6 +22,9 @@ import (
 
 const (
 	statsRingCap uint64 = 3000 // capacity of statsRing.
+
+	// SonicVersionFilePath is the path of build version YML file.
+	SonicVersionFilePath = "/etc/sonic/sonic_version.yml"
 )
 
 type dataGetFunc func() ([]byte, error)
@@ -33,16 +40,43 @@ type statsRing struct {
 	mu       sync.RWMutex // Mutex for data protection
 }
 
+// SonicVersionInfo is a data model to serialize '/etc/sonic/sonic_version.yml'
+type SonicVersionInfo struct {
+	BuildVersion string `yaml:"build_version" json:"build_version"`
+	Error        string `json:"error"` // Applicable only when there is a failure while reading the file.
+}
+
+// sonicVersionYmlStash caches the content of '/etc/sonic/sonic_version.yml'
+// Assumed that the content of the file doesn't change during the lifetime of telemetry service.
+type sonicVersionYmlStash struct {
+	once        sync.Once // sync object to make sure file is loaded only once.
+	versionInfo SonicVersionInfo
+}
+
+// InvalidateVersionFileStash invalidates the cache that keeps version file content.
+func InvalidateVersionFileStash() {
+	versionFileStash = sonicVersionYmlStash{}
+}
+
 var (
 	clientTrie *Trie
 	statsR     statsRing
 
-	// path2DataFuncTbl is used to populate trie tree which is reponsible
+	versionFileStash sonicVersionYmlStash
+
+	// ImplIoutilReadFile points to the implementation of ioutil.ReadFile. Should be overridden by UTs only.
+	ImplIoutilReadFile func(string) ([]byte, error) = ioutil.ReadFile
+
+	// path2DataFuncTbl is used to populate trie tree which is responsible
 	// for getting data at the path specified
 	path2DataFuncTbl = []path2DataFunc{
-		{ // Get cpu utilizaation
+		{ // Get cpu utilization
 			path:    []string{"OTHERS", "platform", "cpu"},
 			getFunc: dataGetFunc(getCpuUtil),
+		},
+		{ // Get host uptime
+			path:    []string{"OTHERS", "proc", "uptime"},
+			getFunc: dataGetFunc(getSysUptime),
 		},
 		{ // Get proc meminfo
 			path:    []string{"OTHERS", "proc", "meminfo"},
@@ -63,6 +97,10 @@ var (
 		{ // Get proc stat
 			path:    []string{"OTHERS", "proc", "stat"},
 			getFunc: dataGetFunc(getProcStat),
+		},
+		{ // OS build version
+			path:    []string{"OTHERS", "osversion", "build"},
+			getFunc: dataGetFunc(getBuildVersion),
 		},
 	}
 )
@@ -247,6 +285,54 @@ func getProcStat() ([]byte, error) {
 	return b, nil
 }
 
+func getSysUptime() ([]byte, error) {
+	uptime, _ := linuxproc.ReadUptime("/proc/uptime")
+	b, err := json.Marshal(uptime)
+	if err != nil {
+		log.V(2).Infof("%v", err)
+		return b, err
+	}
+
+	log.V(4).Infof("getSysUptime, output %v", string(b))
+	return b, nil
+}
+
+func getBuildVersion() ([]byte, error) {
+
+	// Load and parse the content of version file
+	versionFileStash.once.Do(func() {
+		versionFileStash.versionInfo.BuildVersion = "sonic.NA"
+		versionFileStash.versionInfo.Error = "" // empty string means no error.
+
+		fileContent, err := ImplIoutilReadFile(SonicVersionFilePath)
+		if err != nil {
+			log.Errorf("Failed to read '%v', %v", SonicVersionFilePath, err)
+			versionFileStash.versionInfo.Error = err.Error()
+			return
+		}
+
+		err = yaml.Unmarshal(fileContent, &versionFileStash.versionInfo)
+		if err != nil {
+			log.Errorf("Failed to parse '%v', %v", SonicVersionFilePath, err)
+			versionFileStash.versionInfo.Error = err.Error()
+			return
+		}
+
+		// Prepend 'sonic.' to the build version string.
+		if versionFileStash.versionInfo.BuildVersion != "sonic.NA" {
+			versionFileStash.versionInfo.BuildVersion = "sonic." + versionFileStash.versionInfo.BuildVersion
+		}
+	})
+
+	b, err := json.Marshal(versionFileStash.versionInfo)
+	if err != nil {
+		log.V(2).Infof("%v", err)
+		return b, err
+	}
+	log.V(4).Infof("getBuildVersion, output %v", string(b))
+	return b, nil
+}
+
 func pollStats() {
 	for {
 		stat, err := linuxproc.ReadStat("/proc/stat")
@@ -331,9 +417,109 @@ func (c *NonDbClient) String() string {
 		c.prefix.GetTarget(), c.sendMsg, c.recvMsg)
 }
 
-// To be implemented
+// StreamRun implements stream subscription for non-DB queries. It supports SAMPLE mode only.
 func (c *NonDbClient) StreamRun(q *LimitedQueue, stop chan struct{}, w *sync.WaitGroup, subscribe *gnmipb.SubscriptionList) {
-	return
+	c.w = w
+	defer c.w.Done()
+	c.q = q
+
+	validatedSubs := make(map[*gnmipb.Subscription]time.Duration)
+
+	// Validate all subs
+	for _, sub := range subscribe.GetSubscription() {
+		subMode := sub.GetMode()
+		if subMode != gnmipb.SubscriptionMode_SAMPLE {
+			enqueFatalMsgNonDbClient(c, fmt.Sprintf("Unsupported subscription mode: %v.", subMode))
+			return
+		}
+
+		interval, err := validateSampleInterval(sub)
+		if err != nil {
+			enqueFatalMsgNonDbClient(c, err.Error())
+			return
+		}
+
+		gnmiPath := sub.GetPath()
+		_, ok := c.path2Getter[gnmiPath]
+		if !ok {
+			log.V(3).Infof("Cannot find getter for the path: %v", gnmiPath)
+			continue
+		}
+
+		validatedSubs[sub] = interval
+	}
+
+	if len(validatedSubs) == 0 {
+		log.V(3).Infof("No valid sub for stream subscription.")
+		return
+	}
+
+	for sub := range validatedSubs {
+		gnmiPath := sub.GetPath()
+		getter, _ := c.path2Getter[gnmiPath]
+		runGetterAndSend(c, gnmiPath, getter)
+	}
+
+	c.q.EnqueueItem(Value{
+		&spb.Value{
+			Timestamp:    time.Now().UnixNano(),
+			SyncResponse: true,
+		},
+	})
+
+	// Start a GO routine for each sub as they might have different intervals
+	for sub, interval := range validatedSubs {
+		go streamSample(c, stop, sub, interval)
+	}
+
+	log.V(1).Infof("Started non-db sampling routines for %s ", c)
+	<-stop
+	log.V(1).Infof("Stopping NonDbClient.StreamRun routine for Client %s ", c)
+}
+
+// streamSample implements the sampling loop for a streaming subscription.
+func streamSample(c *NonDbClient, stop chan struct{}, sub *gnmipb.Subscription, interval time.Duration) {
+	log.V(1).Infof("Starting sampling routine sub: '%s' client: '%s'", sub, c)
+
+	gnmiPath := sub.GetPath()
+	getter, _ := c.path2Getter[gnmiPath] // this is already a validated sub, getter should be there.
+
+	for {
+		select {
+		case <-stop:
+			log.V(1).Infof("Stopping NonDbClient.streamSample routine for sub '%s'", sub)
+			return
+		case <-time.After(interval):
+			runGetterAndSend(c, gnmiPath, getter)
+		}
+	}
+}
+
+// runGetterAndSend runs a given getter method and puts the result to client queue.
+func runGetterAndSend(c *NonDbClient, gnmiPath *gnmipb.Path, getter dataGetFunc) error {
+	v, err := getter()
+	if err != nil {
+		log.V(3).Infof("runGetterAndSend getter error %v, %v", gnmiPath, err)
+	}
+
+	spbv := &spb.Value{
+		Prefix:       c.prefix,
+		Path:         gnmiPath,
+		Timestamp:    time.Now().UnixNano(),
+		SyncResponse: false,
+		Val: &gnmipb.TypedValue{
+			Value: &gnmipb.TypedValue_JsonIetfVal{
+				JsonIetfVal: v,
+			}},
+	}
+
+	err = c.q.EnqueueItem(Value{spbv})
+	if err != nil {
+		log.V(3).Infof("Failed to put for %v, %v", gnmiPath, err)
+	} else {
+		log.V(6).Infof("Added spbv #%v", spbv)
+	}
+	return err
 }
 func enqueFatalMsgNonDbClient(c *NonDbClient, msg string) {
 	log.Error(msg)
@@ -364,23 +550,7 @@ func (c *NonDbClient) PollRun(q *LimitedQueue, poll chan struct{}, w *sync.WaitG
 		}
 		t1 := time.Now()
 		for gnmiPath, getter := range c.path2Getter {
-			v, err := getter()
-			if err != nil {
-				log.V(3).Infof("PollRun getter error %v for %v", err, v)
-			}
-			spbv := &spb.Value{
-				Prefix:       c.prefix,
-				Path:         gnmiPath,
-				Timestamp:    time.Now().UnixNano(),
-				SyncResponse: false,
-				Val: &gnmipb.TypedValue{
-					Value: &gnmipb.TypedValue_JsonIetfVal{
-						JsonIetfVal: v,
-					}},
-			}
-
-			c.q.EnqueueItem(Value{spbv})
-			log.V(6).Infof("Added spbv #%v", spbv)
+			runGetterAndSend(c, gnmiPath, getter)
 		}
 
 		c.q.EnqueueItem(Value{

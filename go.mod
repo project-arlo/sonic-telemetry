@@ -26,6 +26,7 @@ require (
 	golang.org/x/crypto v0.0.0-20200302210943-78000ba7a073
 	golang.org/x/net v0.0.0-20200301022130-244492dfa37a
 	google.golang.org/grpc v1.28.0
+	gopkg.in/yaml.v2 v2.2.4
 )
 
 replace github.com/Azure/sonic-mgmt-common => ../sonic-mgmt-common
