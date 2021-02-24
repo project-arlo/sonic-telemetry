@@ -12,8 +12,8 @@ CVL_GOPATH=$(GO_MGMT_PATH)/build/gopkgs:$(GO_MGMT_PATH):$(GO_MGMT_PATH)/src/cvl/
 GOPATH = $(CVL_GOPATH):$(GO_DEP_PATH):$(GO_MGMT_PATH):/tmp/go:$(GO_SONIC_TELEMETRY_PATH):$(TELEM_DIR)
 INSTALL := /usr/bin/install
 
-SRC_FILES=$(shell find . -name '*.go' | grep -v '_test.go' | grep -v '/tests/')
-TEST_FILES=$(wildcard *_test.go)
+SRC_FILES=$(shell find src -name '*.go' | grep -v '_test.go' | grep -v '/tests/')
+TEST_FILES=$(shell find src/gnmi_server -name '*_test.go')
 TELEMETRY_TEST_DIR = $(GO_MGMT_PATH)/build/tests/gnmi_server
 TELEMETRY_TEST_BIN = $(TELEMETRY_TEST_DIR)/server.test
 
@@ -35,9 +35,10 @@ $(BUILD_DIR)/.deps: $(MAKEFILE_LIST)
 	GOPATH=$(GO_DEP_PATH) $(GO) get -u github.com/openconfig/goyang
 	GOPATH=$(GO_DEP_PATH) $(GO) get -d github.com/openconfig/ygot/ygot
 	GOPATH=$(GO_DEP_PATH) $(GO) get -u github.com/golang/glog
-	GOPATH=$(GO_DEP_PATH) $(GO) get -d github.com/go-redis/redis
-	cd $(GO_DEP_PATH)/src/github.com/go-redis/redis && \
-		git clean -fd && git checkout -fq d19aba07b47683ef19378c4a4d43959672b7cec8 
+	TODIR=$(GO_DEP_PATH)/src/github.com/go-redis/redis && \
+			  $(RM) -r $${TODIR} && mkdir -p $${TODIR} && \
+			  git clone https://github.com/go-redis/redis $${TODIR} && \
+			  git -C $${TODIR} reset --hard d19aba07b47683ef19378c4a4d43959672b7cec8
 	GOPATH=$(GO_DEP_PATH) $(GO) get -u  github.com/c9s/goprocinfo/linux
 	GOPATH=$(GO_DEP_PATH) $(GO) get -u  github.com/golang/protobuf/proto
 	GOPATH=$(GO_DEP_PATH) $(GO) get -d  github.com/openconfig/gnmi/proto/gnmi
