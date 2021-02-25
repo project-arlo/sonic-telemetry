@@ -55,6 +55,8 @@ while [[ $# -gt 0 ]]; do
         echo "  -pass           Prompt for username and password"
         echo "  -proto          Request PROTO encoded notifications"
         echo "  -brief          Display compact output -- {path, value} lines"
+        echo "  -heartbeat SECS Set heartbeat_interval value in seconds"
+        echo "  -noredundant    Set suppress_redundant flag"
         echo ""
         exit 0;;
     -once)
@@ -83,6 +85,12 @@ while [[ $# -gt 0 ]]; do
     -proto)
         ARGS+=( -encoding PROTO )
         shift;;
+    -heartbeat|-heartbeat_interval)
+        ARGS+=( -heartbeat_interval $2 )
+        shift 2;;
+    -noredundant|-suppress_redundant)
+        ARGS+=( -suppress_redundant )
+        shift;;
     -H|-host) HOST=$2; shift 2;;
     -p|-port) PORT=$2; shift 2;;
     -brief)   DISP=single; shift;;
@@ -100,6 +108,7 @@ ARGS+=( -logtostderr )
 ARGS+=( -address ${HOST}:${PORT} )
 ARGS+=( -display_type ${DISP} )
 ARGS+=( -target OC_YANG )
+ARGS+=( -timestamp on )
 ARGS+=( -query $(IFS=,; echo "${PATHS[*]}") )
 
 set -x
