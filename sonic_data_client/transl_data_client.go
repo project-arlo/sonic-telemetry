@@ -601,7 +601,7 @@ func copyPath(p *gnmipb.Path) *gnmipb.Path {
 	elems := make([]*gnmipb.PathElem, len(p.Elem))
 	copy(elems, p.Elem)
 	return &gnmipb.Path{
-		Elem: elems,
+		Elem:   elems,
 		Target: p.Target,
 		Origin: p.Origin,
 	}
@@ -789,7 +789,16 @@ func buildValue(prefix *gnmipb.Path, path *gnmipb.Path, enc gnmipb.Encoding,
 		if valueTree == nil {
 			return nil, nil
 		}
-		notifications, err := ygot.TogNMINotifications(*valueTree, time.Now().UnixNano(), ygot.GNMINotificationsConfig{UsePathElem: true, PathElemPrefix: path.GetElem()})
+
+		fullPath := transutil.GnmiTranslFullPath(prefix, path)
+		removeLastPathElem(fullPath)
+		notifications, err := ygot.TogNMINotifications(
+			*valueTree,
+			time.Now().UnixNano(),
+			ygot.GNMINotificationsConfig{
+				UsePathElem:    true,
+				PathElemPrefix: fullPath.GetElem(),
+			})
 		if err != nil {
 			return nil, fmt.Errorf("Cannot convert OC Struct to Notifications: %s", err)
 		}

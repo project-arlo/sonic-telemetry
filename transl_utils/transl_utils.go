@@ -43,8 +43,12 @@ func __log_audit_msg(ctx context.Context, reqType string, uriPath string, err er
 }
 
 func GnmiTranslFullPath(prefix, path *gnmipb.Path) *gnmipb.Path {
+	origin := prefix.Origin
+	if len(origin) == 0 {
+		origin = path.Origin // try path.Origin for backward compatibility
+	}
 
-	fullPath := &gnmipb.Path{Origin: path.Origin}
+	fullPath := &gnmipb.Path{Origin: origin}
 	if path.GetElement() != nil {
 		fullPath.Element = append(prefix.GetElement(), path.GetElement()...)
 	}
