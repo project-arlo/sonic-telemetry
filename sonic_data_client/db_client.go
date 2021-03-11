@@ -51,6 +51,8 @@ type Client interface {
 	Set(delete []*gnmipb.Path, replace []*gnmipb.Update, update []*gnmipb.Update) error
 	// Capabilities of the switch
 	Capabilities() ([]gnmipb.ModelData)
+	// SetEncoding sets the requested encoding on the Request/Response RPCs
+	SetEncoding(gnmipb.Encoding)
 
 	// Close provides implemenation for explicit cleanup of Client
 	Close() error
@@ -101,6 +103,7 @@ func (val Value) Compare(other queue.Item) int {
 type DbClient struct {
 	prefix  *gnmipb.Path
 	pathG2S map[*gnmipb.Path][]tablePath
+	encoding gnmipb.Encoding
 	q       *LimitedQueue
 	channel chan struct{}
 
@@ -365,6 +368,13 @@ func ValToResp(val Value) (*gnmipb.SubscribeResponse, error) {
 			return nil, fmt.Errorf("%s", fatal)
 		}
 
+		//In case scalar values are requested
+		if val.GetNotification() != nil {
+			return &gnmipb.SubscribeResponse{
+				Response: &gnmipb.SubscribeResponse_Update{
+					Update: val.GetNotification()}}, nil
+		}
+
 		return &gnmipb.SubscribeResponse{
 			Response: &gnmipb.SubscribeResponse_Update{
 				Update: &gnmipb.Notification{
@@ -403,7 +413,7 @@ func useRedisTcpClient() {
 				redisDb = redis.NewClient(&redis.Options{
 					Network:     "tcp",
 					Addr:        sdcfg.GetDbTcpAddr(dbName),
-					Password:    "", // no password set
+					Password:    sdcfg.GetDbPassword(dbName),
 					DB:          int(dbn),
 					DialTimeout: 0,
 				})
@@ -423,7 +433,7 @@ func init() {
 			redisDb = redis.NewClient(&redis.Options{
 				Network:     "unix",
 				Addr:        sdcfg.GetDbSock(dbName),
-				Password:    "", // no password set
+				Password:    sdcfg.GetDbPassword(dbName),
 				DB:          int(dbn),
 				DialTimeout: 0,
 			})
@@ -1095,5 +1105,10 @@ func  (c *DbClient) Set(delete []*gnmipb.Path, replace []*gnmipb.Update, update 
 }
 func (c *DbClient) Capabilities() ([]gnmipb.ModelData) {
 	return nil
+}
+
+// SetEncoding sets the requested encoding on the response
+func (c *DbClient) SetEncoding(enc gnmipb.Encoding) {
+        c.encoding = enc
 }
 

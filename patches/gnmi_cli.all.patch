@@ -1,6 +1,14 @@
 --- ./github.com/openconfig/gnmi/client/gnmi/client.go	2019-11-22 14:03:29.839103602 -0800
-+++ ./github.com/openconfig/gnmi/client/gnmi/client.go	2019-10-11 13:48:49.226145599 -0700
-@@ -257,7 +257,7 @@
++++ ./github.com/openconfig/gnmi/client/gnmi/client.go	2021-01-06 15:18:10.171608000 +0530
+@@ -247,6 +247,7 @@
+ 		Subscribe: &gpb.SubscriptionList{
+ 			Mode:   getType(q.Type),
+ 			Prefix: &gpb.Path{Target: q.Target},
++			Encoding: q.Encoding,
+ 		},
+ 	}
+ 	if q.UpdatesOnly {
+@@ -257,7 +258,7 @@
  		if err != nil {
  			return nil, fmt.Errorf("invalid query path %q: %v", qq, err)
  		}
@@ -10,8 +18,8 @@
  	return &gpb.SubscribeRequest{Request: s}, nil
  }
 --- ./github.com/openconfig/gnmi/cmd/gnmi_cli/gnmi_cli.go	2019-11-22 14:03:29.839103602 -0800
-+++ ./github.com/openconfig/gnmi/cmd/gnmi_cli/gnmi_cli.go	2019-11-21 09:30:52.453893674 -0800
-@@ -76,6 +76,11 @@
++++ ./github.com/openconfig/gnmi/cmd/gnmi_cli/gnmi_cli.go	2021-01-06 15:18:10.171608000 +0530
+@@ -76,6 +76,12 @@
  	caCert     = flag.String("ca_crt", "", "CA certificate file. Used to verify server TLS certificate.")
  	clientCert = flag.String("client_crt", "", "Client certificate file. Used for client certificate-based authentication.")
  	clientKey  = flag.String("client_key", "", "Client private key file. Used for client certificate-based authentication.")
@@ -20,10 +28,11 @@
 +	streaming_sample_int = flag.Uint("streaming_sample_interval", 0, "Streaming sample inteval seconds, 0 means lowest supported.")
 +	heartbeat_int = flag.Uint("heartbeat_interval", 0, "Heartbeat inteval seconds.")
 +	suppress_redundant = flag.Bool("suppress_redundant", false, "Suppress Redundant Subscription Updates")
++	encoding = flag.String("encoding", "JSON", "One of JSON, BYTES, PROTO, ASCII, JSON_IETF")
  )
  
  func init() {
-@@ -278,6 +283,22 @@
+@@ -278,6 +284,27 @@
  	if len(*queryFlag) == 0 {
  		return errors.New("--query must be set")
  	}
@@ -42,13 +51,18 @@
 +	} else if *heartbeat_int > 0  {
 +		return errors.New("-heartbeat_interval only valid with streaming query type")
 +	}
++	if enc, ok := gpb.Encoding_value[strings.ToUpper(*encoding)]; ok {
++		q.Encoding = gpb.Encoding(enc)
++	} else {
++		return fmt.Errorf("Invalid -encoding value \"%s\"", *encoding)
++	}
 +	q.Suppress_redundant = bool(*suppress_redundant)
  	for _, path := range *queryFlag {
  		query, err := parseQuery(path, cfg.Delimiter)
  		if err != nil {
 --- ./github.com/openconfig/gnmi/client/query.go	2019-11-22 14:03:29.839103602 -0800
-+++ ./github.com/openconfig/gnmi/client/query.go	2019-10-11 13:48:49.226145599 -0700
-@@ -172,6 +172,10 @@
++++ ./github.com/openconfig/gnmi/client/query.go	2021-01-06 15:18:10.171608000 +0530
+@@ -172,6 +172,11 @@
  	// SubReq is an optional field. If not nil, gnmi client implementation uses
  	// it rather than generating from client.Query while sending gnmi Subscribe RPC.
  	SubReq *gpb.SubscribeRequest
@@ -56,11 +70,12 @@
 +	Streaming_sample_int uint64
 +	Heartbeat_int uint64
 +	Suppress_redundant bool
++	Encoding gpb.Encoding
  }
  
  // Destination extracts a Destination instance out of Query fields.
 --- ./github.com/openconfig/gnmi/value/value.go	2019-11-22 14:03:29.847103498 -0800
-+++ ./github.com/openconfig/gnmi/value/value.go	2019-10-11 13:48:49.234145530 -0700
++++ ./github.com/openconfig/gnmi/value/value.go	2021-01-06 15:18:10.171608000 +0530
 @@ -117,6 +117,8 @@
  		i = ss
  	case *pb.TypedValue_BytesVal:

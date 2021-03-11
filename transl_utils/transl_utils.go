@@ -12,6 +12,7 @@ import (
 	"context"
         "log/syslog"
 	"github.com/Azure/sonic-mgmt-common/translib/tlerr"
+	"github.com/openconfig/ygot/ygot"
 )
 
 var (
@@ -42,8 +43,12 @@ func __log_audit_msg(ctx context.Context, reqType string, uriPath string, err er
 }
 
 func GnmiTranslFullPath(prefix, path *gnmipb.Path) *gnmipb.Path {
+	origin := prefix.Origin
+	if len(origin) == 0 {
+		origin = path.Origin // try path.Origin for backward compatibility
+	}
 
-	fullPath := &gnmipb.Path{Origin: path.Origin}
+	fullPath := &gnmipb.Path{Origin: origin}
 	if path.GetElement() != nil {
 		fullPath.Element = append(prefix.GetElement(), path.GetElement()...)
 	}
@@ -105,18 +110,36 @@ func ConvertToURI(prefix *gnmipb.Path, path *gnmipb.Path, req *string) error {
 	return nil
 }
 
+/* GetTranslibFmtType is a helper that converts gnmi Encoding to supported format types in translib */
+func GetTranslFmtType(encoding gnmipb.Encoding) translib.TranslibFmtType {
+
+	if encoding == gnmipb.Encoding_PROTO {
+		return translib.TRANSLIB_FMT_YGOT
+	}
+	// default to ietf_json as translib supports either Ygot or ietf_json
+	return translib.TRANSLIB_FMT_IETF_JSON
+
+}
+
 /* Fill the values from TransLib. */
-func TranslProcessGet(uriPath string, op *string, ctx context.Context) (*gnmipb.TypedValue, error) {
+func TranslProcessGet(uriPath string, op *string, ctx context.Context, encoding gnmipb.Encoding) (*gnmipb.TypedValue, *ygot.ValidatedGoStruct, error) {
 	var jv []byte
 	var data []byte
 	rc, ctx := common_utils.GetContext(ctx)
 
-	req := translib.GetRequest{Path:uriPath, User: translib.UserRoles{Name: rc.Auth.User, Roles: rc.Auth.Roles}}
+	fmtType := GetTranslFmtType(encoding)
+	req := translib.GetRequest{
+		Path:          uriPath,
+		//FillValueTree: encoding == gnmipb.Encoding_PROTO,
+		FmtType: fmtType,
+		User:          translib.UserRoles{Name: rc.Auth.User, Roles: rc.Auth.Roles}}
+
+
 	if rc.BundleVersion != nil {
 		nver, err := translib.NewVersion(*rc.BundleVersion)
 		if err != nil {
 			log.V(2).Infof("GET operation failed with error =%v", err.Error())
-			return nil, err
+			return nil, nil, err
 		}
 		req.ClientVersion = nver
 	}
@@ -130,7 +153,12 @@ func TranslProcessGet(uriPath string, op *string, ctx context.Context) (*gnmipb.
 		data = resp.Payload
 	} else {
 		log.V(2).Infof("GET operation failed with error =%v, %v", resp.ErrSrc, err1.Error())
-		return nil, err1
+		return nil, nil, fmt.Errorf("GET failed for this message: %v", err1.Error())
+	}
+
+	/* When Proto is requested we use ValueTree to generate scalar values in the data_client.*/
+	if encoding == gnmipb.Encoding_PROTO {
+		return nil, resp.ValueTree, nil
 	}
 
 	dst := new(bytes.Buffer)
@@ -142,7 +170,7 @@ func TranslProcessGet(uriPath string, op *string, ctx context.Context) (*gnmipb.
 	return &gnmipb.TypedValue{
 		Value: &gnmipb.TypedValue_JsonIetfVal{
 		JsonIetfVal: jv,
-		}}, nil
+		}}, nil, nil
 
 }
 
@@ -265,6 +293,14 @@ func TranslProcessBulk(delete []*gnmipb.Path, replace []*gnmipb.Update, update [
 			Payload: payload,
 			User: translib.UserRoles{Name: rc.Auth.User, Roles: rc.Auth.Roles},
 		}
+		if rc.BundleVersion != nil {
+			nver, err := translib.NewVersion(*rc.BundleVersion)
+			if err != nil {
+				log.V(2).Infof("Bulk Set operation failed with error =%v", err.Error())
+				return err
+			}
+			req.ClientVersion = nver
+		}
 		if rc.Auth.AuthEnabled {
 			req.AuthEnabled = true
 		}
@@ -282,6 +318,14 @@ func TranslProcessBulk(delete []*gnmipb.Path, replace []*gnmipb.Update, update [
 			Payload: payload,
 			User: translib.UserRoles{Name: rc.Auth.User, Roles: rc.Auth.Roles},
 		}
+		if rc.BundleVersion != nil {
+			nver, err := translib.NewVersion(*rc.BundleVersion)
+			if err != nil {
+				log.V(2).Infof("Bulk Set operation failed with error =%v", err.Error())
+				return err
+			}
+			req.ClientVersion = nver
+		}
 		if rc.Auth.AuthEnabled {
 			req.AuthEnabled = true
 		}
@@ -298,6 +342,14 @@ func TranslProcessBulk(delete []*gnmipb.Path, replace []*gnmipb.Update, update [
 			Path: uri,
 			Payload: payload,
 			User: translib.UserRoles{Name: rc.Auth.User, Roles: rc.Auth.Roles},
+		}
+		if rc.BundleVersion != nil {
+			nver, err := translib.NewVersion(*rc.BundleVersion)
+			if err != nil {
+				log.V(2).Infof("Bulk Set operation failed with error =%v", err.Error())
+				return err
+			}
+			req.ClientVersion = nver
 		}
 		if rc.Auth.AuthEnabled {
 			req.AuthEnabled = true

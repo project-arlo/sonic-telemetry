@@ -77,8 +77,6 @@ func (c *Client) populateDbPathSubscrition(sublist *gnmipb.SubscriptionList) ([]
 func (c *Client) Run(stream gnmipb.GNMI_SubscribeServer) (err error) {
 	defer log.V(1).Infof("Client %s shutdown", c)
 	ctx := stream.Context()
-	
-
 
 	if stream == nil {
 		return grpc.Errorf(codes.FailedPrecondition, "cannot start client: stream is nil")
@@ -126,20 +124,23 @@ func (c *Client) Run(stream gnmipb.GNMI_SubscribeServer) (err error) {
 		return grpc.Errorf(codes.NotFound, "Invalid subscription path: %v %q", err, query)
 	}
 	var dc sdc.Client
-	
-    if target == "OTHERS" {
-            dc, err = sdc.NewNonDbClient(paths, prefix)
-    } else if isTargetDb(target) == true {
-            dc, err = sdc.NewDbClient(paths, prefix)
-    } else {
-            /* For any other target or no target create new Transl Client. */
-            dc, err = sdc.NewTranslClient(prefix, paths, ctx, extensions)
-    }
 
-    if err != nil {
-            return grpc.Errorf(codes.NotFound, "%v", err)
-    }
+	if target == "OTHERS" {
+		dc, err = sdc.NewNonDbClient(paths, prefix)
+	} else if isTargetDb(target) == true {
+		dc, err = sdc.NewDbClient(paths, prefix)
+	} else {
+		/* For any other target or no target create new Transl Client. */
+		dc, err = sdc.NewTranslClient(prefix, paths, ctx, extensions)
+	}
 
+	dc.SetEncoding(c.subscribe.GetEncoding())
+
+	if err != nil {
+		return grpc.Errorf(codes.NotFound, "%v", err)
+	}
+
+	var stopOnSync bool
 
 	switch mode := c.subscribe.GetMode(); mode {
 	case gnmipb.SubscriptionList_STREAM:
@@ -152,6 +153,7 @@ func (c *Client) Run(stream gnmipb.GNMI_SubscribeServer) (err error) {
 		c.w.Add(1)
 		go dc.PollRun(c.q, c.polled, &c.w, c.subscribe)
 	case gnmipb.SubscriptionList_ONCE:
+		stopOnSync = true
 		c.once = make(chan struct{}, 1)
 		c.once <- struct{}{}
 		c.w.Add(1)
@@ -161,11 +163,15 @@ func (c *Client) Run(stream gnmipb.GNMI_SubscribeServer) (err error) {
 	}
 	log.V(1).Infof("Client %s running", c)
 	go c.recv(stream)
-	err = c.send(stream)
+	err = c.send(stream, stopOnSync)
 	c.Close()
 	// Wait until all child go routines exited
 	c.w.Wait()
-	return grpc.Errorf(codes.InvalidArgument, "%s", err)
+
+	if err != nil {
+		err = grpc.Errorf(codes.InvalidArgument, "%s", err)
+	}
+	return err
 }
 
 // Closing of client queue is triggered upon end of stream receive or stream error
@@ -224,11 +230,10 @@ func (c *Client) recv(stream gnmipb.GNMI_SubscribeServer) {
 		}
 		log.V(1).Infof("Client %s received invalid event: %s", c, event)
 	}
-	log.V(1).Infof("Client %s exit from recv()", c)
 }
 
 // send runs until process Queue returns an error.
-func (c *Client) send(stream gnmipb.GNMI_SubscribeServer) error {
+func (c *Client) send(stream gnmipb.GNMI_SubscribeServer, stopOnSync bool) error {
 	for {
 		item, err := c.q.DequeueItem()
 
@@ -245,7 +250,6 @@ func (c *Client) send(stream gnmipb.GNMI_SubscribeServer) error {
 			return err
 		}
 
-
 		c.sendMsg++
 		err = stream.Send(resp)
 		if err != nil {
@@ -254,5 +258,9 @@ func (c *Client) send(stream gnmipb.GNMI_SubscribeServer) error {
 			return err
 		}
 		log.V(5).Infof("Client %s done sending, msg count %d, msg %v", c, c.sendMsg, resp)
+
+		if stopOnSync && resp.GetSyncResponse() {
+			return nil
+		}
 	}
 }

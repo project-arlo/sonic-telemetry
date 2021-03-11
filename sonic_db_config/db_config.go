@@ -4,6 +4,7 @@ package dbconfig
 import (
     "encoding/json"
     "fmt"
+	"os"
     "strconv"
     io "io/ioutil"
 )
@@ -114,11 +115,32 @@ func GetDbTcpAddr(db_name string)(string) {
     return hostname + ":" + strconv.Itoa(port)
 }
 
+func GetDbPassword(db_name string)(string) {
+    inst := GetDbInst(db_name)
+    password :=""
+    password_path, ok := inst["password_path"]
+    if !ok {
+        return password
+    }
+    data,er := io.ReadFile(password_path.(string))
+    if er != nil {
+        //
+    } else {
+          password =(string(data))
+    }
+    return password
+}
+
 func DbInit() {
     if sonic_db_init {
         return
     }
-    data, err := io.ReadFile(SONIC_DB_CONFIG_FILE)
+
+	dbConfigFile := SONIC_DB_CONFIG_FILE
+	if customFile, ok := os.LookupEnv("DB_CONFIG_PATH"); ok {
+		dbConfigFile = customFile
+	}
+    data, err := io.ReadFile(dbConfigFile)
     if err != nil {
         panic(err)
     } else {

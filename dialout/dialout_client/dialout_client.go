@@ -198,6 +198,7 @@ func (cs *clientSubscription) NewInstance(ctx context.Context) error {
 	} else {
 		dc, err = sdc.NewDbClient(cs.paths, cs.prefix)
 	}
+        dc.SetEncoding(gpb.Encoding_JSON_IETF)
 	if err != nil {
 		log.V(1).Infof("Connection to DB for %v failed: %v", *cs, err)
 		return fmt.Errorf("Connection to DB for %v failed: %v", *cs, err)
@@ -637,13 +638,14 @@ func processTelemetryClientConfig(ctx context.Context, redisDb *redis.Client, ke
 func DialOutRun(ctx context.Context, ccfg *ClientConfig) error {
 	clientCfg = ccfg
 	dbn := sdcfg.GetDbId("CONFIG_DB")
+	password := sdcfg.GetDbPassword("CONFIG_DB")
 
 	var redisDb *redis.Client
 	if sdc.UseRedisLocalTcpPort == false {
 		redisDb = redis.NewClient(&redis.Options{
 			Network:     "unix",
 			Addr:        sdcfg.GetDbSock("CONFIG_DB"),
-			Password:    "", // no password set
+			Password:    password, 
 			DB:          dbn,
 			DialTimeout: 0,
 		})
@@ -651,7 +653,7 @@ func DialOutRun(ctx context.Context, ccfg *ClientConfig) error {
 		redisDb = redis.NewClient(&redis.Options{
 			Network:     "tcp",
 			Addr:        sdcfg.GetDbTcpAddr("CONFIG_DB"),
-			Password:    "", // no password set
+			Password:    password,
 			DB:          dbn,
 			DialTimeout: 0,
 		})

@@ -2,7 +2,7 @@
   "title": "Set Interface mtu",
   "operations":[
     {
-      "operation": "replace",
+      "operation": "update",
       "returnCode": 0,
       "xpath": "openconfig-interfaces:interfaces/interface[name=Ethernet0]/config",
       "target": "OC_YANG",
@@ -47,7 +47,7 @@
       }
     },
     {
-      "operation": "replace",
+      "operation": "update",
       "returnCode": 0,
       "xpath": "openconfig-interfaces:interfaces/interface[name=Ethernet0]/config",
       "target": "OC_YANG",
