@@ -628,6 +628,17 @@ func removeLastPathElem(p *gnmipb.Path) *gnmipb.PathElem {
 	return last
 }
 
+// setPrefixTarget fills prefix taregt for given Notification objects.
+func setPrefixTarget(notifs []*gnmipb.Notification, target string) {
+	for _, n := range notifs {
+		if n.Prefix == nil {
+			n.Prefix = &gnmipb.Path{Target: target}
+		} else {
+			n.Prefix.Target = target
+		}
+	}
+}
+
 func strSliceContains(ss []string, v string) bool {
 	for _, s := range ss {
 		if s == v {
@@ -804,6 +815,10 @@ func buildValue(prefix *gnmipb.Path, path *gnmipb.Path, enc gnmipb.Encoding,
 		}
 		if len(notifications) != 1 {
 			return nil, fmt.Errorf("YGOT returned wrong number of notifications")
+		}
+		if len(prefix.Target) != 0 {
+			// Copy target from reqest.. ygot.TogNMINotifications does not fill it.
+			setPrefixTarget(notifications, prefix.Target)
 		}
 		return &spb.Value{
 			Notification: notifications[0],
