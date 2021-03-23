@@ -40,6 +40,7 @@ import (
 // translSubscriber is an extension of TranslClient to service Subscribe RPC.
 type translSubscriber struct {
 	client      *TranslClient
+	session     *translib.SubscribeSession
 	updatesOnly bool
 	isHeartbeat bool
 	stopOnSync  bool           // Stop upon sync message from translib
@@ -61,8 +62,9 @@ func (ts *translSubscriber) doSample(p *gnmipb.Path) {
 	c := ts.client
 	paths := []string{c.path2URI[p]}
 	req := translib.SubscribeRequest{
-		Paths: paths,
-		Q:     queue.NewPriorityQueue(1, false),
+		Paths:   paths,
+		Q:       queue.NewPriorityQueue(1, false),
+		Session: ts.session,
 	}
 	if c.version != nil {
 		req.ClientVersion = *c.version
@@ -89,9 +91,10 @@ func (ts *translSubscriber) doOnChange(stringPaths []string) {
 	q := queue.NewPriorityQueue(1, false)
 
 	req := translib.SubscribeRequest{
-		Paths: stringPaths,
-		Q:     q,
-		Stop:  c.channel,
+		Paths:   stringPaths,
+		Q:       q,
+		Stop:    c.channel,
+		Session: ts.session,
 	}
 	if c.version != nil {
 		req.ClientVersion = *c.version

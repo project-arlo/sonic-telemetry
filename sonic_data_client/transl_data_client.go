@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"reflect"
+	"runtime"
 	"sync"
 	"time"
 
@@ -19,12 +20,6 @@ import (
 	"github.com/openconfig/ygot/ygot"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-)
-
-const (
-	DELETE  int = 0
-	REPLACE int = 1
-	UPDATE  int = 2
 )
 
 type TranslClient struct {
@@ -151,6 +146,10 @@ func enqueueSyncMessage(c *TranslClient) {
 // close the RPC with an error status. Should always be used as a deferred function.
 func recoverSubscribe(c *TranslClient) {
 	if r := recover(); r != nil {
+		buff := make([]byte, 1<<12)
+		buff = buff[:runtime.Stack(buff, false)]
+		log.Error(string(buff))
+
 		err := status.Errorf(codes.Internal, "%v", r)
 		enqueFatalMsgTranslib(c, fmt.Sprintf("Subscribe operation failed with error =%v", err.Error()))
 	}
@@ -200,7 +199,13 @@ func (c *TranslClient) StreamRun(q *LimitedQueue, stop chan struct{}, w *sync.Wa
 		pathsMap[p] = sub.Path
 	}
 
-	req := translib.IsSubscribeRequest{Paths: stringPaths}
+	ss := translib.NewSubscribeSession()
+	defer translib.CloseSubscribeSession(ss)
+
+	req := translib.IsSubscribeRequest{
+		Paths:   stringPaths,
+		Session: ss,
+	}
 	if c.version != nil {
 		req.ClientVersion = *c.version
 	}
@@ -270,6 +275,7 @@ func (c *TranslClient) StreamRun(q *LimitedQueue, stop chan struct{}, w *sync.Wa
 				//Send initial data now so we can send sync response, unless updates_only is set.
 				ts := translSubscriber{
 					client:  c,
+					session: ss,
 					pathMap: pathsMap,
 				}
 				if sub.SuppressRedundant {
@@ -303,6 +309,7 @@ func (c *TranslClient) StreamRun(q *LimitedQueue, stop chan struct{}, w *sync.Wa
 	if len(onChangeSubsString) > 0 {
 		ts := translSubscriber{
 			client:      c,
+			session:     ss,
 			pathMap:     pathsMap,
 			updatesOnly: subscribe.UpdatesOnly,
 		}
@@ -326,6 +333,7 @@ func (c *TranslClient) StreamRun(q *LimitedQueue, stop chan struct{}, w *sync.Wa
 			log.V(6).Infof("tick, heartbeat: %t, path: %s\n", tick.heartbeat, c.path2URI[tick.sub.Path])
 			ts := translSubscriber{
 				client:      c,
+				session:     ss,
 				pathMap:     pathsMap,
 				isHeartbeat: tick.heartbeat,
 			}
