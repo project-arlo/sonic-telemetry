@@ -104,7 +104,7 @@ func (ts *translSubscriber) doOnChange(stringPaths []string) {
 	ts.synced.Add(1)
 	go ts.processResponses(q)
 
-	_, err := translib.Subscribe(req)
+	err := translib.Subscribe(req)
 	if err != nil {
 		q.Dispose()
 		enqueFatalMsgTranslib(c, "Subscribe operation failed with error: "+err.Error())
