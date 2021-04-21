@@ -85,16 +85,7 @@ fi
 # Prepare yang files directiry for transformer
 if [[ -z ${YANG_MODELS_PATH} ]]; then
     export YANG_MODELS_PATH=${BUILD_DIR}/all_yangs
-    mkdir -p ${YANG_MODELS_PATH}
-    pushd ${YANG_MODELS_PATH} > /dev/null
-    MGMT_COMN=$(realpath --relative-to=${PWD} ${MGMT_COMMON_DIR})
-    rm -f *
-    find ${MGMT_COMN}/models/yang -name "*.yang" -not -path "*/testdata/*" -exec ln -sf {} \;
-    ln -sf ${MGMT_COMN}/models/yang/version.xml
-    ln -sf ${MGMT_COMN}/config/transformer/models_list
-    ln -sf ${MGMT_COMN}/config/transformer/sonic_table_info.json
-    ln -sf ${MGMT_COMN}/build/yang/api_ignore
-    popd > /dev/null
+    ${MGMT_COMMON_DIR}/tools/test/yangpath_init.sh
 fi
 
 if [[ -z ${SILENT} ]]; then
