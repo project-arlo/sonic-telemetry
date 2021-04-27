@@ -191,12 +191,11 @@ func (c *TranslClient) StreamRun(q *LimitedQueue, stop chan struct{}, w *sync.Wa
 	cases_map := make(map[int]int)
 	var subscribe_mode gnmipb.SubscriptionMode
 	stringPaths := make([]string, len(subscribe.Subscription))
-	pathsMap := make(map[string]*gnmipb.Path)
+	sampleCache := make(map[*gnmipb.Path]*ygotCache)
 
 	for i, sub := range subscribe.Subscription {
 		p := c.path2URI[sub.Path]
 		stringPaths[i] = p
-		pathsMap[p] = sub.Path
 	}
 
 	ss := translib.NewSubscribeSession()
@@ -212,11 +211,6 @@ func (c *TranslClient) StreamRun(q *LimitedQueue, stop chan struct{}, w *sync.Wa
 	subSupport, _ := translib.IsSubscribeSupported(req)
 
 	var onChangeSubsString []string
-
-	valueCache := make(map[string]string)
-	filterFunc := func(path string, v *spb.Value) bool {
-		return filterValues(valueCache, v, path, c.encoding)
-	}
 
 	for i, sub := range subscribe.Subscription {
 		log.V(6).Infof("%s %s", sub.Mode, sub.SampleInterval)
@@ -259,6 +253,7 @@ func (c *TranslClient) StreamRun(q *LimitedQueue, stop chan struct{}, w *sync.Wa
 			enqueFatalMsgTranslib(c, fmt.Sprintf("Invalid Subscription Mode %d", sub.Mode))
 			return
 		}
+
 		log.V(6).Infof("subscribe_mode:", subscribe_mode)
 		if subscribe_mode == gnmipb.SubscriptionMode_SAMPLE {
 			interval := int(sub.SampleInterval)
@@ -271,18 +266,17 @@ func (c *TranslClient) StreamRun(q *LimitedQueue, stop chan struct{}, w *sync.Wa
 				}
 			}
 
-			if !subscribe.UpdatesOnly {
-				//Send initial data now so we can send sync response, unless updates_only is set.
-				ts := translSubscriber{
-					client:  c,
-					session: ss,
-					pathMap: pathsMap,
-				}
-				if sub.SuppressRedundant {
-					ts.filterFunc = filterFunc
-				}
-				ts.doSample(sub.Path)
+			yCache := newYgotCache()
+			sampleCache[sub.Path] = yCache
+			ts := translSubscriber{
+				client:      c,
+				session:     ss,
+				sampleCache: yCache,
+				filterMsgs:  subscribe.UpdatesOnly,
 			}
+
+			// do initial sync & build the cache
+			ts.doSample(sub.Path)
 
 			addTimer(c, ticker_map, &cases, cases_map, interval, sub, false)
 			//Heartbeat intervals are valid for SAMPLE in the case suppress_redundant is specified
@@ -308,10 +302,9 @@ func (c *TranslClient) StreamRun(q *LimitedQueue, stop chan struct{}, w *sync.Wa
 
 	if len(onChangeSubsString) > 0 {
 		ts := translSubscriber{
-			client:      c,
-			session:     ss,
-			pathMap:     pathsMap,
-			updatesOnly: subscribe.UpdatesOnly,
+			client:     c,
+			session:    ss,
+			filterMsgs: subscribe.UpdatesOnly,
 		}
 		ts.doOnChange(onChangeSubsString)
 	} else {
@@ -334,11 +327,8 @@ func (c *TranslClient) StreamRun(q *LimitedQueue, stop chan struct{}, w *sync.Wa
 			ts := translSubscriber{
 				client:      c,
 				session:     ss,
-				pathMap:     pathsMap,
-				isHeartbeat: tick.heartbeat,
-			}
-			if tick.sub.SuppressRedundant {
-				ts.filterFunc = filterFunc
+				sampleCache: sampleCache[tick.sub.Path],
+				filterDups:  (!tick.heartbeat && tick.sub.SuppressRedundant),
 			}
 			ts.doSample(tick.sub.Path)
 		}

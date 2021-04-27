@@ -49,7 +49,8 @@ type DiffResults struct {
 func Diff(original, modified ygot.GoStruct, opts DiffOptions) (DiffResults, error) {
 	var yd ygotDiff
 	yd.DiffOptions = opts
-	if reflect.TypeOf(original) != reflect.TypeOf(modified) {
+	yd.errors.Separator = "\n"
+	if original != nil && reflect.TypeOf(original) != reflect.TypeOf(modified) {
 		return yd.DiffResults, fmt.Errorf("Type mismatch")
 	}
 
@@ -66,13 +67,13 @@ type ygotDiff struct {
 }
 
 func (yd *ygotDiff) forStruct(v1, v2 reflect.Value) {
-	if v1.IsNil() {
-		if !v2.IsNil() {
+	if !v1.IsValid() || v1.IsNil() {
+		if v2.IsValid() && !v2.IsNil() {
 			yd.recordUpdates(v2.Interface())
 		}
 		return
 	}
-	if v2.IsNil() {
+	if !v2.IsValid() || v2.IsNil() {
 		yd.recordDeletePath(nil)
 		return
 	}
@@ -103,6 +104,8 @@ func (yd *ygotDiff) forStruct(v1, v2 reflect.Value) {
 			yd.forEnum(&ft, f1.Int(), f2.Int())
 		case reflect.Interface: // union
 			yd.forUnion(&ft, &f1, &f2)
+		case reflect.Bool: // empty leaf
+			yd.forLeaf(&ft, f1.Bool(), f2.Bool())
 		default:
 			yd.recordError("Unexpected type %v for field %s", ft.Type.Kind(), ft.Name)
 		}
@@ -241,7 +244,8 @@ func (yd *ygotDiff) recordDeletePath(suffix *gnmi.PathElem) {
 }
 
 func (yd *ygotDiff) recordError(f string, args ...interface{}) {
-	yd.errors.Add(fmt.Errorf(f, args...))
+	p, _ := ygot.PathToString(&gnmi.Path{Elem: yd.prefix})
+	yd.errors.Add(fmt.Errorf(p+": "+f, args...))
 }
 
 // newPath returns a new *gnmi.Path by joining the path elements

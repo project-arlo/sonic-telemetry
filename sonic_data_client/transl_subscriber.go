@@ -31,7 +31,6 @@ import (
 	spb "github.com/Azure/sonic-telemetry/proto"
 	"github.com/Azure/sonic-telemetry/transl_utils"
 	"github.com/Workiva/go-datastructures/queue"
-	"github.com/gogo/protobuf/proto"
 	log "github.com/golang/glog"
 	gnmipb "github.com/openconfig/gnmi/proto/gnmi"
 	"github.com/openconfig/ygot/ygot"
@@ -41,17 +40,30 @@ import (
 type translSubscriber struct {
 	client      *TranslClient
 	session     *translib.SubscribeSession
-	updatesOnly bool
-	isHeartbeat bool
-	stopOnSync  bool           // Stop upon sync message from translib
-	synced      sync.WaitGroup // To signal receipt of sync message from translib
-	pathMap     map[string]*gnmipb.Path
-	filterFunc  func(string, *spb.Value) bool
+	sampleCache *ygotCache      // session cache for SAMPLE; optional
+	filterMsgs  bool            // Filter out messages till sync done (updates_only)
+	filterDups  bool            // Filter out duplicate updates (suppress_redundant)
+	stopOnSync  bool            // Stop upon sync message from translib
+	synced      sync.WaitGroup  // To signal receipt of sync message from translib
+	rcvdPaths   map[string]bool // Paths from received SubscribeResponse
+	msgBuilder  notificationBuilder
 }
+
+// notificationBuilder creates gnmipb.Notification from a translib.SubscribeResponse
+// instance. Input can be nil, indicating the end of current sample iteration.
+type notificationBuilder func(
+	resp *translib.SubscribeResponse, ts *translSubscriber) (*gnmipb.Notification, error)
 
 // doSample invokes translib.Stream API to service SAMPLE, POLL and ONCE subscriptions.
 // Timer for SAMPLE subscription should be managed outside.
 func (ts *translSubscriber) doSample(p *gnmipb.Path) {
+	if ts.sampleCache != nil {
+		ts.msgBuilder = ts.sampleCache.msgBuilder // SAMPLE
+		ts.rcvdPaths = make(map[string]bool)
+	} else {
+		ts.msgBuilder = defaultMsgBuilder // ONCE, POLL or heartbeat for ON_CHANGE
+	}
+
 	// Temporary workaround to support legacy app implementations.
 	// TODO remove once all apps have migrated to new subscribe infra
 	if !path.HasWildcardKey(p) {
@@ -102,6 +114,7 @@ func (ts *translSubscriber) doOnChange(stringPaths []string) {
 
 	c.w.Add(1)
 	ts.synced.Add(1)
+	ts.msgBuilder = defaultMsgBuilder
 	go ts.processResponses(q)
 
 	err := translib.Subscribe(req)
@@ -147,8 +160,9 @@ func (ts *translSubscriber) processResponses(q *queue.PriorityQueue) {
 				return
 			}
 
-			if v.SyncComplete && !syncDone {
+			if v.SyncComplete {
 				if ts.stopOnSync {
+					ts.notify(nil)
 					log.V(6).Infof("Stopping on sync signal from translib")
 					return
 				}
@@ -157,36 +171,57 @@ func (ts *translSubscriber) processResponses(q *queue.PriorityQueue) {
 				enqueueSyncMessage(c)
 				syncDone = true
 				ts.synced.Done()
+				ts.filterMsgs = false
 				break
 			}
 
-			//Don't send initial update with full object if user wants updates only.
-			if ts.updatesOnly && !syncDone {
-				log.V(1).Infof("Msg suppressed due to updates_only")
-				break
+			if err := ts.notify(v); err != nil {
+				log.Warning(err)
+				enqueFatalMsgTranslib(c, "Internal error")
+				return
 			}
-
-			ts.notify(v)
-
 		default:
 			log.V(1).Infof("Unknown data type %v for %s in queue", items[0], c)
 		}
 	}
 }
 
-func (ts *translSubscriber) notify(v *translib.SubscribeResponse) {
-	c := ts.client
-
-	//TODO change SubscribeResponse to return *gnmi.Path itself
-	p := ts.pathMap[v.Path]
-	if p == nil {
-		p, _ = ygot.StringToStructuredPath(v.Path)
-		p.Target = c.prefix.Target
-		p.Origin = c.prefix.Origin
-	} else {
-		p = copyPath(p)
+func (ts *translSubscriber) notify(v *translib.SubscribeResponse) error {
+	msg, err := ts.msgBuilder(v, ts)
+	if err != nil {
+		return err
 	}
 
+	if msg == nil || (len(msg.Update) == 0 && len(msg.Delete) == 0) {
+		log.V(6).Infof("Ignore nil message")
+		return nil
+	}
+	spbv := &spb.Value{
+		Notification: msg,
+	}
+	ts.client.q.EnqueueItem(Value{spbv})
+	log.V(6).Infof("Added spbv #%v", spbv)
+	return nil
+}
+
+func (ts *translSubscriber) toPrefix(path string) *gnmipb.Path {
+	p, _ := ygot.StringToStructuredPath(path)
+	p.Target = ts.client.prefix.Target
+	p.Origin = ts.client.prefix.Origin
+	return p
+}
+
+func defaultMsgBuilder(v *translib.SubscribeResponse, ts *translSubscriber) (*gnmipb.Notification, error) {
+	if v == nil {
+		return nil, nil
+	}
+	if ts.filterMsgs {
+		log.V(3).Infof("Msg suppressed due to updates_only")
+		return nil, nil
+	}
+
+	c := ts.client
+	p := ts.toPrefix(v.Path)
 	n := gnmipb.Notification{
 		Prefix:    p,
 		Timestamp: v.Timestamp,
@@ -202,8 +237,7 @@ func (ts *translSubscriber) notify(v *translib.SubscribeResponse) {
 			ju, err := ygot.TogNMINotifications(v.Update, v.Timestamp,
 				ygot.GNMINotificationsConfig{UsePathElem: true, PathElemPrefix: p.GetElem()})
 			if err != nil {
-				log.Error(err)
-				return
+				return nil, err
 			}
 			n.Update = ju[0].Update
 			if extraPrefix != nil {
@@ -217,8 +251,7 @@ func (ts *translSubscriber) notify(v *translib.SubscribeResponse) {
 		if v.Update != nil {
 			ju, err := ygotToIetfJsonValue(extraPrefix, v.Update)
 			if err != nil {
-				log.Error(err)
-				return
+				return nil, err
 			}
 			n.Update = append(n.Update, ju)
 		}
@@ -227,23 +260,13 @@ func (ts *translSubscriber) notify(v *translib.SubscribeResponse) {
 	for _, del := range v.Delete {
 		p, err := ygot.StringToStructuredPath(del)
 		if err != nil {
-			log.Errorf("Invalid path \"%s\"; err=%v", del, err)
-			break
+			return nil, err
 		}
 		insertFirstPathElem(p, extraPrefix)
 		n.Delete = append(n.Delete, p)
 	}
 
-	spbv := &spb.Value{
-		Notification: &n,
-	}
-
-	if ts.filterFunc != nil && !ts.filterFunc(v.Path, spbv) && !ts.isHeartbeat {
-		log.V(6).Infof("Redundant message suppressed for path: %v", v.Path)
-	} else {
-		c.q.EnqueueItem(Value{spbv})
-		log.V(6).Infof("Added spbv #%v", spbv)
-	}
+	return &n, nil
 }
 
 // notifyUsingGet performs translib.Get to retrieve data for a path
@@ -261,19 +284,19 @@ func (ts *translSubscriber) notifyUsingGet(p *gnmipb.Path) {
 		return
 	}
 
-	resp := translib.SubscribeResponse{
-		Path:      pathStr,
-		Timestamp: time.Now().UnixNano(),
-	}
-
+	var resp *translib.SubscribeResponse
 	if valTree != nil {
-		resp.Update = *valTree
-	} else {
-		//TODO send delete notification if applicable
-		return
+		resp = &translib.SubscribeResponse{
+			Path:      pathStr,
+			Update:    *valTree,
+			Timestamp: time.Now().UnixNano(),
+		}
 	}
 
-	ts.notify(&resp)
+	if err := ts.notify(resp); err != nil {
+		log.Warning(err)
+		enqueFatalMsgTranslib(ts.client, "Internal error")
+	}
 }
 
 // ygotToIetfJsonValue creates a gnmipb.Update object with IETF JSON value of a ygot struct.
@@ -358,61 +381,78 @@ func strSliceContains(ss []string, v string) bool {
 	return false
 }
 
-//Compares val to cache, removes any duplicates from val,
-//updates cache. Returns true if there are new values.
-func filterValues(cache map[string]string, val *spb.Value, URI string, enc gnmipb.Encoding) bool {
-	switch enc {
-	case gnmipb.Encoding_JSON:
-		fallthrough
-	case gnmipb.Encoding_JSON_IETF:
-		var v string
-		if val.Notification != nil && len(val.Notification.Update) != 0 {
-			v = string(val.Notification.Update[0].Val.GetJsonIetfVal())
-		} else if val.Val != nil {
-			v = string(val.Val.GetJsonIetfVal())
-		}
-		if len(v) != 0 && v != cache[URI] {
-			cache[URI] = v
-			return true
-		}
-		return false
-	case gnmipb.Encoding_PROTO:
-		prefix, err := ygot.PathToString(val.Notification.GetPrefix())
-		if err != nil {
-			log.V(4).Infof("Failed to stringify prefix: #%v", err)
-		}
+// ygotCache holds path to ygot struct mappings
+type ygotCache struct {
+	values map[string]ygot.GoStruct
+}
 
-		//Remove delete messages from cache.
-		for _, d := range val.Notification.GetDelete() {
-			path, err := ygot.PathToString(d)
-			if err != nil {
-				log.V(4).Infof("Failed to stringify delete path: #%v", err)
-				continue
-			}
-			delete(cache, prefix+path)
-		}
-
-		//Only forward values that have changed from the cache.
-		var filteredUpdates []*gnmipb.Update
-		for _, u := range val.Notification.GetUpdate() {
-			path, err := ygot.PathToString(u.GetPath())
-			if err != nil {
-				log.V(4).Infof("Failed to stringify update path: #%v", err)
-				continue
-			}
-			leaf := proto.MarshalTextString(u.GetVal())
-			if cache[prefix+path] != leaf {
-				cache[prefix+path] = leaf
-				filteredUpdates = append(filteredUpdates, u)
-			}
-
-		}
-		if len(filteredUpdates) == 0 && len(val.Notification.GetDelete()) == 0 {
-			return false
-		}
-		val.GetNotification().Update = filteredUpdates
-		return true
-	default:
-		return false
+// newYgotCache creates a new ygotCache instance
+func newYgotCache() *ygotCache {
+	return &ygotCache{
+		values: make(map[string]ygot.GoStruct),
 	}
+}
+
+// msgBuilder is a notificationBuilder implementation to create a gnmipb.Notification
+// message by comparing the SubscribeResponse.Update ygot struct to the cached value.
+// Includes only modified or deleted leaf paths if translSubscriber.filterDups is set.
+// Returns nil message if translSubscriber.filterMsgs is set or on error.
+// Updates the cache with the new ygot struct (SubscribeResponse.Update).
+// Special case: if SubscribeResponse is nil, calls deleteMsgBuilder to delete
+// non-existing paths from the cache.
+func (c *ygotCache) msgBuilder(v *translib.SubscribeResponse, ts *translSubscriber) (*gnmipb.Notification, error) {
+	if v == nil {
+		return c.deleteMsgBuilder(ts)
+	}
+
+	old := c.values[v.Path]
+	c.values[v.Path] = v.Update
+	ts.rcvdPaths[v.Path] = true
+	log.Infof("%s updated; old=%p, new=%p, filterDups=%v", v.Path, old, v.Update, ts.filterDups)
+	if ts.filterMsgs {
+		log.V(3).Infof("Msg suppressed due to updates_only")
+		return nil, nil
+	}
+
+	res, err := transl_utils.Diff(old, v.Update,
+		transl_utils.DiffOptions{
+			RecordAll: !ts.filterDups,
+		})
+	if err != nil {
+		return nil, err
+	}
+
+	return &gnmipb.Notification{
+		Timestamp: v.Timestamp,
+		Prefix:    ts.toPrefix(v.Path),
+		Update:    res.Update,
+		Delete:    res.Delete,
+	}, nil
+}
+
+// deleteMsgBuilder deletes the cache entries whose path does not appear in
+// the translSubscriber.rcvdPaths map. Creates a gnmipb.Notification message
+// for the deleted paths. Returns nil message if there are no such delete paths
+// or translSubscriber.filterMsgs is set.
+func (c *ygotCache) deleteMsgBuilder(ts *translSubscriber) (*gnmipb.Notification, error) {
+	if ts.filterMsgs {
+		log.V(3).Infof("Msg suppressed due to updates_only")
+		return nil, nil
+	}
+	var deletePaths []*gnmipb.Path
+	for path := range c.values {
+		if !ts.rcvdPaths[path] {
+			log.Infof("%s deleted", path)
+			deletePaths = append(deletePaths, ts.toPrefix(path))
+			delete(c.values, path)
+		}
+	}
+	if len(deletePaths) == 0 {
+		return nil, nil
+	}
+	return &gnmipb.Notification{
+		Timestamp: time.Now().UnixNano(),
+		Prefix:    ts.toPrefix("/"),
+		Delete:    deletePaths,
+	}, nil
 }
