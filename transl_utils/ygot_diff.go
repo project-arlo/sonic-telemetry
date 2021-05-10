@@ -99,7 +99,7 @@ func (yd *ygotDiff) forStruct(v1, v2 reflect.Value) {
 		case reflect.Map: // list
 			yd.forList(&ft, &f1, &f2)
 		case reflect.Slice: // leaf-list
-			//TODO
+			yd.forLeafList(&ft, &f1, &f2)
 		case reflect.Int64: // enum
 			yd.forEnum(&ft, f1.Int(), f2.Int())
 		case reflect.Interface: // union
@@ -187,6 +187,32 @@ func (yd *ygotDiff) forLeaf(f *reflect.StructField, v1, v2 interface{}) {
 		}
 	} else if yd.RecordAll || v1 != v2 {
 		yd.recordUpdate(f, v2)
+	}
+}
+
+func (yd *ygotDiff) forLeafList(f *reflect.StructField, v1, v2 *reflect.Value) {
+	var len1, len2 int
+	if !v1.IsNil() {
+		len1 = v1.Len()
+	}
+	if !v2.IsNil() {
+		len2 = v2.Len()
+	}
+	if len2 == 0 {
+		if len1 != 0 {
+			yd.recordDelete(f)
+		}
+		return
+	}
+	if yd.RecordAll || len1 != len2 {
+		yd.recordUpdate(f, v2.Interface())
+		return
+	}
+	for i := 0; i < len1; i++ {
+		if v1.Index(i).Interface() != v2.Index(i).Interface() {
+			yd.recordUpdate(f, v2.Interface())
+			return
+		}
 	}
 }
 
