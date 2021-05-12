@@ -21,6 +21,7 @@ package transl_utils
 
 import (
 	"fmt"
+	"io/ioutil"
 	"strings"
 	"testing"
 
@@ -110,6 +111,12 @@ func tvToStr(tv *gnmi.TypedValue) string {
 	switch x := tv.Value.(type) {
 	case *gnmi.TypedValue_StringVal:
 		return x.StringVal
+	case *gnmi.TypedValue_LeaflistVal:
+		var values []string
+		for _, v := range x.LeaflistVal.Element {
+			values = append(values, tvToStr(v))
+		}
+		return strings.Join(values, ",")
 	}
 
 	// stringify TypedValue into "field: value" format
@@ -123,6 +130,11 @@ func loadJSON(t *testing.T, v string) ygot.GoStruct {
 	root := &ocbinds.Device{}
 	err := ocbinds.Unmarshal([]byte(v), root)
 	if err != nil {
+		if f, err := ioutil.TempFile("", "payload-*"); err == nil {
+			f.Write([]byte(v))
+			f.Close()
+			t.Log("Faulty payload saved at ", f.Name())
+		}
 		t.Fatalf("ocbinds.Unmarshal failed; err=%v", err)
 	}
 	return root
@@ -495,5 +507,93 @@ func TestAcl_RecordAll(t *testing.T) {
 		"acl-entry[sequence-id=104]/ipv4/config/protocol",
 		"acl-entry[sequence-id=104]/ipv4/config/source-address",
 	)
+	dif.Compare(t, &exp)
+}
+
+func TestAcl_LeafList(t *testing.T) {
+	a1 := loadJSON(t, `{"acl":{"acl-sets":{"acl-set":[
+		{"name": "ACL1", "type": "ACL_IPV4", "acl-entries": {"acl-entry": [
+		{"sequence-id": 1, "transport": {"config": {"tcp-flags": ["TCP_SYN", "TCP_FIN"]}}},
+		{"sequence-id": 2, "transport": {"config": {"tcp-flags": ["TCP_SYN", "TCP_FIN"]}}},
+		{"sequence-id": 3, "transport": {"config": {"tcp-flags": ["TCP_SYN", "TCP_FIN"]}}},
+		{"sequence-id": 4, "transport": {"config": {"tcp-flags": ["TCP_SYN", "TCP_FIN"]}}},
+		{"sequence-id": 5, "transport": {"config": {"tcp-flags": ["TCP_SYN", "TCP_FIN"]}}},
+		{"sequence-id": 6, "transport": {"config": {"tcp-flags": ["TCP_SYN", "TCP_FIN"]}}},
+		{"sequence-id": 7, "transport": {"config": {"tcp-flags": ["TCP_SYN", "TCP_FIN"]}}},
+		{"sequence-id": 8, "transport": {"config": {"tcp-flags": ["TCP_SYN", "TCP_FIN"]}}},
+		{"sequence-id": 9}
+		]}}]}}}`)
+	a2 := loadJSON(t, `{"acl":{"acl-sets":{"acl-set":[
+		{"name": "ACL1", "type": "ACL_IPV4", "acl-entries": {"acl-entry": [
+		{"sequence-id": 1, "transport": {"config": {"tcp-flags": ["TCP_SYN", "TCP_RST"]}}},
+		{"sequence-id": 2, "transport": {"config": {"tcp-flags": ["TCP_FIN", "TCP_SYN"]}}},
+		{"sequence-id": 3, "transport": {"config": {"tcp-flags": ["TCP_SYN"]}}},
+		{"sequence-id": 4, "transport": {"config": {"tcp-flags": ["TCP_SYN", "TCP_FIN", "TCP_ACK"]}}},
+		{"sequence-id": 5, "transport": {"config": {"tcp-flags": ["TCP_SYN", "TCP_FIN"]}}},
+		{"sequence-id": 6, "transport": {"config": {"tcp-flags": []}}},
+		{"sequence-id": 7, "transport": {"config": {}}},
+		{"sequence-id": 8},
+		{"sequence-id": 9, "transport": {"config": {"tcp-flags": ["TCP_SYN", "TCP_FIN"]}}},
+		{"sequence-id":10, "transport": {"config": {"tcp-flags": ["TCP_SYN", "TCP_FIN"]}}}
+		]}}]}}}`)
+
+	var dif, exp diffData
+	dif.YgotDiff(t, a1, a2, DiffOptions{})
+	exp.Updates("/acl/acl-sets/acl-set[name=ACL1][type=ACL_IPV4]/acl-entries",
+		map[string]interface{}{
+			"acl-entry[sequence-id=1]/transport/config/tcp-flags":  "TCP_SYN,TCP_RST",
+			"acl-entry[sequence-id=2]/transport/config/tcp-flags":  "TCP_FIN,TCP_SYN",
+			"acl-entry[sequence-id=3]/transport/config/tcp-flags":  "TCP_SYN",
+			"acl-entry[sequence-id=4]/transport/config/tcp-flags":  "TCP_SYN,TCP_FIN,TCP_ACK",
+			"acl-entry[sequence-id=9]/transport/config/tcp-flags":  "TCP_SYN,TCP_FIN",
+			"acl-entry[sequence-id=10]/sequence-id":                10,
+			"acl-entry[sequence-id=10]/transport/config/tcp-flags": "TCP_SYN,TCP_FIN",
+		})
+	exp.Deletes("/acl/acl-sets/acl-set[name=ACL1][type=ACL_IPV4]/acl-entries",
+		"acl-entry[sequence-id=6]/transport/config/tcp-flags",
+		"acl-entry[sequence-id=7]/transport/config/tcp-flags",
+		"acl-entry[sequence-id=8]/transport",
+	)
+	dif.Compare(t, &exp)
+}
+
+func TestAcl_LeafList_RecordAll(t *testing.T) {
+	a1 := loadJSON(t, `{"acl":{"acl-sets":{"acl-set":[
+		{"name": "ACL1", "type": "ACL_IPV4", "acl-entries": {"acl-entry": [
+		{"sequence-id": 1, "transport": {"config": {"tcp-flags": ["TCP_SYN", "TCP_FIN"]}}},
+		{"sequence-id": 2, "transport": {"config": {"tcp-flags": ["TCP_SYN", "TCP_FIN"]}}},
+		{"sequence-id": 3, "transport": {"config": {"tcp-flags": ["TCP_SYN", "TCP_FIN"]}}},
+		{"sequence-id": 4, "transport": {"config": {"tcp-flags": ["TCP_SYN", "TCP_FIN"]}}},
+		{"sequence-id": 5, "transport": {"config": {"tcp-flags": ["TCP_SYN", "TCP_FIN"]}}}
+		]}}]}}}`)
+	a2 := loadJSON(t, `{"acl":{"acl-sets":{"acl-set":[
+		{"name": "ACL1", "type": "ACL_IPV4", "acl-entries": {"acl-entry": [
+		{"sequence-id": 1, "transport": {"config": {"tcp-flags": ["TCP_SYN", "TCP_RST"]}}},
+		{"sequence-id": 2, "transport": {"config": {"tcp-flags": ["TCP_FIN", "TCP_SYN"]}}},
+		{"sequence-id": 3, "transport": {"config": {"tcp-flags": ["TCP_SYN"]}}},
+		{"sequence-id": 4, "transport": {"config": {"tcp-flags": ["TCP_SYN", "TCP_FIN", "TCP_ACK"]}}},
+		{"sequence-id": 5, "transport": {"config": {"tcp-flags": ["TCP_SYN", "TCP_FIN"]}}}
+		]}}]}}}`)
+
+	var dif, exp diffData
+	dif.YgotDiff(t, a1, a2, DiffOptions{RecordAll: true})
+	exp.Updates("/acl/acl-sets/acl-set[name=ACL1][type=ACL_IPV4]",
+		map[string]interface{}{
+			"name": "ACL1",
+			"type": "ACL_IPV4",
+		})
+	exp.Updates("/acl/acl-sets/acl-set[name=ACL1][type=ACL_IPV4]/acl-entries",
+		map[string]interface{}{
+			"acl-entry[sequence-id=1]/sequence-id":                1,
+			"acl-entry[sequence-id=1]/transport/config/tcp-flags": "TCP_SYN,TCP_RST",
+			"acl-entry[sequence-id=2]/sequence-id":                2,
+			"acl-entry[sequence-id=2]/transport/config/tcp-flags": "TCP_FIN,TCP_SYN",
+			"acl-entry[sequence-id=3]/sequence-id":                3,
+			"acl-entry[sequence-id=3]/transport/config/tcp-flags": "TCP_SYN",
+			"acl-entry[sequence-id=4]/sequence-id":                4,
+			"acl-entry[sequence-id=4]/transport/config/tcp-flags": "TCP_SYN,TCP_FIN,TCP_ACK",
+			"acl-entry[sequence-id=5]/sequence-id":                5,
+			"acl-entry[sequence-id=5]/transport/config/tcp-flags": "TCP_SYN,TCP_FIN",
+		})
 	dif.Compare(t, &exp)
 }
