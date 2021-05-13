@@ -284,6 +284,12 @@ func (ts *translSubscriber) notifyUsingGet(p *gnmipb.Path) {
 		return
 	}
 
+	// translib.Get always returns parent container of the path.
+	// Remove the last path elem to avoid duplicate elem in the message.
+	fullPath := transl_utils.GnmiTranslFullPath(ts.client.prefix, p)
+	removeLastPathElem(fullPath)
+	pathStr, _ = ygot.PathToString(fullPath)
+
 	var resp *translib.SubscribeResponse
 	if valTree != nil {
 		resp = &translib.SubscribeResponse{
@@ -366,6 +372,9 @@ func removeLastPathElem(p *gnmipb.Path) *gnmipb.PathElem {
 	k := len(p.Elem) - 1
 	if k < 0 {
 		return nil
+	}
+	if p.Element != nil {
+		p.Element = p.Element[:k]
 	}
 	last := p.Elem[k]
 	p.Elem = p.Elem[:k]
