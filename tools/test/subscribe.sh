@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
-
 ################################################################################
 #                                                                              #
 #  Copyright 2020 Broadcom. The term Broadcom refers to Broadcom Inc. and/or   #
@@ -21,6 +20,27 @@
 
 set -e
 
+function print_usage() {
+echo "usage: $(basename $0) [OPTIONS] [MODE] PATH*"
+echo ""
+echo "MODE (one of):"
+echo "  -onchange         ON_CHANGE subscription"
+echo "  -sample SECS      SAMPLE subscription with sample interval seconds"
+echo "  -target-defined   TARGET_DEFINED subscription"
+echo "  -once             ONCE subscription (default mode)"
+echo "  -poll SECS        POLL subscription with poll interval seconds"
+echo ""
+echo "OPTIONS:"
+echo "  -host HOST        Server IP address (default 127.0.0.1)"
+echo "  -port PORT        Server port (default 8080)"
+echo "  -pass             Prompt for username and password"
+echo "  -proto            Request PROTO encoded notifications"
+echo "  -brief            Display compact output -- {path, value} lines"
+echo "  -heartbeat SECS   Set heartbeat_interval value in seconds"
+echo "  -noredundant      Set suppress_redundant flag"
+echo ""
+}
+
 TOPDIR=$(git rev-parse --show-toplevel || echo ${PWD})
 BINDIR=${TOPDIR}/build/bin
 GNMCLI=$(realpath --relative-to ${PWD} ${BINDIR}/gnmi_cli)
@@ -40,24 +60,7 @@ DISP=proto
 while [[ $# -gt 0 ]]; do
     case "$1" in
     -h|-help|--help)
-        echo "usage: $(basename $0) [OPTIONS] [MODE] PATH*"
-        echo ""
-        echo "MODE (one of):"
-        echo "  -onchange       ON_CHANGE subscription"
-        echo "  -sample SECS    SAMPLE subscription with sample interval seconds"
-        echo "  -target-defined TARGET_DEFINED subscription"
-        echo "  -once           ONCE subscription (default mode)"
-        echo "  -poll SECS      POLL subscription with poll interval seconds"
-        echo ""
-        echo "OPTIONS:"
-        echo "  -host HOST      Server IP address (default 127.0.0.1)"
-        echo "  -port PORT      Server port (default 8080)"
-        echo "  -pass           Prompt for username and password"
-        echo "  -proto          Request PROTO encoded notifications"
-        echo "  -brief          Display compact output -- {path, value} lines"
-        echo "  -heartbeat SECS Set heartbeat_interval value in seconds"
-        echo "  -noredundant    Set suppress_redundant flag"
-        echo ""
+        print_usage
         exit 0;;
     -once)
         ARGS+=( -query_type once )
@@ -91,10 +94,22 @@ while [[ $# -gt 0 ]]; do
     -noredundant|-suppress_redundant)
         ARGS+=( -suppress_redundant )
         shift;;
-    -H|-host) HOST=$2; shift 2;;
-    -p|-port) PORT=$2; shift 2;;
-    -brief)   DISP=single; shift;;
-    *) PATHS+=("$1"); shift;;
+    -H|-host)
+        HOST=$2
+        shift 2;;
+    -p|-port)
+        PORT=$2
+        shift 2;;
+    -brief)
+        DISP=single
+        shift;;
+    [/_a-zA-Z]*)
+        PATHS+=( "$1" )
+        shift;;
+    *)
+        echo "error: unknown option: $1"
+        print_usage
+        exit 1;;
     esac
 done
 
