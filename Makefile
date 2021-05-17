@@ -23,14 +23,21 @@ SRC_FILES=$(shell find . -name '*.go' | grep -v '_test.go' | grep -v '/tests/')
 TEST_FILES=$(wildcard gnmi_server/*_test.go)
 TELEMETRY_TEST_DIR = build/tests/gnmi_server
 TELEMETRY_TEST_BIN = $(TELEMETRY_TEST_DIR)/server.test
+FORMAT_CHECK = $(BUILD_DIR)/.formatcheck
 
 GO_DEPS := vendor/.done
 PATCHES := $(wildcard patches/*.patch)
 
-all: sonic-telemetry clients $(TELEMETRY_TEST_BIN)
+all: sonic-telemetry clients $(TELEMETRY_TEST_BIN) $(FORMAT_CHECK)
 
 go.mod:
 	$(GO) mod init github.com/Azure/sonic-telemetry
+
+$(FORMAT_CHECK): $(SRC_FILES) $(TEST_FILES)
+	$(MGMT_COMMON_DIR)/tools/test/format-check.sh \
+		--log=$(BUILD_DIR)/formatcheck.log \
+		--exclude=proto
+	touch $@
 
 $(GO_DEPS): go.mod $(PATCHES)
 	$(GO) mod vendor
