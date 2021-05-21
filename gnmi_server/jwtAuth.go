@@ -1,16 +1,17 @@
 package gnmi
 
 import (
-	"github.com/Azure/sonic-telemetry/common_utils"
 	"crypto/rand"
+	"time"
+
+	"github.com/Azure/sonic-telemetry/common_utils"
+	spb "github.com/Azure/sonic-telemetry/proto/gnoi"
 	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/golang/glog"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
-	spb "github.com/Azure/sonic-telemetry/proto/gnoi"
-	"time"
 )
 
 var (

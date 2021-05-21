@@ -1,7 +1,3 @@
-ifeq ($(GOPATH),)
-	export GOPATH=/tmp/go
-endif
-export PATH := $(PATH):$(GOPATH)/bin
 
 INSTALL := /usr/bin/install
 DBDIR := /var/run/redis/sonic-db/
@@ -9,6 +5,13 @@ ifeq ($(GO),)
 	GO := /usr/local/go/bin/go 
 	export GO
 endif
+export GOPATH ?= /tmp/go
+# GOPATH is overriten by Version Cache framework
+export GOPATH := $(shell GOPATH=$(GOPATH) ${GO} env GOPATH)
+ifeq ($(GOPATH),)
+	export GOPATH=/tmp/go
+endif
+export PATH := $(PATH):$(GOPATH)/bin
 
 TOP_DIR := $(abspath ..)
 MGMT_COMMON_DIR := $(TOP_DIR)/sonic-mgmt-common
@@ -17,17 +20,24 @@ export CVL_SCHEMA_PATH := $(MGMT_COMMON_DIR)/cvl/schema
 export GOBIN := $(abspath $(BUILD_DIR))
 
 SRC_FILES=$(shell find . -name '*.go' | grep -v '_test.go' | grep -v '/tests/')
-TEST_FILES=$(wildcard *_test.go)
+TEST_FILES=$(wildcard gnmi_server/*_test.go)
 TELEMETRY_TEST_DIR = build/tests/gnmi_server
 TELEMETRY_TEST_BIN = $(TELEMETRY_TEST_DIR)/server.test
+FORMAT_CHECK = $(BUILD_DIR)/.formatcheck
 
 GO_DEPS := vendor/.done
 PATCHES := $(wildcard patches/*.patch)
 
-all: sonic-telemetry $(TELEMETRY_TEST_BIN)
+all: sonic-telemetry clients $(TELEMETRY_TEST_BIN) $(FORMAT_CHECK)
 
 go.mod:
 	$(GO) mod init github.com/Azure/sonic-telemetry
+
+$(FORMAT_CHECK): $(SRC_FILES) $(TEST_FILES)
+	$(MGMT_COMMON_DIR)/tools/test/format-check.sh \
+		--log=$(BUILD_DIR)/formatcheck.log \
+		--exclude=proto
+	touch $@
 
 $(GO_DEPS): go.mod $(PATCHES)
 	$(GO) mod vendor
@@ -47,11 +57,20 @@ go-deps-clean:
 
 sonic-telemetry: $(MAKEFILE_LIST) $(GO_DEPS)
 	$(GO) install -mod=vendor github.com/Azure/sonic-telemetry/telemetry
+
+clients:
 	$(GO) install -mod=vendor github.com/Azure/sonic-telemetry/dialout/dialout_client_cli
 	$(GO) install -mod=vendor github.com/Azure/sonic-telemetry/gnoi_client
 	$(GO) install -mod=vendor github.com/jipanyang/gnxi/gnmi_get
 	$(GO) install -mod=vendor github.com/jipanyang/gnxi/gnmi_set
 	$(GO) install -mod=vendor github.com/openconfig/gnmi/cmd/gnmi_cli
+
+# telemetry is a special target to recompile the gNMI telemetry server after telemetry or
+# mgmt-common code changes. Useful for quick testing locally on the build environment.
+telemetry: go-deps-clean
+	$(MAKE) -C $(MGMT_COMMON_DIR)
+	$(MAKE) sonic-telemetry
+	test -e $(GOBIN)/gnmi_cli || $(MAKE) clients
 
 check:
 	sudo mkdir -p ${DBDIR}
@@ -63,7 +82,7 @@ clean:
 	$(RM) -r build
 	$(RM) -r vendor
 
-$(TELEMETRY_TEST_BIN): $(TEST_FILES) $(SRC_FILES)
+$(TELEMETRY_TEST_BIN): $(TEST_FILES) $(SRC_FILES) $(GO_DEPS)
 	mkdir -p $(@D)
 	cp -r testdata $(@D)/
 	$(GO) test -mod=vendor -c -cover github.com/Azure/sonic-telemetry/gnmi_server -o $@

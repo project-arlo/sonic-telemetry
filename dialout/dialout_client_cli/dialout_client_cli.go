@@ -4,13 +4,14 @@ package main
 import (
 	"crypto/tls"
 	"flag"
+	"os"
+	"os/signal"
+	"time"
+
 	dc "github.com/Azure/sonic-telemetry/dialout/dialout_client"
 	log "github.com/golang/glog"
 	gpb "github.com/openconfig/gnmi/proto/gnmi"
 	"golang.org/x/net/context"
-	"os"
-	"os/signal"
-	"time"
 )
 
 var (
@@ -30,7 +31,7 @@ func init() {
 	flag.BoolVar(&clientCfg.TLS.InsecureSkipVerify, "insecure", false, "When set, client will not verify the server certificate during TLS handshake.")
 	flag.DurationVar(&clientCfg.RetryInterval, "retry_interval", 30*time.Second, "Interval at which client tries to reconnect to destination servers")
 	flag.BoolVar(&clientCfg.Unidirectional, "unidirectional", true, "No repesponse from server is expected")
-	
+
 }
 
 func main() {
