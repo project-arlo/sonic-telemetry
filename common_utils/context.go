@@ -6,11 +6,10 @@ import (
 	"sync/atomic"
 )
 
-
 // AuthInfo holds data about the authenticated user
 type AuthInfo struct {
 	// Username
-	User string
+	User        string
 	AuthEnabled bool
 	// Roles
 	Roles []string
@@ -55,9 +54,8 @@ func GetContext(ctx context.Context) (*RequestContext, context.Context) {
 }
 
 func GetUsername(ctx context.Context, username *string) {
-        rc, ctx := GetContext(ctx)
-        if rc != nil {
-            *username = rc.Auth.User
-        }
+	rc, ctx := GetContext(ctx)
+	if rc != nil {
+		*username = rc.Auth.User
+	}
 }
-

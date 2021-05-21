@@ -6,26 +6,29 @@ import (
 	"net"
 	"strings"
 	"sync"
+
 	"github.com/Azure/sonic-telemetry/common_utils"
 	log "github.com/golang/glog"
+	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
+	grpc_recovery "github.com/grpc-ecosystem/go-grpc-middleware/recovery"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
-	"github.com/grpc-ecosystem/go-grpc-middleware"
-	"github.com/grpc-ecosystem/go-grpc-middleware/recovery"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/peer"
 	"google.golang.org/grpc/reflection"
 	"google.golang.org/grpc/status"
+
 	// "github.com/msteinert/pam"
-	"github.com/golang/protobuf/proto"
-	gnoi_system_pb "github.com/openconfig/gnoi/system"
+	"bytes"
+
+	"github.com/Azure/sonic-mgmt-common/translib"
+	spb "github.com/Azure/sonic-telemetry/proto"
+	spb_gnoi "github.com/Azure/sonic-telemetry/proto/gnoi"
 	sdc "github.com/Azure/sonic-telemetry/sonic_data_client"
+	"github.com/golang/protobuf/proto"
 	gnmipb "github.com/openconfig/gnmi/proto/gnmi"
 	gnmi_extpb "github.com/openconfig/gnmi/proto/gnmi_ext"
-	spb_gnoi "github.com/Azure/sonic-telemetry/proto/gnoi"
-	spb "github.com/Azure/sonic-telemetry/proto"
-	"github.com/Azure/sonic-mgmt-common/translib"
-	"bytes"
+	gnoi_system_pb "github.com/openconfig/gnoi/system"
 )
 
 var (
@@ -43,11 +46,12 @@ type Server struct {
 	clients map[string]*Client
 }
 type AuthTypes map[string]bool
+
 // Config is a collection of values for Server
 type Config struct {
 	// Port for the Server to listen on. If 0 or unset the Server will pick a port
 	// for this Server.
-	Port int64
+	Port     int64
 	UserAuth AuthTypes
 }
 
@@ -133,7 +137,7 @@ func NewServer(config *Config, opts []grpc.ServerOption) (*Server, error) {
 
 	opts = append(opts, grpc_middleware.WithStreamServerChain(grpc_recovery.StreamServerInterceptor(recopts...)))
 	opts = append(opts, grpc_middleware.WithUnaryServerChain(grpc_recovery.UnaryServerInterceptor(recopts...)))
-	
+
 	s := grpc.NewServer(opts...)
 	reflection.Register(s)
 
@@ -177,7 +181,7 @@ func (srv *Server) Port() int64 {
 	return srv.config.Port
 }
 
-func authenticate(UserAuth AuthTypes, ctx context.Context) (context.Context,error) {
+func authenticate(UserAuth AuthTypes, ctx context.Context) (context.Context, error) {
 	var err error
 	success := false
 	rc, ctx := common_utils.GetContext(ctx)
@@ -194,23 +198,23 @@ func authenticate(UserAuth AuthTypes, ctx context.Context) (context.Context,erro
 		}
 	}
 	if !success && UserAuth.Enabled("jwt") {
-		_,ctx,err = JwtAuthenAndAuthor(ctx)
+		_, ctx, err = JwtAuthenAndAuthor(ctx)
 		if err == nil {
 			success = true
 		}
 	}
 	if !success && UserAuth.Enabled("cert") {
-		ctx,err = ClientCertAuthenAndAuthor(ctx)
+		ctx, err = ClientCertAuthenAndAuthor(ctx)
 		if err == nil {
 			success = true
 		}
 	}
 
 	if !success {
-		return ctx,status.Error(codes.Unauthenticated, "Unauthenticated")
-	} 
+		return ctx, status.Error(codes.Unauthenticated, "Unauthenticated")
+	}
 
-	return ctx,nil
+	return ctx, nil
 }
 
 // Subscribe implements the gNMI Subscribe RPC.
@@ -338,18 +342,17 @@ func (s *Server) Get(ctx context.Context, req *gnmipb.GetRequest) (*gnmipb.GetRe
 }
 
 // Set method is not implemented. Refer to gnxi for examples with openconfig integration
-func (s *Server) Set(ctx context.Context,req *gnmipb.SetRequest) (*gnmipb.SetResponse, error) {
+func (s *Server) Set(ctx context.Context, req *gnmipb.SetRequest) (*gnmipb.SetResponse, error) {
 	ctx, err := authenticate(s.config.UserAuth, ctx)
 	if err != nil {
 		return nil, err
 	}
 	var results []*gnmipb.UpdateResult
-	
 
 	/* Fetch the prefix. */
 	prefix := req.GetPrefix()
 	extensions := req.GetExtension()
-           /* Create Transl client. */
+	/* Create Transl client. */
 	dc, _ := sdc.NewTranslClient(prefix, nil, ctx, extensions)
 
 	/* DELETE */
@@ -357,47 +360,44 @@ func (s *Server) Set(ctx context.Context,req *gnmipb.SetRequest) (*gnmipb.SetRes
 		log.V(2).Infof("Delete path: %v", path)
 
 		res := gnmipb.UpdateResult{
-						Path: path,
-      						Op:   gnmipb.UpdateResult_DELETE,
- 			    		          }
+			Path: path,
+			Op:   gnmipb.UpdateResult_DELETE,
+		}
 
 		/* Add to Set response results. */
- 			results = append(results, &res)
+		results = append(results, &res)
 
 	}
 
 	/* REPLACE */
-	for _, path := range req.GetReplace(){
+	for _, path := range req.GetReplace() {
 		log.V(2).Infof("Replace path: %v ", path)
 
 		res := gnmipb.UpdateResult{
-						Path: path.GetPath(),
-      						Op:   gnmipb.UpdateResult_REPLACE,
-				                  }
+			Path: path.GetPath(),
+			Op:   gnmipb.UpdateResult_REPLACE,
+		}
 		/* Add to Set response results. */
- 			results = append(results, &res)
+		results = append(results, &res)
 	}
 
-
 	/* UPDATE */
-	for _, path := range req.GetUpdate(){
+	for _, path := range req.GetUpdate() {
 		log.V(2).Infof("Update path: %v ", path)
 
 		res := gnmipb.UpdateResult{
-						Path: path.GetPath(),
-      						Op:   gnmipb.UpdateResult_UPDATE,
- 					          }
+			Path: path.GetPath(),
+			Op:   gnmipb.UpdateResult_UPDATE,
+		}
 		/* Add to Set response results. */
- 			results = append(results, &res)
+		results = append(results, &res)
 	}
 	err = dc.Set(req.GetDelete(), req.GetReplace(), req.GetUpdate())
 
-
-
 	return &gnmipb.SetResponse{
- 					Prefix:   req.GetPrefix(),
-		  			Response: results,
-				  }, err
+		Prefix:   req.GetPrefix(),
+		Response: results,
+	}, err
 
 }
 
@@ -408,7 +408,7 @@ func (s *Server) Capabilities(ctx context.Context, req *gnmipb.CapabilityRequest
 		return nil, err
 	}
 	extensions := req.GetExtension()
-	dc, _ := sdc.NewTranslClient(nil , nil, ctx, extensions)
+	dc, _ := sdc.NewTranslClient(nil, nil, ctx, extensions)
 
 	/* Fetch the client capabitlities. */
 	supportedModels := dc.Capabilities()
@@ -416,42 +416,40 @@ func (s *Server) Capabilities(ctx context.Context, req *gnmipb.CapabilityRequest
 
 	for index, model := range supportedModels {
 		suppModels[index] = &gnmipb.ModelData{
-					    	     	Name: model.Name, 
-							Organization: model.Organization, 
-							Version: model.Version,
+			Name:         model.Name,
+			Organization: model.Organization,
+			Version:      model.Version,
 		}
 	}
 
 	sup_bver := spb.SupportedBundleVersions{
 		BundleVersion: translib.GetYangBundleVersion().String(),
-		BaseVersion: translib.GetYangBaseVersion().String(),
+		BaseVersion:   translib.GetYangBaseVersion().String(),
 	}
 	sup_msg, _ := proto.Marshal(&sup_bver)
 	ext := gnmi_extpb.Extension{}
-	ext.Ext = &gnmi_extpb.Extension_RegisteredExt {
-		RegisteredExt: &gnmi_extpb.RegisteredExtension {
-			Id: spb.SUPPORTED_VERSIONS_EXT,
+	ext.Ext = &gnmi_extpb.Extension_RegisteredExt{
+		RegisteredExt: &gnmi_extpb.RegisteredExtension{
+			Id:  spb.SUPPORTED_VERSIONS_EXT,
 			Msg: sup_msg}}
 	exts := []*gnmi_extpb.Extension{&ext}
 
-	return &gnmipb.CapabilityResponse{SupportedModels: suppModels, 
-				 	  SupportedEncodings: supportedEncodings,
-					  GNMIVersion: "0.7.0",
-					  Extension: exts}, nil
+	return &gnmipb.CapabilityResponse{SupportedModels: suppModels,
+		SupportedEncodings: supportedEncodings,
+		GNMIVersion:        "0.7.0",
+		Extension:          exts}, nil
 }
 
-func isTargetDb ( target string) (bool) {
-	isDbClient := false 
-	dbTargetSupported := []string { "APPL_DB", "ASIC_DB" , "COUNTERS_DB", "LOGLEVEL_DB", "CONFIG_DB", "PFC_WD_DB", "FLEX_COUNTER_DB", "STATE_DB"}
+func isTargetDb(target string) bool {
+	isDbClient := false
+	dbTargetSupported := []string{"APPL_DB", "ASIC_DB", "COUNTERS_DB", "LOGLEVEL_DB", "CONFIG_DB", "PFC_WD_DB", "FLEX_COUNTER_DB", "STATE_DB"}
 
-	    for _, name := range  dbTargetSupported {
-		    if  target ==  name {
-			    isDbClient = true
-				    return isDbClient
-		    }
-	    }
+	for _, name := range dbTargetSupported {
+		if target == name {
+			isDbClient = true
+			return isDbClient
+		}
+	}
 
-	    return isDbClient
+	return isDbClient
 }
-
-
