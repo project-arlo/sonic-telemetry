@@ -16,18 +16,17 @@ import (
 
 	spb "github.com/Azure/sonic-telemetry/proto"
 	sdcfg "github.com/Azure/sonic-telemetry/sonic_db_config"
+	"github.com/Workiva/go-datastructures/queue"
 	"github.com/go-redis/redis"
 	gnmipb "github.com/openconfig/gnmi/proto/gnmi"
-	"google.golang.org/grpc/status"
 	"google.golang.org/grpc/codes"
-	"github.com/Workiva/go-datastructures/queue"
-
+	"google.golang.org/grpc/status"
 )
 
 const (
 	// indentString represents the default indentation string used for
 	// JSON. Two spaces are used here.
-	indentString                 string = "  "
+	indentString string = "  "
 )
 
 // Client defines a set of methods which every client must implement.
@@ -50,7 +49,7 @@ type Client interface {
 	// Set data based on path and value
 	Set(delete []*gnmipb.Path, replace []*gnmipb.Update, update []*gnmipb.Update) error
 	// Capabilities of the switch
-	Capabilities() ([]gnmipb.ModelData)
+	Capabilities() []gnmipb.ModelData
 	// SetEncoding sets the requested encoding on the Request/Response RPCs
 	SetEncoding(gnmipb.Encoding)
 
@@ -101,11 +100,11 @@ func (val Value) Compare(other queue.Item) int {
 }
 
 type DbClient struct {
-	prefix  *gnmipb.Path
-	pathG2S map[*gnmipb.Path][]tablePath
+	prefix   *gnmipb.Path
+	pathG2S  map[*gnmipb.Path][]tablePath
 	encoding gnmipb.Encoding
-	q       *LimitedQueue
-	channel chan struct{}
+	q        *LimitedQueue
+	channel  chan struct{}
 
 	synced sync.WaitGroup  // Control when to send gNMI sync_response
 	w      *sync.WaitGroup // wait for all sub go routines to finish
@@ -116,12 +115,11 @@ type DbClient struct {
 	errors  int64
 }
 
-
-var queueLengthSum uint64;
-var queueLengthLock sync.Mutex;
+var queueLengthSum uint64
+var queueLengthLock sync.Mutex
 
 type LimitedQueue struct {
-	Q *queue.PriorityQueue
+	Q       *queue.PriorityQueue
 	maxSize uint64
 }
 
@@ -129,7 +127,7 @@ func (q *LimitedQueue) EnqueueItem(item Value) error {
 	queueLengthLock.Lock()
 	defer queueLengthLock.Unlock()
 	ilen := uint64(len(item.Val.GetJsonIetfVal()))
-	if ilen + queueLengthSum < q.maxSize {
+	if ilen+queueLengthSum < q.maxSize {
 		queueLengthSum += ilen
 		log.V(2).Infof("Output queue size: %d", queueLengthSum)
 		return q.Q.Put(item)
@@ -139,6 +137,7 @@ func (q *LimitedQueue) EnqueueItem(item Value) error {
 		return nil
 	}
 }
+
 // This is for the case of enqueueing fatal messages only
 func (q *LimitedQueue) ForceEnqueueItem(item Value) error {
 	queueLengthLock.Lock()
@@ -164,11 +163,10 @@ func (q *LimitedQueue) DequeueItem() (Value, error) {
 
 func NewLimitedQueue(hint int, allowDuplicates bool, maxSize uint64) *LimitedQueue {
 	return &LimitedQueue{
-		Q: queue.NewPriorityQueue(hint, allowDuplicates),
+		Q:       queue.NewPriorityQueue(hint, allowDuplicates),
 		maxSize: maxSize,
 	}
 }
-
 
 func NewDbClient(paths []*gnmipb.Path, prefix *gnmipb.Path) (Client, error) {
 	var client DbClient
@@ -226,11 +224,11 @@ func enqueFatalMsgDbClient(c *DbClient, msg string) {
 func (c *DbClient) StreamRun(q *LimitedQueue, stop chan struct{}, w *sync.WaitGroup, subscribe *gnmipb.SubscriptionList) {
 	c.w = w
 	defer func() {
-			if r := recover(); r != nil {
-				err := status.Errorf(codes.Internal, "%v", r)
-				enqueFatalMsgDbClient(c, fmt.Sprintf("Subscribe operation failed with error =%v", err.Error()))
-			}
-		}()
+		if r := recover(); r != nil {
+			err := status.Errorf(codes.Internal, "%v", r)
+			enqueFatalMsgDbClient(c, fmt.Sprintf("Subscribe operation failed with error =%v", err.Error()))
+		}
+	}()
 	defer c.w.Done()
 	c.q = q
 	c.channel = stop
@@ -277,11 +275,11 @@ func (c *DbClient) StreamRun(q *LimitedQueue, stop chan struct{}, w *sync.WaitGr
 func (c *DbClient) PollRun(q *LimitedQueue, poll chan struct{}, w *sync.WaitGroup, subscribe *gnmipb.SubscriptionList) {
 	c.w = w
 	defer func() {
-			if r := recover(); r != nil {
-				err := status.Errorf(codes.Internal, "%v", r)
-				enqueFatalMsgDbClient(c, fmt.Sprintf("Subscribe operation failed with error =%v", err.Error()))
-			}
-		}()
+		if r := recover(); r != nil {
+			err := status.Errorf(codes.Internal, "%v", r)
+			enqueFatalMsgDbClient(c, fmt.Sprintf("Subscribe operation failed with error =%v", err.Error()))
+		}
+	}()
 	defer c.w.Done()
 	c.q = q
 	c.channel = poll
@@ -1100,15 +1098,14 @@ func dbTableKeySubscribe(gnmiPath *gnmipb.Path, c *DbClient) {
 	}
 }
 
-func  (c *DbClient) Set(delete []*gnmipb.Path, replace []*gnmipb.Update, update []*gnmipb.Update) error {
+func (c *DbClient) Set(delete []*gnmipb.Path, replace []*gnmipb.Update, update []*gnmipb.Update) error {
 	return nil
 }
-func (c *DbClient) Capabilities() ([]gnmipb.ModelData) {
+func (c *DbClient) Capabilities() []gnmipb.ModelData {
 	return nil
 }
 
 // SetEncoding sets the requested encoding on the response
 func (c *DbClient) SetEncoding(enc gnmipb.Encoding) {
-        c.encoding = enc
+	c.encoding = enc
 }
-

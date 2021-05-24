@@ -1,12 +1,13 @@
 package gnmi
 
 import (
-	"github.com/Azure/sonic-telemetry/common_utils"
 	"errors"
+	"os/user"
+
+	"github.com/Azure/sonic-telemetry/common_utils"
 	"github.com/golang/glog"
 	"github.com/msteinert/pam"
 	"golang.org/x/crypto/ssh"
-	"os/user"
 )
 
 type UserCredential struct {

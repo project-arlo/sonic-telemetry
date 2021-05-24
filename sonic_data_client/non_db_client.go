@@ -3,14 +3,15 @@ package client
 import (
 	"encoding/json"
 	"fmt"
+	"sync"
+	"time"
+
 	spb "github.com/Azure/sonic-telemetry/proto"
 	linuxproc "github.com/c9s/goprocinfo/linux"
 	log "github.com/golang/glog"
 	gnmipb "github.com/openconfig/gnmi/proto/gnmi"
-	"sync"
-	"time"
-	"google.golang.org/grpc/status"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 // Non db client is to Handle
@@ -276,7 +277,7 @@ func init() {
 type NonDbClient struct {
 	prefix      *gnmipb.Path
 	path2Getter map[*gnmipb.Path]dataGetFunc
-	encoding gnmipb.Encoding
+	encoding    gnmipb.Encoding
 
 	q       *LimitedQueue
 	channel chan struct{}
@@ -348,11 +349,11 @@ func enqueFatalMsgNonDbClient(c *NonDbClient, msg string) {
 func (c *NonDbClient) PollRun(q *LimitedQueue, poll chan struct{}, w *sync.WaitGroup, subscribe *gnmipb.SubscriptionList) {
 	c.w = w
 	defer func() {
-			if r := recover(); r != nil {
-				err := status.Errorf(codes.Internal, "%v", r)
-				enqueFatalMsgNonDbClient(c, fmt.Sprintf("Subscribe operation failed with error =%v", err.Error()))
-			}
-		}()
+		if r := recover(); r != nil {
+			err := status.Errorf(codes.Internal, "%v", r)
+			enqueFatalMsgNonDbClient(c, fmt.Sprintf("Subscribe operation failed with error =%v", err.Error()))
+		}
+	}()
 	defer c.w.Done()
 	c.q = q
 	c.channel = poll
@@ -427,15 +428,14 @@ func (c *NonDbClient) Close() error {
 	return nil
 }
 
-func  (c *NonDbClient) Set(delete []*gnmipb.Path, replace []*gnmipb.Update, update []*gnmipb.Update) error {
+func (c *NonDbClient) Set(delete []*gnmipb.Path, replace []*gnmipb.Update, update []*gnmipb.Update) error {
 	return nil
 }
-func (c *NonDbClient) Capabilities() ([]gnmipb.ModelData) {
+func (c *NonDbClient) Capabilities() []gnmipb.ModelData {
 	return nil
 }
 
 // SetEncoding sets the desired encoding for Get and Subcribe responses
 func (c *NonDbClient) SetEncoding(enc gnmipb.Encoding) {
-        c.encoding = enc
+	c.encoding = enc
 }
-
