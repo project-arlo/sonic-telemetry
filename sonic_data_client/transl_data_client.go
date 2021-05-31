@@ -124,7 +124,7 @@ func (c *TranslClient) Set(delete []*gnmipb.Path, replace []*gnmipb.Update, upda
 }
 
 func enqueFatalMsgTranslib(c *TranslClient, msg string) {
-	log.Error(msg)
+	log.ErrorDepth(1, msg)
 	c.q.ForceEnqueueItem(Value{
 		&spb.Value{
 			Timestamp: time.Now().UnixNano(),
@@ -170,6 +170,17 @@ func tickerCleanup(ticker_map map[int][]*ticker_info, c *TranslClient) {
 	}
 }
 
+func getTranslNotificationType(mode gnmipb.SubscriptionMode) translib.NotificationType {
+	switch mode {
+	case gnmipb.SubscriptionMode_ON_CHANGE:
+		return translib.OnChange
+	case gnmipb.SubscriptionMode_SAMPLE:
+		return translib.Sample
+	default:
+		return translib.TargetDefined
+	}
+}
+
 func (c *TranslClient) StreamRun(q *LimitedQueue, stop chan struct{}, w *sync.WaitGroup, subscribe *gnmipb.SubscriptionList) {
 	c.w = w
 
@@ -190,19 +201,20 @@ func (c *TranslClient) StreamRun(q *LimitedQueue, stop chan struct{}, w *sync.Wa
 	var cases []reflect.SelectCase
 	cases_map := make(map[int]int)
 	var subscribe_mode gnmipb.SubscriptionMode
-	stringPaths := make([]string, len(subscribe.Subscription))
+	translPaths := make([]translib.IsSubscribePath, len(subscribe.Subscription))
 	sampleCache := make(map[*gnmipb.Path]*ygotCache)
 
 	for i, sub := range subscribe.Subscription {
-		p := c.path2URI[sub.Path]
-		stringPaths[i] = p
+		translPaths[i].ID = uint32(i)
+		translPaths[i].Path = c.path2URI[sub.Path]
+		translPaths[i].Mode = getTranslNotificationType(sub.Mode)
 	}
 
 	ss := translib.NewSubscribeSession()
 	defer translib.CloseSubscribeSession(ss)
 
 	req := translib.IsSubscribeRequest{
-		Paths:   stringPaths,
+		Paths:   translPaths,
 		Session: ss,
 	}
 	if c.version != nil {
@@ -213,6 +225,7 @@ func (c *TranslClient) StreamRun(q *LimitedQueue, stop chan struct{}, w *sync.Wa
 	var onChangeSubsString []string
 
 	for i, sub := range subscribe.Subscription {
+		pathStr := translPaths[i].Path
 		log.V(6).Infof("%s %s", sub.Mode, sub.SampleInterval)
 
 		switch sub.Mode {
@@ -234,18 +247,19 @@ func (c *TranslClient) StreamRun(q *LimitedQueue, stop chan struct{}, w *sync.Wa
 				if subSupport[i].MinInterval > 0 {
 					subscribe_mode = gnmipb.SubscriptionMode_ON_CHANGE
 				} else {
-					enqueFatalMsgTranslib(c, fmt.Sprintf("Invalid subscribe path %v", stringPaths[i]))
+					//FIXME have an error type to indicate invalid paths
+					enqueFatalMsgTranslib(c, fmt.Sprintf("Invalid subscribe path %v", pathStr))
 					return
 				}
 			} else {
-				enqueFatalMsgTranslib(c, fmt.Sprintf("ON_CHANGE Streaming mode invalid for %v", stringPaths[i]))
+				enqueFatalMsgTranslib(c, fmt.Sprintf("ON_CHANGE Streaming mode invalid for %v", pathStr))
 				return
 			}
 		case gnmipb.SubscriptionMode_SAMPLE:
 			if subSupport[i].MinInterval > 0 {
 				subscribe_mode = gnmipb.SubscriptionMode_SAMPLE
 			} else {
-				enqueFatalMsgTranslib(c, fmt.Sprintf("Invalid subscribe path %v", stringPaths[i]))
+				enqueFatalMsgTranslib(c, fmt.Sprintf("Invalid subscribe path %v", pathStr))
 				return
 			}
 		default:
@@ -288,7 +302,7 @@ func (c *TranslClient) StreamRun(q *LimitedQueue, stop chan struct{}, w *sync.Wa
 				addTimer(c, ticker_map, &cases, cases_map, int(sub.HeartbeatInterval), sub, true)
 			}
 		} else if subscribe_mode == gnmipb.SubscriptionMode_ON_CHANGE {
-			onChangeSubsString = append(onChangeSubsString, c.path2URI[sub.Path])
+			onChangeSubsString = append(onChangeSubsString, pathStr)
 			if sub.HeartbeatInterval > 0 {
 				if int(sub.HeartbeatInterval) < subSupport[i].MinInterval*int(time.Second) {
 					enqueFatalMsgTranslib(c, fmt.Sprintf("Invalid Heartbeat Interval %ds, minimum interval is %ds", int(sub.HeartbeatInterval)/int(time.Second), subSupport[i].MinInterval))
