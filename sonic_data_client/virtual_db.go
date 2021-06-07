@@ -2,9 +2,8 @@ package client
 
 import (
 	"fmt"
-	"strings"
-
 	log "github.com/golang/glog"
+	"strings"
 )
 
 // virtual db is to Handle

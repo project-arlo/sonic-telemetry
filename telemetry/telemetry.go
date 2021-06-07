@@ -17,8 +17,8 @@ import (
 
 var (
 	defUserAuth = gnmi.AuthTypes{"password": true, "cert": false, "jwt": true}
-	userAuth    = gnmi.AuthTypes{"password": false, "cert": false, "jwt": false}
-	port        = flag.Int("port", 8080, "port to listen on")
+	userAuth = gnmi.AuthTypes{"password": false, "cert": false, "jwt": false}
+	port = flag.Int("port", 8080, "port to listen on")
 	// Certificate files.
 	caCert            = flag.String("ca_crt", "", "CA certificate for client certificate validation. Optional.")
 	serverCert        = flag.String("server_crt", "", "TLS server certificate")
@@ -27,7 +27,7 @@ var (
 	allowNoClientCert = flag.Bool("allow_no_client_auth", false, "When set, telemetry server will request but not require a client certificate.")
 	jwtRefInt         = flag.Uint64("jwt_refresh_int", 900, "Seconds before JWT expiry the token can be refreshed.")
 	jwtValInt         = flag.Uint64("jwt_valid_int", 3600, "Seconds that JWT token is valid for.")
-	outputQueSz       = flag.Uint64("output_queue_size", 100, "Output Queue Maximum Size (in MB)")
+	outputQueSz      = flag.Uint64("output_queue_size", 100, "Output Queue Maximum Size (in MB)")
 )
 
 func main() {
@@ -35,7 +35,7 @@ func main() {
 	flag.Parse()
 	if isFlagPassed("client_auth") {
 		log.V(1).Infof("client_auth provided")
-	} else {
+	}else {
 		log.V(1).Infof("client_auth not provided, using defaults.")
 		userAuth = defUserAuth
 	}
@@ -47,8 +47,8 @@ func main() {
 	}
 	var certificate tls.Certificate
 	var err error
-	gnmi.JwtRefreshInt = time.Duration(*jwtRefInt * uint64(time.Second))
-	gnmi.JwtValidInt = time.Duration(*jwtValInt * uint64(time.Second))
+	gnmi.JwtRefreshInt = time.Duration(*jwtRefInt*uint64(time.Second))
+	gnmi.JwtValidInt = time.Duration(*jwtValInt*uint64(time.Second))
 	gnmi.OutputQueSize = *outputQueSz * uint64(1e6)
 	if *insecure {
 		certificate, err = testcert.NewCert()
@@ -71,8 +71,8 @@ func main() {
 	}
 
 	tlsCfg := &tls.Config{
-		ClientAuth:               tls.RequestClientCert,
-		Certificates:             []tls.Certificate{certificate},
+		ClientAuth:   tls.RequestClientCert,
+		Certificates: []tls.Certificate{certificate},
 		MinVersion:               tls.VersionTLS12,
 		CurvePreferences:         []tls.CurveID{tls.CurveP521, tls.CurveP384, tls.CurveP256},
 		PreferServerCipherSuites: true,
@@ -85,6 +85,7 @@ func main() {
 			tls.TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,
 			tls.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,
 		},
+
 	}
 	if *allowNoClientCert {
 		// RequestClientCert will ask client for a certificate but won't
@@ -123,7 +124,7 @@ func main() {
 		log.Errorf("Failed to create gNMI server: %v", err)
 		return
 	}
-	log.V(1).Info("Auth Modes: ", userAuth)
+	log.V(1).Infof("Auth Modes: ", userAuth)
 
 	log.V(1).Infof("Starting RPC server on address: %s", s.Address())
 	s.Serve() // blocks until close
@@ -131,11 +132,11 @@ func main() {
 }
 
 func isFlagPassed(name string) bool {
-	found := false
-	flag.Visit(func(f *flag.Flag) {
-		if f.Name == name {
-			found = true
-		}
-	})
-	return found
+    found := false
+    flag.Visit(func(f *flag.Flag) {
+        if f.Name == name {
+            found = true
+        }
+    })
+    return found
 }

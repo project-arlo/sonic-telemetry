@@ -5,7 +5,6 @@ import (
 	"crypto/tls"
 	"errors"
 	"fmt"
-
 	spb "github.com/Azure/sonic-telemetry/proto"
 	sdc "github.com/Azure/sonic-telemetry/sonic_data_client"
 	sdcfg "github.com/Azure/sonic-telemetry/sonic_db_config"
@@ -13,13 +12,10 @@ import (
 	log "github.com/golang/glog"
 	gpb "github.com/openconfig/gnmi/proto/gnmi"
 	"github.com/openconfig/ygot/ygot"
-
-	"net"
-
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
-
+	"net"
 	//"reflect"
 	"strconv"
 	"strings"
@@ -120,12 +116,12 @@ type clientSubscription struct {
 
 	// Running time data
 	cMu    sync.Mutex
-	client *Client           // GNMIDialOutClient
-	dc     sdc.Client        // SONiC data client
-	stop   chan struct{}     // Inform publishRun routine to stop
+	client *Client              // GNMIDialOutClient
+	dc     sdc.Client           // SONiC data client
+	stop   chan struct{}        // Inform publishRun routine to stop
 	q      *sdc.LimitedQueue // for data passing among go routine
-	w      sync.WaitGroup    // Wait for all sub go routine to finish
-	opened bool              // whether there is opened instance for this client subscription
+	w      sync.WaitGroup       // Wait for all sub go routine to finish
+	opened bool                 // whether there is opened instance for this client subscription
 	cancel context.CancelFunc
 
 	conTryCnt uint64 //Number of time trying to connect
@@ -201,7 +197,6 @@ func (cs *clientSubscription) NewInstance(ctx context.Context) error {
 	} else {
 		dc, err = sdc.NewDbClient(cs.paths, cs.prefix)
 	}
-	dc.SetEncoding(gpb.Encoding_JSON_IETF)
 	if err != nil {
 		log.V(1).Infof("Connection to DB for %v failed: %v", *cs, err)
 		return fmt.Errorf("Connection to DB for %v failed: %v", *cs, err)
@@ -217,6 +212,7 @@ func (cs *clientSubscription) send(stream spb.GNMIDialOut_PublishClient) error {
 	for {
 		item, err := cs.q.DequeueItem()
 
+		
 		if err != nil {
 			cs.errors++
 			log.V(1).Infof("%v", err)
@@ -229,6 +225,7 @@ func (cs *clientSubscription) send(stream spb.GNMIDialOut_PublishClient) error {
 			cs.errors++
 			return err
 		}
+
 
 		cs.sendMsg++
 		err = stream.Send(resp)
@@ -639,14 +636,13 @@ func processTelemetryClientConfig(ctx context.Context, redisDb *redis.Client, ke
 func DialOutRun(ctx context.Context, ccfg *ClientConfig) error {
 	clientCfg = ccfg
 	dbn := sdcfg.GetDbId("CONFIG_DB")
-	password := sdcfg.GetDbPassword("CONFIG_DB")
 
 	var redisDb *redis.Client
 	if sdc.UseRedisLocalTcpPort == false {
 		redisDb = redis.NewClient(&redis.Options{
 			Network:     "unix",
 			Addr:        sdcfg.GetDbSock("CONFIG_DB"),
-			Password:    password,
+			Password:    "", // no password set
 			DB:          dbn,
 			DialTimeout: 0,
 		})
@@ -654,7 +650,7 @@ func DialOutRun(ctx context.Context, ccfg *ClientConfig) error {
 		redisDb = redis.NewClient(&redis.Options{
 			Network:     "tcp",
 			Addr:        sdcfg.GetDbTcpAddr("CONFIG_DB"),
-			Password:    password,
+			Password:    "", // no password set
 			DB:          dbn,
 			DialTimeout: 0,
 		})

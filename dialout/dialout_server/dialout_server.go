@@ -3,11 +3,6 @@ package dialout_server
 import (
 	"errors"
 	"fmt"
-	"io"
-	"net"
-	"strings"
-	"sync"
-
 	spb "github.com/Azure/sonic-telemetry/proto"
 	log "github.com/golang/glog"
 	"github.com/google/gnxi/utils"
@@ -16,6 +11,10 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/peer"
 	"google.golang.org/grpc/reflection"
+	"io"
+	"net"
+	"strings"
+	"sync"
 )
 
 var (

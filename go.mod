@@ -12,7 +12,7 @@ require (
 	github.com/go-redis/redis/v7 v7.2.0
 	github.com/gogo/protobuf v1.3.1
 	github.com/golang/glog v0.0.0-20160126235308-23def4e6c14b
-	github.com/golang/protobuf v1.4.2
+	github.com/golang/protobuf v1.4.0
 	github.com/google/gnxi v0.0.0-20191016182648-6697a080bc2d
 	github.com/grpc-ecosystem/go-grpc-middleware v1.2.0
 	github.com/jipanyang/gnmi v0.0.0-20180820232453-cb4d464fa018
@@ -27,7 +27,6 @@ require (
 	golang.org/x/net v0.0.0-20200813134508-3edf25e44fcc
 	google.golang.org/grpc v1.28.0
 	gopkg.in/yaml.v2 v2.2.4
-	google.golang.org/protobuf v1.25.0
 )
 
 replace github.com/Azure/sonic-mgmt-common => ../sonic-mgmt-common

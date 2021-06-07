@@ -6,9 +6,7 @@ package telemetry_dialout
 import (
 	"crypto/tls"
 	"encoding/json"
-
 	"github.com/go-redis/redis/v7"
-
 	//"github.com/golang/protobuf/proto"
 	testcert "github.com/Azure/sonic-telemetry/testdata/tls"
 
@@ -18,7 +16,6 @@ import (
 	"github.com/openconfig/gnmi/value"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
-
 	//"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials"
 	//"google.golang.org/grpc/status"
@@ -101,7 +98,7 @@ func getRedisClient(t *testing.T) *redis.Client {
 	rclient := redis.NewClient(&redis.Options{
 		Network:     "tcp",
 		Addr:        sdcfg.GetDbTcpAddr("COUNTERS_DB"),
-		Password:    sdcfg.GetDbPassword("COUNTERS_DB"),
+		Password:    "", // no password set
 		DB:          sdcfg.GetDbId("COUNTERS_DB"),
 		DialTimeout: 0,
 	})
@@ -130,7 +127,7 @@ func getConfigDbClient(t *testing.T) *redis.Client {
 	rclient := redis.NewClient(&redis.Options{
 		Network:     "tcp",
 		Addr:        sdcfg.GetDbTcpAddr("CONFIG_DB"),
-		Password:    sdcfg.GetDbPassword("CONFIG_DB"),
+		Password:    "", // no password set
 		DB:          sdcfg.GetDbId("CONFIG_DB"),
 		DialTimeout: 0,
 	})
@@ -183,7 +180,7 @@ func prepareDb(t *testing.T) {
 	rclient.FlushDB()
 	//Enable keysapce notification
 	os.Setenv("PATH", "$PATH:/usr/bin:/sbin:/bin:/usr/local/bin:/usr/local/Cellar/redis/4.0.8/bin")
-	// CHECK ME Multi-DB changed redis-cli to sonic-db-cli
+        // CHECK ME Multi-DB changed redis-cli to sonic-db-cli
 	cmd := exec.Command("sonic-db-cli", "config", "set", "notify-keyspace-events", "KEA")
 	_, err := cmd.Output()
 	if err != nil {
