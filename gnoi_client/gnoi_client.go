@@ -76,7 +76,7 @@ func main() {
 			sonicGetAuditLog(sc, ctx)
 		case "clearAuditLog":
 			sonicClearAuditLog(sc, ctx)
-^               case "clearNeighbors":
+                case "clearNeighbors":
                         clearNeighbors(sc, ctx)
 		case "vlanReplace":
 			vlanReplace(sc, ctx)
