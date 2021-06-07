@@ -2,48 +2,54 @@ package transl_utils
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
-	"strings"
 	"fmt"
+	"log/syslog"
+	"strings"
+
+	"github.com/Azure/sonic-mgmt-common/translib"
+	"github.com/Azure/sonic-mgmt-common/translib/tlerr"
+	"github.com/Azure/sonic-telemetry/common_utils"
 	log "github.com/golang/glog"
 	gnmipb "github.com/openconfig/gnmi/proto/gnmi"
-	"github.com/Azure/sonic-mgmt-common/translib"
-	"github.com/Azure/sonic-telemetry/common_utils"
-	"context"
-        "log/syslog"
-	"github.com/Azure/sonic-mgmt-common/translib/tlerr"
+	"github.com/openconfig/ygot/ygot"
 )
 
 var (
-    Writer *syslog.Writer
+	Writer *syslog.Writer
 )
 
 func __log_audit_msg(ctx context.Context, reqType string, uriPath string, err error) {
-    var err1 error
-    username := "invalid"
-    statusMsg := "failure"
-    if (err == nil) {
-        statusMsg = "success"
-    }
+	var err1 error
+	username := "invalid"
+	statusMsg := "failure"
+	if err == nil {
+		statusMsg = "success"
+	}
 
-    if Writer == nil {
-        Writer, err1 = syslog.Dial("", "", (syslog.LOG_LOCAL4), "")
-        if (err1 != nil) {
-            log.V(2).Infof("Could not open connection to syslog with error =%v", err1.Error())
-            return
-        }
-    }
+	if Writer == nil {
+		Writer, err1 = syslog.Dial("", "", (syslog.LOG_LOCAL4), "")
+		if err1 != nil {
+			log.V(2).Infof("Could not open connection to syslog with error =%v", err1.Error())
+			return
+		}
+	}
 
-    common_utils.GetUsername(ctx, &username)
+	common_utils.GetUsername(ctx, &username)
 
-    auditMsg := fmt.Sprintf("User \"%s\" request \"%s %s\" status - %s",
-                            username, reqType, uriPath, statusMsg)
-    Writer.Info(auditMsg)
+	auditMsg := fmt.Sprintf("User \"%s\" request \"%s %s\" status - %s",
+		username, reqType, uriPath, statusMsg)
+	Writer.Info(auditMsg)
 }
 
 func GnmiTranslFullPath(prefix, path *gnmipb.Path) *gnmipb.Path {
+	origin := prefix.Origin
+	if len(origin) == 0 {
+		origin = path.Origin // try path.Origin for backward compatibility
+	}
 
-	fullPath := &gnmipb.Path{Origin: path.Origin}
+	fullPath := &gnmipb.Path{Origin: origin}
 	if path.GetElement() != nil {
 		fullPath.Element = append(prefix.GetElement(), path.GetElement()...)
 	}
@@ -105,18 +111,35 @@ func ConvertToURI(prefix *gnmipb.Path, path *gnmipb.Path, req *string) error {
 	return nil
 }
 
+/* GetTranslibFmtType is a helper that converts gnmi Encoding to supported format types in translib */
+func GetTranslFmtType(encoding gnmipb.Encoding) translib.TranslibFmtType {
+
+	if encoding == gnmipb.Encoding_PROTO {
+		return translib.TRANSLIB_FMT_YGOT
+	}
+	// default to ietf_json as translib supports either Ygot or ietf_json
+	return translib.TRANSLIB_FMT_IETF_JSON
+
+}
+
 /* Fill the values from TransLib. */
-func TranslProcessGet(uriPath string, op *string, ctx context.Context) (*gnmipb.TypedValue, error) {
+func TranslProcessGet(uriPath string, op *string, ctx context.Context, encoding gnmipb.Encoding) (*gnmipb.TypedValue, *ygot.ValidatedGoStruct, error) {
 	var jv []byte
 	var data []byte
 	rc, ctx := common_utils.GetContext(ctx)
 
-	req := translib.GetRequest{Path:uriPath, User: translib.UserRoles{Name: rc.Auth.User, Roles: rc.Auth.Roles}}
+	fmtType := GetTranslFmtType(encoding)
+	req := translib.GetRequest{
+		Path: uriPath,
+		//FillValueTree: encoding == gnmipb.Encoding_PROTO,
+		FmtType: fmtType,
+		User:    translib.UserRoles{Name: rc.Auth.User, Roles: rc.Auth.Roles}}
+
 	if rc.BundleVersion != nil {
 		nver, err := translib.NewVersion(*rc.BundleVersion)
 		if err != nil {
 			log.V(2).Infof("GET operation failed with error =%v", err.Error())
-			return nil, err
+			return nil, nil, err
 		}
 		req.ClientVersion = nver
 	}
@@ -124,25 +147,29 @@ func TranslProcessGet(uriPath string, op *string, ctx context.Context) (*gnmipb.
 		req.AuthEnabled = true
 	}
 	resp, err1 := translib.Get(req)
-        __log_audit_msg(ctx, "GET", uriPath, err1)
+	__log_audit_msg(ctx, "GET", uriPath, err1)
 
 	if isTranslibSuccess(err1) {
 		data = resp.Payload
 	} else {
 		log.V(2).Infof("GET operation failed with error =%v, %v", resp.ErrSrc, err1.Error())
-		return nil, err1
+		return nil, nil, fmt.Errorf("GET failed for this message: %v", err1.Error())
+	}
+
+	/* When Proto is requested we use ValueTree to generate scalar values in the data_client.*/
+	if encoding == gnmipb.Encoding_PROTO {
+		return nil, resp.ValueTree, nil
 	}
 
 	dst := new(bytes.Buffer)
 	json.Compact(dst, data)
 	jv = dst.Bytes()
 
-
 	/* Fill the values into GNMI data structures . */
 	return &gnmipb.TypedValue{
 		Value: &gnmipb.TypedValue_JsonIetfVal{
-		JsonIetfVal: jv,
-		}}, nil
+			JsonIetfVal: jv,
+		}}, nil, nil
 
 }
 
@@ -151,7 +178,7 @@ func TranslProcessDelete(uri string, ctx context.Context) error {
 	var str3 string
 	payload := []byte(str3)
 	rc, ctx := common_utils.GetContext(ctx)
-	req := translib.SetRequest{Path:uri, Payload:payload, User: translib.UserRoles{Name: rc.Auth.User, Roles: rc.Auth.Roles}}
+	req := translib.SetRequest{Path: uri, Payload: payload, User: translib.UserRoles{Name: rc.Auth.User, Roles: rc.Auth.Roles}}
 	if rc.BundleVersion != nil {
 		nver, err := translib.NewVersion(*rc.BundleVersion)
 		if err != nil {
@@ -164,8 +191,8 @@ func TranslProcessDelete(uri string, ctx context.Context) error {
 		req.AuthEnabled = true
 	}
 	resp, err := translib.Delete(req)
-        __log_audit_msg(ctx, "DELETE", uri, err)
-	if err != nil{
+	__log_audit_msg(ctx, "DELETE", uri, err)
+	if err != nil {
 		log.V(2).Infof("DELETE operation failed with error =%v, %v", resp.ErrSrc, err.Error())
 		return err
 	}
@@ -182,7 +209,7 @@ func TranslProcessReplace(uri string, t *gnmipb.TypedValue, ctx context.Context)
 
 	payload := []byte(str3)
 	rc, ctx := common_utils.GetContext(ctx)
-	req := translib.SetRequest{Path:uri, Payload:payload, User: translib.UserRoles{Name: rc.Auth.User, Roles: rc.Auth.Roles}}
+	req := translib.SetRequest{Path: uri, Payload: payload, User: translib.UserRoles{Name: rc.Auth.User, Roles: rc.Auth.Roles}}
 	if rc.BundleVersion != nil {
 		nver, err := translib.NewVersion(*rc.BundleVersion)
 		if err != nil {
@@ -195,13 +222,12 @@ func TranslProcessReplace(uri string, t *gnmipb.TypedValue, ctx context.Context)
 		req.AuthEnabled = true
 	}
 	resp, err1 := translib.Replace(req)
-        __log_audit_msg(ctx, "REPLACE", uri, err1)
+	__log_audit_msg(ctx, "REPLACE", uri, err1)
 
-	if err1 != nil{
+	if err1 != nil {
 		log.V(2).Infof("REPLACE operation failed with error =%v, %v", resp.ErrSrc, err1.Error())
 		return err1
 	}
-
 
 	return nil
 }
@@ -215,7 +241,7 @@ func TranslProcessUpdate(uri string, t *gnmipb.TypedValue, ctx context.Context) 
 
 	payload := []byte(str3)
 	rc, ctx := common_utils.GetContext(ctx)
-	req := translib.SetRequest{Path:uri, Payload:payload, User: translib.UserRoles{Name: rc.Auth.User, Roles: rc.Auth.Roles}}
+	req := translib.SetRequest{Path: uri, Payload: payload, User: translib.UserRoles{Name: rc.Auth.User, Roles: rc.Auth.Roles}}
 	if rc.BundleVersion != nil {
 		nver, err := translib.NewVersion(*rc.BundleVersion)
 		if err != nil {
@@ -228,7 +254,7 @@ func TranslProcessUpdate(uri string, t *gnmipb.TypedValue, ctx context.Context) 
 		req.AuthEnabled = true
 	}
 	resp, err := translib.Update(req)
-	if err != nil{
+	if err != nil {
 		switch err.(type) {
 		case tlerr.NotFoundError:
 			//If Update fails, it may be due to object not existing in this case use Replace to create and update the object.
@@ -238,8 +264,8 @@ func TranslProcessUpdate(uri string, t *gnmipb.TypedValue, ctx context.Context) 
 			return err
 		}
 	}
-        __log_audit_msg(ctx, "UPDATE", uri, err)
-	if err != nil{
+	__log_audit_msg(ctx, "UPDATE", uri, err)
+	if err != nil {
 		log.V(2).Infof("UPDATE operation failed with error =%v, %v", resp.ErrSrc, err.Error())
 		return err
 	}
@@ -250,96 +276,120 @@ func TranslProcessBulk(delete []*gnmipb.Path, replace []*gnmipb.Update, update [
 	var br translib.BulkRequest
 	var uri string
 
-        var deleteUri []string
-        var replaceUri []string
-        var updateUri []string
+	var deleteUri []string
+	var replaceUri []string
+	var updateUri []string
 
 	rc, ctx := common_utils.GetContext(ctx)
 	log.V(2).Info("TranslProcessBulk Called")
-	for _,d := range delete {
+	for _, d := range delete {
 		ConvertToURI(prefix, d, &uri)
 		var str3 string
 		payload := []byte(str3)
 		req := translib.SetRequest{
-			Path: uri,
+			Path:    uri,
 			Payload: payload,
-			User: translib.UserRoles{Name: rc.Auth.User, Roles: rc.Auth.Roles},
+			User:    translib.UserRoles{Name: rc.Auth.User, Roles: rc.Auth.Roles},
+		}
+		if rc.BundleVersion != nil {
+			nver, err := translib.NewVersion(*rc.BundleVersion)
+			if err != nil {
+				log.V(2).Infof("Bulk Set operation failed with error =%v", err.Error())
+				return err
+			}
+			req.ClientVersion = nver
 		}
 		if rc.Auth.AuthEnabled {
 			req.AuthEnabled = true
 		}
 		br.DeleteRequest = append(br.DeleteRequest, req)
-                deleteUri = append(deleteUri, uri)
+		deleteUri = append(deleteUri, uri)
 	}
-	for _,r := range replace {
+	for _, r := range replace {
 		ConvertToURI(prefix, r.GetPath(), &uri)
 		str := string(r.GetVal().GetJsonIetfVal())
 		str3 := strings.Replace(str, "\n", "", -1)
 		log.V(2).Infof("Incoming JSON body is", str)
 		payload := []byte(str3)
 		req := translib.SetRequest{
-			Path: uri,
+			Path:    uri,
 			Payload: payload,
-			User: translib.UserRoles{Name: rc.Auth.User, Roles: rc.Auth.Roles},
+			User:    translib.UserRoles{Name: rc.Auth.User, Roles: rc.Auth.Roles},
+		}
+		if rc.BundleVersion != nil {
+			nver, err := translib.NewVersion(*rc.BundleVersion)
+			if err != nil {
+				log.V(2).Infof("Bulk Set operation failed with error =%v", err.Error())
+				return err
+			}
+			req.ClientVersion = nver
 		}
 		if rc.Auth.AuthEnabled {
 			req.AuthEnabled = true
 		}
 		br.ReplaceRequest = append(br.ReplaceRequest, req)
-                replaceUri = append(replaceUri, uri)
+		replaceUri = append(replaceUri, uri)
 	}
-	for _,u := range update {
+	for _, u := range update {
 		ConvertToURI(prefix, u.GetPath(), &uri)
 		str := string(u.GetVal().GetJsonIetfVal())
 		str3 := strings.Replace(str, "\n", "", -1)
 		log.V(2).Infof("Incoming JSON body is", str)
 		payload := []byte(str3)
 		req := translib.SetRequest{
-			Path: uri,
+			Path:    uri,
 			Payload: payload,
-			User: translib.UserRoles{Name: rc.Auth.User, Roles: rc.Auth.Roles},
+			User:    translib.UserRoles{Name: rc.Auth.User, Roles: rc.Auth.Roles},
+		}
+		if rc.BundleVersion != nil {
+			nver, err := translib.NewVersion(*rc.BundleVersion)
+			if err != nil {
+				log.V(2).Infof("Bulk Set operation failed with error =%v", err.Error())
+				return err
+			}
+			req.ClientVersion = nver
 		}
 		if rc.Auth.AuthEnabled {
 			req.AuthEnabled = true
 		}
 		br.UpdateRequest = append(br.UpdateRequest, req)
-                updateUri = append(updateUri, uri)
+		updateUri = append(updateUri, uri)
 	}
 
-	resp,err := translib.Bulk(br)
+	resp, err := translib.Bulk(br)
 
-        i := 0
-	for _,d := range resp.DeleteResponse {
-            __log_audit_msg(ctx, "DELETE", deleteUri[i], d.Err)
-            i++
-        }
-        i = 0
-	for _,r := range resp.ReplaceResponse {
-            __log_audit_msg(ctx, "REPLACE", replaceUri[i], r.Err)
-            i++
-        }
-        i = 0
-	for _,u := range resp.UpdateResponse {
-            __log_audit_msg(ctx, "UPDATE", updateUri[i], u.Err)
-            i++
-        }
+	i := 0
+	for _, d := range resp.DeleteResponse {
+		__log_audit_msg(ctx, "DELETE", deleteUri[i], d.Err)
+		i++
+	}
+	i = 0
+	for _, r := range resp.ReplaceResponse {
+		__log_audit_msg(ctx, "REPLACE", replaceUri[i], r.Err)
+		i++
+	}
+	i = 0
+	for _, u := range resp.UpdateResponse {
+		__log_audit_msg(ctx, "UPDATE", updateUri[i], u.Err)
+		i++
+	}
 
 	var errors []string
-	if err != nil{
+	if err != nil {
 		log.V(2).Infof("BULK SET operation failed with error(s):")
-		for _,d := range resp.DeleteResponse {
+		for _, d := range resp.DeleteResponse {
 			if d.Err != nil {
 				log.V(2).Infof("%s=%v", d.Err.Error(), d.ErrSrc)
 				errors = append(errors, d.Err.Error())
 			}
 		}
-		for _,r := range resp.ReplaceResponse {
+		for _, r := range resp.ReplaceResponse {
 			if r.Err != nil {
 				log.V(2).Infof("%s=%v", r.Err.Error(), r.ErrSrc)
 				errors = append(errors, r.Err.Error())
 			}
 		}
-		for _,u := range resp.UpdateResponse {
+		for _, u := range resp.UpdateResponse {
 			if u.Err != nil {
 				log.V(2).Infof("%s=%v", u.Err.Error(), u.ErrSrc)
 				errors = append(errors, u.Err.Error())
@@ -350,6 +400,7 @@ func TranslProcessBulk(delete []*gnmipb.Path, replace []*gnmipb.Update, update [
 
 	return nil
 }
+
 /* Action/rpc request handling. */
 func TranslProcessAction(uri string, payload []byte, ctx context.Context) ([]byte, error) {
 	rc, ctx := common_utils.GetContext(ctx)
@@ -369,9 +420,9 @@ func TranslProcessAction(uri string, payload []byte, ctx context.Context) ([]byt
 	req.Payload = payload
 
 	resp, err := translib.Action(req)
-        __log_audit_msg(ctx, "ACTION", uri, err)
+	__log_audit_msg(ctx, "ACTION", uri, err)
 
-	if err != nil{
+	if err != nil {
 		log.V(2).Infof("Action operation failed with error =%v, %v", resp.ErrSrc, err.Error())
 		return nil, err
 	}
@@ -383,21 +434,20 @@ func GetModels() []gnmipb.ModelData {
 
 	gnmiModels := make([]gnmipb.ModelData, 0, 1)
 	supportedModels, _ := translib.GetModels()
-	for _,model := range supportedModels {
+	for _, model := range supportedModels {
 		gnmiModels = append(gnmiModels, gnmipb.ModelData{
-			Name: model.Name,
+			Name:         model.Name,
 			Organization: model.Org,
-			Version: model.Ver,
-
+			Version:      model.Ver,
 		})
 	}
 	return gnmiModels
 }
 
 func isTranslibSuccess(err error) bool {
-        if err != nil && err.Error() != "Success" {
-                return false
-        }
+	if err != nil && err.Error() != "Success" {
+		return false
+	}
 
-        return true
+	return true
 }
