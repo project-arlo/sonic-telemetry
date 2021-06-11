@@ -76,8 +76,10 @@ func main() {
 			sonicGetAuditLog(sc, ctx)
 		case "clearAuditLog":
 			sonicClearAuditLog(sc, ctx)
-        case "clearNeighbors":
-            clearNeighbors(sc, ctx)
+                case "clearNeighbors":
+                        clearNeighbors(sc, ctx)
+		case "vlanReplace":
+			vlanReplace(sc, ctx)
 		default:
 			panic("Invalid RPC Name")
 		}
@@ -275,6 +277,26 @@ func clearNeighbors(sc spb.SonicServiceClient, ctx context.Context) {
         panic(err.Error())
     }
     fmt.Println(string(respstr))
+}
+
+func vlanReplace(sc spb.SonicServiceClient, ctx context.Context) {
+	fmt.Println("Sonic VlanReplace")
+	ctx = setUserCreds(ctx)
+	req := &spb.VlanReplaceRequest{
+		Input: &spb.VlanReplaceRequest_Input{},
+	}
+	json.Unmarshal([]byte(*args), req)
+
+	resp, err := sc.VlanReplace(ctx, req)
+
+	if err != nil {
+		panic(err.Error())
+	}
+	respstr, err := json.Marshal(resp)
+	if err != nil {
+		panic(err.Error())
+	}
+	fmt.Println(string(respstr))
 }
 
 func sonicGetAuditLog(sc spb.SonicServiceClient, ctx context.Context) {
