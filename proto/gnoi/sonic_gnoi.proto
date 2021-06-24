@@ -21,6 +21,7 @@ service SonicService {
   rpc Authenticate(AuthenticateRequest) returns (AuthenticateResponse) {}
   rpc Refresh(RefreshRequest) returns (RefreshResponse) {}
   rpc ClearNeighbors(ClearNeighborsRequest) returns (ClearNeighborsResponse) {}
+  rpc VlanReplace(VlanReplaceRequest) returns (VlanReplaceResponse) {}
 
   rpc GetAuditLog (GetAuditLogRequest) returns (GetAuditLogResponse) {}
   rpc ClearAuditLog (ClearAuditLogRequest) returns (ClearAuditLogResponse) {}
@@ -58,6 +59,21 @@ message ClearNeighborsResponse {
         string response = 1;
     }
     Output output = 1 [(gogoproto.jsontag) = "sonic-neighbor:output", (gogoproto.moretags) = "xml:\",comment\""];
+}
+
+message VlanReplaceRequest {
+    message Input {
+        string ifname = 1;
+        string vlanlist = 2;
+    }
+    Input input = 1 [(gogoproto.jsontag) = "openconfig-interfaces-ext:input", (gogoproto.moretags) = "xml:\",comment\""];
+}
+
+message VlanReplaceResponse {
+    message Output {
+        string response = 1;
+    }
+    Output output = 1 [(gogoproto.jsontag) = "openconfig-interfaces-ext:output", (gogoproto.moretags) = "xml:\",comment\""];
 }
 
 message SumRequest {
