@@ -341,6 +341,38 @@ func (srv *Server) ClearNeighbors(ctx context.Context, req *spb.ClearNeighborsRe
 	return resp, nil
 }
 
+func (srv *Server) VlanReplace(ctx context.Context, req *spb.VlanReplaceRequest) (*spb.VlanReplaceResponse, error) {
+	ctx, err := authenticate(srv.config.UserAuth, ctx)
+	if err != nil {
+		return nil, err
+	}
+	log.V(1).Info("gNOI: Sonic VlanReplace")
+	log.V(1).Info("Request: ", req)
+
+	resp := &spb.VlanReplaceResponse{
+		Output: &spb.VlanReplaceResponse_Output{},
+	}
+
+	reqstr, err := json.Marshal(req)
+
+	if err != nil {
+		return nil, status.Error(codes.Unknown, err.Error())
+	}
+
+	jsresp, err := transutil.TranslProcessAction("/openconfig-interfaces-ext:vlan-replace", []byte(reqstr), ctx)
+
+	if err != nil {
+		return nil, status.Error(codes.Unknown, err.Error())
+	}
+
+	err = json.Unmarshal(jsresp, resp)
+	if err != nil {
+		return nil, status.Error(codes.Unknown, err.Error())
+	}
+
+	return resp, nil
+}
+
 func (srv *Server) GetAuditLog(ctx context.Context, req *spb.GetAuditLogRequest) (*spb.GetAuditLogResponse, error) {
 	ctx, err := authenticate(srv.config.UserAuth, ctx)
 	if err != nil {
