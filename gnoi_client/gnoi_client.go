@@ -277,6 +277,26 @@ func clearNeighbors(sc spb.SonicServiceClient, ctx context.Context) {
 	fmt.Println(string(respstr))
 }
 
+func vlanReplace(sc spb.SonicServiceClient, ctx context.Context) {
+	fmt.Println("Sonic VlanReplace")
+	ctx = setUserCreds(ctx)
+	req := &spb.VlanReplaceRequest{
+		Input: &spb.VlanReplaceRequest_Input{},
+	}
+	json.Unmarshal([]byte(*args), req)
+
+	resp, err := sc.VlanReplace(ctx, req)
+
+	if err != nil {
+		panic(err.Error())
+	}
+	respstr, err := json.Marshal(resp)
+	if err != nil {
+		panic(err.Error())
+	}
+	fmt.Println(string(respstr))
+}
+
 func sonicGetAuditLog(sc spb.SonicServiceClient, ctx context.Context) {
 	fmt.Println("Sonic GetAuditLog")
 	ctx = setUserCreds(ctx)

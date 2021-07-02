@@ -107,17 +107,8 @@ func (c *Client) Run(stream gnmipb.GNMI_SubscribeServer) (err error) {
 		return grpc.Errorf(codes.InvalidArgument, "first message must be SubscriptionList: %q", query)
 	}
 
-	var target string
 	prefix := c.subscribe.GetPrefix()
-	if prefix == nil {
-		return grpc.Errorf(codes.Unimplemented, "No target specified in prefix")
-	} else {
-		target = prefix.GetTarget()
-		// TODO: add data client support for fetching non-db data
-		if target == "" {
-			return grpc.Errorf(codes.Unimplemented, "Empty target data not supported yet")
-		}
-	}
+	target := prefix.GetTarget()
 
 	paths, err := c.populateDbPathSubscrition(c.subscribe)
 	if err != nil {
