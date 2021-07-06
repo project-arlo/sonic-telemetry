@@ -6,6 +6,7 @@ package gnmi
 import (
 	"crypto/tls"
 	"encoding/json"
+	"flag"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -95,6 +96,15 @@ func loadDB(t *testing.T, rclient *redis.Client, mpi map[string]interface{}) {
 			}
 		default:
 			t.Errorf("Invalid data for db: %v : %v", key, fv)
+		}
+	}
+}
+func loadDBNotStrict(t *testing.T, rclient *redis.Client, mpi map[string]interface{}) {
+	for key, fv := range mpi {
+		switch fv.(type) {
+		case map[string]interface{}:
+			rclient.HMSet(key, fv.(map[string]interface{})).Result()
+
 		}
 	}
 }
@@ -250,7 +260,6 @@ func runTestSet(t *testing.T, ctx context.Context, gClient pb.GNMIClient, st *Op
 		t.Log("err: ", err)
 		t.Fatalf("got return code %v, want %v", gotRetStatus.Code(), st.wantRetCode)
 	}
-
 }
 
 func runServer(t *testing.T, s *Server) {
@@ -260,6 +269,21 @@ func runServer(t *testing.T, s *Server) {
 		t.Fatalf("gRPC server err: %v", err)
 	}
 	//t.Log("Exiting RPC server on address", s.Address())
+}
+
+func getRedisClientN(t *testing.T, n int) *redis.Client {
+	rclient := redis.NewClient(&redis.Options{
+		Network:     "tcp",
+		Addr:        sdcfg.GetDbTcpAddr("COUNTERS_DB"),
+		Password:    "", // no password set
+		DB:          n,
+		DialTimeout: 0,
+	})
+	_, err := rclient.Ping().Result()
+	if err != nil {
+		t.Fatalf("failed to connect to redis server %v", err)
+	}
+	return rclient
 }
 
 func getRedisClient(t *testing.T) *redis.Client {
@@ -1718,6 +1742,10 @@ func TestBulkSet(t *testing.T) {
 }
 
 func init() {
+	// Enable logs at UT setup
+	flag.Lookup("v").Value.Set("10")
+	flag.Lookup("log_dir").Value.Set("/tmp/telemetrytest")
+
 	// Inform gNMI server to use redis tcp localhost connection
 	sdc.UseRedisLocalTcpPort = true
 }

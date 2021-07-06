@@ -20,13 +20,14 @@ var (
 	userAuth    = gnmi.AuthTypes{"password": false, "cert": false, "jwt": false}
 	port        = flag.Int("port", 8080, "port to listen on")
 	// Certificate files.
-	caCert      = flag.String("ca_crt", "", "CA certificate for client certificate validation. Optional.")
-	serverCert  = flag.String("server_crt", "", "TLS server certificate")
-	serverKey   = flag.String("server_key", "", "TLS server private key")
-	insecure    = flag.Bool("insecure", false, "Skip providing TLS cert and key, for testing only!")
-	jwtRefInt   = flag.Uint64("jwt_refresh_int", 900, "Seconds before JWT expiry the token can be refreshed.")
-	jwtValInt   = flag.Uint64("jwt_valid_int", 3600, "Seconds that JWT token is valid for.")
-	outputQueSz = flag.Uint64("output_queue_size", 100, "Output Queue Maximum Size (in MB)")
+	caCert            = flag.String("ca_crt", "", "CA certificate for client certificate validation. Optional.")
+	serverCert        = flag.String("server_crt", "", "TLS server certificate")
+	serverKey         = flag.String("server_key", "", "TLS server private key")
+	insecure          = flag.Bool("insecure", false, "Skip providing TLS cert and key, for testing only!")
+	allowNoClientCert = flag.Bool("allow_no_client_auth", false, "When set, telemetry server will request but not require a client certificate.")
+	jwtRefInt         = flag.Uint64("jwt_refresh_int", 900, "Seconds before JWT expiry the token can be refreshed.")
+	jwtValInt         = flag.Uint64("jwt_valid_int", 3600, "Seconds that JWT token is valid for.")
+	outputQueSz       = flag.Uint64("output_queue_size", 100, "Output Queue Maximum Size (in MB)")
 )
 
 func main() {
@@ -84,6 +85,12 @@ func main() {
 			tls.TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,
 			tls.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,
 		},
+	}
+	if *allowNoClientCert {
+		// RequestClientCert will ask client for a certificate but won't
+		// require it to proceed. If certificate is provided, it will be
+		// verified.
+		tlsCfg.ClientAuth = tls.RequestClientCert
 	}
 
 	if *caCert != "" {

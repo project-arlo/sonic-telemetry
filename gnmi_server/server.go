@@ -157,7 +157,7 @@ func NewServer(config *Config, opts []grpc.ServerOption) (*Server, error) {
 	gnmipb.RegisterGNMIServer(srv.s, srv)
 	gnoi_system_pb.RegisterSystemServer(srv.s, srv)
 	spb_gnoi.RegisterSonicServiceServer(srv.s, srv)
-	log.V(1).Infof("Created Server on %s", srv.Address())
+	log.V(1).Infof("Created Server on %s, read-only: %t", srv.Address(), !READ_WRITE_MODE)
 	return srv, nil
 }
 

@@ -207,6 +207,15 @@ func (c *Client) recv(stream gnmipb.GNMI_SubscribeServer) {
 			return
 		case io.EOF:
 			log.V(1).Infof("Client %s received io.EOF", c)
+			if c.subscribe.Mode == gnmipb.SubscriptionList_STREAM {
+				// The client->server could be closed after the sending the subscription list.
+				// EOF is not a indication of client is not listening.
+				// Instead stream.Context() which is signaled once the underlying connection is terminated.
+				log.V(1).Infof("Waiting for client '%s'", c)
+				// This context is done when the client connection is terminated.
+				<-stream.Context().Done()
+				log.V(1).Infof("Client is done '%s'", c)
+			}
 			return
 		case nil:
 		}

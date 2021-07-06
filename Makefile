@@ -96,12 +96,10 @@ install:
 	$(INSTALL) -D $(BUILD_DIR)/gnoi_client $(DESTDIR)/usr/sbin/gnoi_client
 	mkdir -p $(DESTDIR)/usr/bin/
 
-
 deinstall:
 	rm $(DESTDIR)/usr/sbin/telemetry
 	rm $(DESTDIR)/usr/sbin/dialout_client_cli
 	rm $(DESTDIR)/usr/sbin/gnmi_get
 	rm $(DESTDIR)/usr/sbin/gnmi_set
 	rm $(DESTDIR)/usr/sbin/gnoi_client
-
 
